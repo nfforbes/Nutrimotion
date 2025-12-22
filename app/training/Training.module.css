@@ -1,0 +1,210 @@
+.trainingContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #000000;
+  text-align: center;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 3rem;
+  color: #000000;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.packagesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.packageCard {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border: 2px solid transparent;
+}
+
+.packageCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.packageCard.popular {
+  border-color: #000000;
+  transform: scale(1.05);
+}
+
+.packageCard.popular:hover {
+  transform: scale(1.05) translateY(-4px);
+}
+
+.popularBadge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  background-color: #000000;
+  color: #ee4d24;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.packageHeader {
+  margin-bottom: 1rem;
+}
+
+.packageName {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #000000;
+}
+
+.packagePrice {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.priceUnit {
+  font-size: 1rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.packageDescription {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #333333;
+  margin-bottom: 1.5rem;
+}
+
+.sessionsInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.sessionsCount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #000000;
+}
+
+.sessionsLabel {
+  font-size: 1rem;
+  color: #666666;
+  font-weight: 500;
+}
+
+.featuresList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  flex-grow: 1;
+}
+
+.feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+  color: #333333;
+  line-height: 1.5;
+}
+
+.checkIcon {
+  flex-shrink: 0;
+  color: #ee4d24;
+  margin-top: 0.125rem;
+}
+
+.selectButton {
+  width: 100%;
+  background-color: #000000;
+  color: #ee4d24;
+  border: 2px solid #000000;
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.selectButton:hover {
+  background-color: #ee4d24;
+  color: #000000;
+  border-color: #ee4d24;
+}
+
+.selectButton:active {
+  transform: scale(0.98);
+}
+
+.packageCard.popular .selectButton {
+  background-color: #ee4d24;
+  color: #000000;
+  border-color: #ee4d24;
+}
+
+.packageCard.popular .selectButton:hover {
+  background-color: #000000;
+  color: #ee4d24;
+  border-color: #000000;
+}
+
+@media (max-width: 768px) {
+  .packagesGrid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .title {
+    font-size: 2rem;
+  }
+
+  .packageCard.popular {
+    transform: scale(1);
+  }
+
+  .packageCard.popular:hover {
+    transform: translateY(-4px);
+  }
+
+  .packageCard {
+    padding: 1.5rem;
+  }
+}
+
+
