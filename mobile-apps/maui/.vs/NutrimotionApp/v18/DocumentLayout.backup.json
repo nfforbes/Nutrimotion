@@ -1,0 +1,241 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\platforms\\android\\mainactivity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\platforms\\android\\mainactivity.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\platforms\\windows\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\platforms\\windows\\app.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\constants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\constants.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\platforms\\ios\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\platforms\\ios\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\platforms\\maccatalyst\\appdelegate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\platforms\\maccatalyst\\appdelegate.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\pagemodels\\taskdetailpagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\pagemodels\\taskdetailpagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\pagemodels\\projectdetailpagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\pagemodels\\projectdetailpagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\pagemodels\\managemetapagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\pagemodels\\managemetapagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\appshell.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\appshell.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\pagemodels\\mainpagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\pagemodels\\mainpagemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\mauiprogram.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\nutrimotion.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\nutrimotion.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|c:\\git\\nutrimotionv1\\mobile-apps\\maui\\nutrimotion\\resources\\styles\\colors.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
+      "RelativeMoniker": "D:0:0:{7375A502-534A-4F11-B9FE-0306C55F1FF4}|Nutrimotion\\Nutrimotion.csproj|solutionrelative:nutrimotion\\resources\\styles\\colors.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 3,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Colors.xaml",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Resources\\Styles\\Colors.xaml",
+              "RelativeDocumentMoniker": "Nutrimotion\\Resources\\Styles\\Colors.xaml",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Resources\\Styles\\Colors.xaml",
+              "RelativeToolTip": "Nutrimotion\\Resources\\Styles\\Colors.xaml",
+              "ViewState": "AgIAAAgAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
+              "WhenOpened": "2026-03-07T17:22:34.805Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\iOS\\Program.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\Platforms\\iOS\\Program.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\iOS\\Program.cs",
+              "RelativeToolTip": "Nutrimotion\\Platforms\\iOS\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:57:55.785Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Constants.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Constants.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\Constants.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Constants.cs",
+              "RelativeToolTip": "Nutrimotion\\Constants.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAA+AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T17:24:31.71Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainActivity.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\Android\\MainActivity.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\Platforms\\Android\\MainActivity.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\Android\\MainActivity.cs",
+              "RelativeToolTip": "Nutrimotion\\Platforms\\Android\\MainActivity.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T21:44:13.729Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "App.xaml.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\Windows\\App.xaml.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\Platforms\\Windows\\App.xaml.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\Windows\\App.xaml.cs",
+              "RelativeToolTip": "Nutrimotion\\Platforms\\Windows\\App.xaml.cs",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAIwB4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:57:47.937Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "AppDelegate.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\MacCatalyst\\AppDelegate.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\Platforms\\MacCatalyst\\AppDelegate.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Platforms\\MacCatalyst\\AppDelegate.cs",
+              "RelativeToolTip": "Nutrimotion\\Platforms\\MacCatalyst\\AppDelegate.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:57:29.669Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "TaskDetailPageModel.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\TaskDetailPageModel.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\PageModels\\TaskDetailPageModel.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\TaskDetailPageModel.cs",
+              "RelativeToolTip": "Nutrimotion\\PageModels\\TaskDetailPageModel.cs",
+              "ViewState": "AgIAAIkAAAAAAAAAAAAqwJYAAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:57:22.456Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "ProjectDetailPageModel.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\ProjectDetailPageModel.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\PageModels\\ProjectDetailPageModel.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\ProjectDetailPageModel.cs",
+              "RelativeToolTip": "Nutrimotion\\PageModels\\ProjectDetailPageModel.cs",
+              "ViewState": "AgIAANEAAAAAAAAAAAAqwN4AAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:57:12.413Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "AppShell.xaml.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\AppShell.xaml.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\AppShell.xaml.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\AppShell.xaml.cs",
+              "RelativeToolTip": "Nutrimotion\\AppShell.xaml.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAUwB4AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:55:04.198Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "ManageMetaPageModel.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\ManageMetaPageModel.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\PageModels\\ManageMetaPageModel.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\ManageMetaPageModel.cs",
+              "RelativeToolTip": "Nutrimotion\\PageModels\\ManageMetaPageModel.cs",
+              "ViewState": "AgIAAC4AAAAAAAAAAAAmwDoAAAAeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:54:05.685Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "MainPageModel.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\MainPageModel.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\PageModels\\MainPageModel.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\PageModels\\MainPageModel.cs",
+              "RelativeToolTip": "Nutrimotion\\PageModels\\MainPageModel.cs",
+              "ViewState": "AgIAAKIAAAAAAAAAAAAmwK4AAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:53:46.579Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "Nutrimotion",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Nutrimotion.csproj",
+              "RelativeDocumentMoniker": "Nutrimotion\\Nutrimotion.csproj",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\Nutrimotion.csproj",
+              "RelativeToolTip": "Nutrimotion\\Nutrimotion.csproj",
+              "ViewState": "AgIAADgAAAAAAAAAAAAAwEUAAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-03-07T16:53:03.246Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "MauiProgram.cs",
+              "DocumentMoniker": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\MauiProgram.cs",
+              "RelativeDocumentMoniker": "Nutrimotion\\MauiProgram.cs",
+              "ToolTip": "C:\\Git\\NutrimotionV1\\mobile-apps\\maui\\Nutrimotion\\MauiProgram.cs",
+              "RelativeToolTip": "Nutrimotion\\MauiProgram.cs",
+              "ViewState": "AgIAABIAAAAAAAAAAAAiwCEAAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-03-07T16:49:48.044Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Nutrimotion</string>
+    <string name="com_auth0_domain">n4consulting.us.auth0.com</string>
+    <string name="com_auth0_client_id">WkjrdWm6dXyUY5IlUjwFXDXbWOXAbhGt</string>
+</resources>

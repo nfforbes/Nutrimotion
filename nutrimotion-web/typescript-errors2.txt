@@ -1,0 +1,70 @@
+﻿app/admin/analytics/page.tsx(80,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/content/page.tsx(87,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/dashboard/page.tsx(86,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/deliveries/page.tsx(122,36): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<OrderStatus, "error" | "default" | "primary" | "secondary" | "info" | "success" | "warning">'.
+app/admin/meals/page.tsx(163,51): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/meals/schedule/page.tsx(138,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; xs: number; key: string; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; xs: number; key: string; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'.
+app/admin/meals/schedule/page.tsx(166,28): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<...> & Omit<...>): Element | null', gave the following error.
+    Property 'component' is missing in type '{ children: Element; xs: number; key: string; }' but required in type '{ component: ElementType<any, keyof IntrinsicElements>; }'.
+  Overload 2 of 2, '(props: DefaultComponentProps<GridTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type '{ children: Element; xs: number; key: string; }' is not assignable to type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'.
+      Property 'xs' does not exist on type 'IntrinsicAttributes & GridBaseProps & { sx?: SxProps<Theme> | undefined; } & SystemProps<Theme> & Omit<...>'.
+app/admin/meals/schedule/page.tsx(230,37): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/meals/schedule/page.tsx(239,37): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/meals/schedule/page.tsx(249,37): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/meals/schedule/page.tsx(262,37): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/admin/orders/page.tsx(145,34): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<OrderStatus, "error" | "default" | "primary" | "secondary" | "info" | "success" | "warning">'.
+app/admin/packages/page.tsx(87,48): error TS2345: Argument of type 'PackageDoc' is not assignable to parameter of type 'SetStateAction<PackageDoc | null>'.
+  Type 'PackageDoc' is missing the following properties from type 'PackageDoc': createdAt, updatedAt
+app/api/auth/me/route.ts(24,31): error TS2339: Property 'picture' does not exist on type '{ sub: string; email: any; name: any; } | User'.
+  Property 'picture' does not exist on type '{ sub: string; email: any; name: any; }'.
+app/books/page.tsx(32,9): error TS7034: Variable 'books' implicitly has type 'any[]' in some locations where its type cannot be determined.
+app/books/page.tsx(58,14): error TS7005: Variable 'books' implicitly has an 'any[]' type.
+app/books/page.tsx(59,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/cart/page.tsx(93,37): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/cart/page.tsx(139,37): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/checkout/page.tsx(119,45): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/checkout/page.tsx(130,45): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/checkout/page.tsx(141,45): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/checkout/page.tsx(152,45): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/client/subscriptions/page.tsx(103,30): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type 'Record<SubscriptionStatus, "error" | "default" | "primary" | "secondary" | "info" | "success" | "warning">'.
+app/dashboard/page.tsx(96,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/page.tsx(102,41): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/recipes/page.tsx(32,9): error TS7034: Variable 'recipes' implicitly has type 'any[]' in some locations where its type cannot be determined.
+app/recipes/page.tsx(58,14): error TS7005: Variable 'recipes' implicitly has an 'any[]' type.
+app/recipes/page.tsx(59,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/tracking/[orderId]/page.tsx(133,21): error TS2322: Type '(OverridableComponent<SvgIconTypeMap<{}, "svg">> & { muiName: string; }) | undefined' is not assignable to type 'ElementType<StepIconProps, keyof IntrinsicElements> | undefined'.
+  Type 'OverridableComponent<SvgIconTypeMap<{}, "svg">> & { muiName: string; }' is not assignable to type 'ElementType<StepIconProps, keyof IntrinsicElements> | undefined'.
+    Type 'OverridableComponent<SvgIconTypeMap<{}, "svg">> & { muiName: string; }' is not assignable to type 'FunctionComponent<StepIconProps>'.
+      Types of parameters 'props' and 'props' are incompatible.
+        Type 'StepIconProps' is not assignable to type '{ component: any; } & SvgIconOwnProps & CommonProps & Omit<any, "children" | "fontSize" | "color" | "shapeRendering" | "className" | "style" | "classes" | ... 4 more ... | "viewBox">'.
+          Property 'component' is missing in type 'StepIconProps' but required in type '{ component: any; }'.
+app/training/page.tsx(32,9): error TS7034: Variable 'trainingPackages' implicitly has type 'any[]' in some locations where its type cannot be determined.
+app/training/page.tsx(58,14): error TS7005: Variable 'trainingPackages' implicitly has an 'any[]' type.
+app/training/page.tsx(59,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+app/videos/page.tsx(33,9): error TS7034: Variable 'videos' implicitly has type 'any[]' in some locations where its type cannot be determined.
+app/videos/page.tsx(59,14): error TS7005: Variable 'videos' implicitly has an 'any[]' type.
+app/videos/page.tsx(60,39): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/admin/BookList.tsx(41,33): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/admin/PackageList.tsx(47,33): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/admin/RecipeList.tsx(38,33): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/admin/TrainingList.tsx(41,33): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/admin/VideoList.tsx(43,33): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/client/PackageSelection.tsx(234,69): error TS17001: JSX elements cannot have multiple attributes with the same name.
+components/layout/AppBar.tsx(138,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: { component: ElementType<any, keyof IntrinsicElements>; } & ChipOwnProps & ChipSlotsAndSlotProps & CommonProps & Omit<...>): Element | null', gave the following error.
+    Type 'Element | null' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | undefined'.
+      Type 'null' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ChipTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'Element | null' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | undefined'.
+      Type 'null' is not assignable to type 'ReactElement<unknown, string | JSXElementConstructor<any>> | undefined'.
+lib/db/models/Cart.ts(64,3): error TS2349: This expression is not callable.
+  Type 'SaveOptions' has no call signatures.
+lib/db/models/Order.ts(111,3): error TS2349: This expression is not callable.
+  Type 'SaveOptions' has no call signatures.

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:NutrimotionApp.ViewModels"
+             x:Class="NutrimotionApp.Views.DriverAssignmentsPage"
+             Title="My Deliveries">
+
+    <RefreshView Command="{Binding LoadDataCommand}"
+                 IsRefreshing="{Binding IsLoading}">
+        <CollectionView ItemsSource="{Binding Assignments}"
+                        Margin="16">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,0,0,12"
+                           Padding="16"
+                           CornerRadius="12"
+                           BorderColor="#E0E0E0"
+                           HasShadow="True">
+                        <VerticalStackLayout Spacing="8">
+                            <!-- Header -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Text="{Binding CustomerName}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       TextColor="{StaticResource DarkText}" />
+                                <Frame Grid.Column="1"
+                                       Padding="8,4"
+                                       CornerRadius="8"
+                                       BackgroundColor="{StaticResource Primary}"
+                                       HasShadow="False">
+                                    <Label Text="{Binding StatusDisplay}"
+                                           FontSize="12"
+                                           TextColor="White" />
+                                </Frame>
+                            </Grid>
+
+                            <!-- Details -->
+                            <Label Text="{Binding CustomerPhone, StringFormat='📞 {0}'}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource MutedText}" />
+                            <Label Text="{Binding AddressDisplay, StringFormat='📍 {0}'}"
+                                   FontSize="14"
+                                   TextColor="{StaticResource MutedText}" />
+
+                            <!-- Action Buttons -->
+                            <HorizontalStackLayout Spacing="8">
+                                <Button Text="Start Delivery"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DriverAssignmentsViewModel}}, Path=StartDeliveryCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="{StaticResource Primary}"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        HeightRequest="40"
+                                        FontSize="14"
+                                        IsVisible="{Binding Status, Converter={StaticResource StatusToPreparingConverter}}" />
+
+                                <Button Text="Mark Delivered"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:DriverAssignmentsViewModel}}, Path=MarkDeliveredCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="#4CAF50"
+                                        TextColor="White"
+                                        CornerRadius="8"
+                                        HeightRequest="40"
+                                        FontSize="14"
+                                        IsVisible="{Binding Status, Converter={StaticResource StatusToOutForDeliveryConverter}}" />
+                            </HorizontalStackLayout>
+                        </VerticalStackLayout>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center"
+                                     VerticalOptions="Center"
+                                     Spacing="8"
+                                     Padding="0,60">
+                    <Label Text="🎉"
+                           FontSize="48"
+                           HorizontalOptions="Center" />
+                    <Label Text="No active deliveries"
+                           FontSize="18"
+                           TextColor="{StaticResource MutedText}"
+                           HorizontalOptions="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+    </RefreshView>
+</ContentPage>

@@ -1,0 +1,1 @@
+import mongoose from 'mongoose'; async function run() { await mongoose.connect('mongodb://localhost:27017/nutrimotion', { useNewUrlParser: true, useUnifiedTopology: true }); const carts = await mongoose.connection.collection('carts').find({}).toArray(); console.log(JSON.stringify(carts, null, 2)); process.exit(0); } run();

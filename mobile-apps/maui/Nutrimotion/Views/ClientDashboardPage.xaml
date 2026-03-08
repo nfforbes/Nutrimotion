@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:NutrimotionApp.ViewModels"
+             x:Class="NutrimotionApp.Views.ClientDashboardPage"
+             Title="Dashboard">
+
+    <RefreshView Command="{Binding LoadDataCommand}"
+                 IsRefreshing="{Binding IsLoading}">
+        <ScrollView>
+            <VerticalStackLayout Padding="16" Spacing="16">
+
+                <!-- Packages Section -->
+                <Label Text="Meal Packages"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource DarkText}" />
+
+                <CollectionView ItemsSource="{Binding Packages}"
+                                HeightRequest="200"
+                                ItemsLayout="HorizontalList">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame WidthRequest="260"
+                                   Margin="0,0,12,0"
+                                   Padding="16"
+                                   CornerRadius="12"
+                                   BorderColor="#E0E0E0"
+                                   HasShadow="True">
+                                <VerticalStackLayout Spacing="6">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="18"
+                                           FontAttributes="Bold"
+                                           TextColor="{StaticResource DarkText}" />
+                                    <Label Text="{Binding Description}"
+                                           FontSize="13"
+                                           TextColor="{StaticResource MutedText}"
+                                           LineBreakMode="TailTruncation"
+                                           MaxLines="2" />
+                                    <Label Text="{Binding MealSummary}"
+                                           FontSize="14"
+                                           TextColor="{StaticResource Primary}" />
+                                    <Label Text="{Binding CostDisplay}"
+                                           FontSize="14"
+                                           FontAttributes="Bold"
+                                           TextColor="{StaticResource DarkText}" />
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="No packages available."
+                               TextColor="{StaticResource MutedText}"
+                               HorizontalOptions="Center"
+                               Margin="0,20" />
+                    </CollectionView.EmptyView>
+                </CollectionView>
+
+                <!-- Meals Section -->
+                <Label Text="Today's Meals"
+                       FontSize="22"
+                       FontAttributes="Bold"
+                       TextColor="{StaticResource DarkText}" />
+
+                <CollectionView ItemsSource="{Binding Meals}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,0,0,8"
+                                   Padding="12"
+                                   CornerRadius="12"
+                                   BorderColor="#E0E0E0"
+                                   HasShadow="True">
+                                <Grid ColumnDefinitions="80,*" ColumnSpacing="12">
+                                    <Image Source="{Binding ImageUrl}"
+                                           Aspect="AspectFill"
+                                           HeightRequest="80"
+                                           WidthRequest="80" />
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Spacing="4"
+                                                         VerticalOptions="Center">
+                                        <Label Text="{Binding Name}"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource DarkText}" />
+                                        <Label Text="{Binding SlotDisplay}"
+                                               FontSize="13"
+                                               TextColor="{StaticResource Primary}" />
+                                        <Label Text="{Binding Price, StringFormat='${0:F2}'}"
+                                               FontSize="14"
+                                               TextColor="{StaticResource DarkText}" />
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                    <CollectionView.EmptyView>
+                        <Label Text="No meals available today."
+                               TextColor="{StaticResource MutedText}"
+                               HorizontalOptions="Center"
+                               Margin="0,20" />
+                    </CollectionView.EmptyView>
+                </CollectionView>
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+</ContentPage>

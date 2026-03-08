@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:NutrimotionApp.ViewModels"
+             x:Class="NutrimotionApp.Views.LoginPage"
+             Title="Nutrimotion"
+             Shell.NavBarIsVisible="False">
+
+    <Grid RowDefinitions="*,Auto,*"
+          Padding="32"
+          BackgroundColor="{StaticResource LightBackground}">
+
+        <!-- Logo / Title -->
+        <VerticalStackLayout Grid.Row="0"
+                             VerticalOptions="End"
+                             HorizontalOptions="Center"
+                             Spacing="8">
+            <Label Text="🍽"
+                   FontSize="64"
+                   HorizontalOptions="Center" />
+            <Label Text="Nutrimotion"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource Primary}"
+                   HorizontalOptions="Center" />
+            <Label Text="Healthy meals, delivered to you"
+                   FontSize="16"
+                   TextColor="{StaticResource MutedText}"
+                   HorizontalOptions="Center" />
+        </VerticalStackLayout>
+
+        <!-- Login Button & Error -->
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="16"
+                             Padding="0,40">
+            <Button Text="Login with Auth0"
+                    Command="{Binding LoginCommand}"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    FontSize="18"
+                    HeightRequest="52"
+                    CornerRadius="12" />
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               Color="{StaticResource Primary}"
+                               HorizontalOptions="Center" />
+
+            <Label Text="{Binding ErrorMessage}"
+                   TextColor="Red"
+                   FontSize="14"
+                   HorizontalOptions="Center"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}" />
+        </VerticalStackLayout>
+
+        <!-- Spacer -->
+        <BoxView Grid.Row="2" />
+    </Grid>
+</ContentPage>

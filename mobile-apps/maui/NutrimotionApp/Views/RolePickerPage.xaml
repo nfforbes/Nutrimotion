@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:NutrimotionApp.ViewModels"
+             x:Class="NutrimotionApp.Views.RolePickerPage"
+             Title="Choose Your Role">
+
+    <Grid RowDefinitions="Auto,*"
+          Padding="24"
+          BackgroundColor="{StaticResource LightBackground}">
+
+        <VerticalStackLayout Grid.Row="0"
+                             Spacing="4"
+                             Padding="0,24,0,16">
+            <Label Text="Welcome!"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{StaticResource DarkText}" />
+            <Label Text="How would you like to continue?"
+                   FontSize="16"
+                   TextColor="{StaticResource MutedText}" />
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="1"
+                             Spacing="16"
+                             VerticalOptions="Start">
+
+            <!-- Client Card -->
+            <Frame BorderColor="{StaticResource Primary}"
+                   CornerRadius="16"
+                   Padding="24"
+                   HasShadow="True">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ContinueAsClientCommand}" />
+                </Frame.GestureRecognizers>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="🍽"
+                           FontSize="40" />
+                    <Label Text="Continue as Client"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource DarkText}" />
+                    <Label Text="Browse meals, packages, and place orders"
+                           FontSize="14"
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Driver Card -->
+            <Frame BorderColor="{StaticResource Accent}"
+                   CornerRadius="16"
+                   Padding="24"
+                   HasShadow="True">
+                <Frame.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ContinueAsDriverCommand}" />
+                </Frame.GestureRecognizers>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="🚚"
+                           FontSize="40" />
+                    <Label Text="Continue as Driver"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="{StaticResource DarkText}" />
+                    <Label Text="View and manage your delivery assignments"
+                           FontSize="14"
+                           TextColor="{StaticResource MutedText}" />
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>

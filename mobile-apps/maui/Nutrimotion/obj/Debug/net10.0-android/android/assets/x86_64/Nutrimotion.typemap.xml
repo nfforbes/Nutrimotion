@@ -1,0 +1,10 @@
+<api type="debug" assembly-name="Nutrimotion" mvid="fa683eea0444472e9552eefd8222ad76">
+  <java-to-managed>
+    <entry java-name="crc64c47059829ae65a68/MainActivity" managed-name="NutrimotionApp.MainActivity, Nutrimotion" managed-type-token-id="33554499" />
+    <entry java-name="crc64c47059829ae65a68/MainApplication" managed-name="NutrimotionApp.MainApplication, Nutrimotion" managed-type-token-id="33554500" />
+  </java-to-managed>
+  <managed-to-java>
+    <entry java-name="crc64c47059829ae65a68/MainActivity" managed-name="NutrimotionApp.MainActivity, Nutrimotion" managed-type-token-id="33554499" />
+    <entry java-name="crc64c47059829ae65a68/MainApplication" managed-name="NutrimotionApp.MainApplication, Nutrimotion" managed-type-token-id="33554500" />
+  </managed-to-java>
+</api>
