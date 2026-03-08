@@ -23,11 +23,12 @@ interface PackageDoc {
   breakfastCount: number;
   lunchCount: number;
   dinnerCount: number;
+  cost?: number;
   daysOption: 'any' | 'specific';
   specificDays: number[];
   active: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function AdminPackagesPage() {
