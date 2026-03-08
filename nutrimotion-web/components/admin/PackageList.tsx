@@ -44,7 +44,7 @@ export default function PackageList({ packages, onEdit }: PackageListProps) {
   return (
     <Grid container spacing={3}>
       {packages.map((pkg) => (
-        <Grid size={{ xs: 12 }} size={{ sm: 6 }} size={{ md: 4 }} key={pkg._id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pkg._id}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>

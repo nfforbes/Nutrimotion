@@ -22,6 +22,15 @@ import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  description?: string;
+  coverImageUrl?: string;
+  price: number;
+}
+
 export default function BooksPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const auth = useAppSelector((state) => state.auth);
@@ -29,7 +38,7 @@ export default function BooksPage() {
   const menuItems = getAllMenuItemsForUser(auth.permissions);
 
   // Mock books - replace with API call
-  const books = [];
+  const books: Book[] = [];
 
   return (
     <>

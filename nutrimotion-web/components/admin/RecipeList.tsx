@@ -35,7 +35,7 @@ export default function RecipeList({ recipes }: RecipeListProps) {
   return (
     <Grid container spacing={3}>
       {recipes.map((recipe) => (
-        <Grid size={{ xs: 12 }} size={{ sm: 6 }} size={{ md: 4 }} key={recipe._id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={recipe._id}>
           <Card>
             <CardMedia
               component="img"

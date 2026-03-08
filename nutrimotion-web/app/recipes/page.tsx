@@ -22,6 +22,15 @@ import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 
+interface Recipe {
+  id: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  prepTime: number;
+  difficulty: string;
+}
+
 export default function RecipesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const auth = useAppSelector((state) => state.auth);
@@ -29,7 +38,7 @@ export default function RecipesPage() {
   const menuItems = getAllMenuItemsForUser(auth.permissions);
 
   // Mock recipes - replace with API call
-  const recipes = [];
+  const recipes: Recipe[] = [];
 
   return (
     <>

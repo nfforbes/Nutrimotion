@@ -40,7 +40,7 @@ export default function VideoList({ videos }: VideoListProps) {
   return (
     <Grid container spacing={3}>
       {videos.map((video) => (
-        <Grid size={{ xs: 12 }} size={{ sm: 6 }} size={{ md: 4 }} key={video._id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={video._id}>
           <Card>
             <Box sx={{ position: 'relative' }}>
               <CardMedia

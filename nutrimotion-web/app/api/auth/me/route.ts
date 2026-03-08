@@ -21,7 +21,7 @@ export async function GET() {
         id: session.dbUserId,
         email: session.user.email,
         name: session.user.name,
-        picture: session.user.picture,
+        picture: (session.user as { picture?: string }).picture,
       },
       roles: session.roles,
       permissions: session.permissions,

@@ -137,7 +137,7 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
             {auth.roles.map((role) => (
               <Chip
                 key={role}
-                icon={getRoleIcon(role)}
+                icon={getRoleIcon(role) ?? undefined}
                 label={getRoleLabel(role)}
                 color={getRoleColor(role)}
                 size="small"

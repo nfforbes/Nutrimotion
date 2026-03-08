@@ -38,7 +38,7 @@ export default function BookList({ books }: BookListProps) {
   return (
     <Grid container spacing={3}>
       {books.map((book) => (
-        <Grid size={{ xs: 12 }} size={{ sm: 6 }} size={{ md: 4 }} key={book._id}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={book._id}>
           <Card>
             <CardMedia
               component="img"

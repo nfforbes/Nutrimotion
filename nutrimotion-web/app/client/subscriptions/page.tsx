@@ -100,7 +100,7 @@ export default function ClientSubscriptionsPage() {
                     </Box>
                     <Chip
                       label={subscription.status}
-                      color={statusColors[subscription.status]}
+                      color={statusColors[subscription.status as SubscriptionStatus]}
                       icon={
                         subscription.status === SubscriptionStatus.ACTIVE ? (
                           <CheckCircleIcon />

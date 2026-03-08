@@ -23,6 +23,15 @@ import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 
+interface Video {
+  id: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  category: string;
+  duration: number;
+}
+
 export default function VideosPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const auth = useAppSelector((state) => state.auth);
@@ -30,7 +39,7 @@ export default function VideosPage() {
   const menuItems = getAllMenuItemsForUser(auth.permissions);
 
   // Mock videos - replace with API call
-  const videos = [];
+  const videos: Video[] = [];
 
   return (
     <>

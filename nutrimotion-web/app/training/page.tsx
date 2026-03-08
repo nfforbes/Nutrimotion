@@ -22,6 +22,13 @@ import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 
+interface TrainingPackage {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+}
+
 export default function TrainingPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const auth = useAppSelector((state) => state.auth);
@@ -29,7 +36,7 @@ export default function TrainingPage() {
   const menuItems = getAllMenuItemsForUser(auth.permissions);
 
   // Mock training packages - replace with API call
-  const trainingPackages = [];
+  const trainingPackages: TrainingPackage[] = [];
 
   return (
     <>
