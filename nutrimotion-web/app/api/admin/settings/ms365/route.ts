@@ -9,6 +9,7 @@ import { requirePermissions } from '@/lib/auth/middleware';
 import { Permission } from '@/types/auth';
 import connectDB from '@/lib/db/connection';
 import { AppSetting } from '@/lib/db/models';
+import type { IMs365Settings } from '@/lib/db/models';
 
 const CONFIG_ID = 'app';
 
@@ -25,7 +26,17 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
     const doc = await AppSetting.findById(CONFIG_ID).lean();
-    const ms365 = doc?.ms365 ?? {};
+    const raw = doc?.ms365;
+    const ms365: IMs365Settings = raw
+      ? (raw as IMs365Settings)
+      : {
+          MS365_CLIENT_ID: '',
+          MS365_CLIENT_SECRET: '',
+          MS365_TENANT_ID: '',
+          MS365_SHAREPOINT_SITE_ID: '',
+          MS365_VIDEOS_FOLDER_PATH: '',
+          MS365_EMAIL_FROM: '',
+        };
 
     return NextResponse.json({
       MS365_CLIENT_ID: ms365.MS365_CLIENT_ID ?? '',
@@ -70,13 +81,15 @@ export async function PUT(request: NextRequest) {
         },
       });
     } else {
-      doc.ms365 = doc.ms365 ?? {};
-      doc.ms365.MS365_CLIENT_ID = MS365_CLIENT_ID;
-      if (MS365_CLIENT_SECRET) doc.ms365.MS365_CLIENT_SECRET = MS365_CLIENT_SECRET;
-      doc.ms365.MS365_TENANT_ID = MS365_TENANT_ID;
-      doc.ms365.MS365_SHAREPOINT_SITE_ID = MS365_SHAREPOINT_SITE_ID;
-      doc.ms365.MS365_VIDEOS_FOLDER_PATH = MS365_VIDEOS_FOLDER_PATH;
-      doc.ms365.MS365_EMAIL_FROM = MS365_EMAIL_FROM;
+      const existing = doc.ms365 as IMs365Settings | undefined;
+      doc.ms365 = {
+        MS365_CLIENT_ID,
+        MS365_CLIENT_SECRET: MS365_CLIENT_SECRET || (existing?.MS365_CLIENT_SECRET ?? ''),
+        MS365_TENANT_ID,
+        MS365_SHAREPOINT_SITE_ID,
+        MS365_VIDEOS_FOLDER_PATH,
+        MS365_EMAIL_FROM,
+      };
       await doc.save();
     }
 

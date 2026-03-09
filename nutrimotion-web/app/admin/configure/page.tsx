@@ -113,17 +113,17 @@ export default function AdminConfigurePage() {
                     {message.text}
                   </Alert>
                 )}
-                {FIELDS.map(({ key, label, type, placeholder }) => (
+                {FIELDS.map((field) => (
                   <TextField
-                    key={key}
+                    key={field.key}
                     fullWidth
-                    label={label}
-                    type={type}
-                    value={values[key]}
-                    onChange={handleChange(key)}
-                    placeholder={placeholder}
+                    label={field.label}
+                    type={field.type}
+                    value={values[field.key]}
+                    onChange={handleChange(field.key)}
+                    placeholder={'placeholder' in field ? field.placeholder : undefined}
                     margin="normal"
-                    autoComplete={type === 'password' ? 'new-password' : 'off'}
+                    autoComplete={field.type === 'password' ? 'new-password' : 'off'}
                   />
                 ))}
                 <Box sx={{ mt: 3 }}>

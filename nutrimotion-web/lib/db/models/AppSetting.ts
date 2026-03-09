@@ -14,7 +14,7 @@ export interface IMs365Settings {
   MS365_EMAIL_FROM: string;
 }
 
-export interface IAppSettingDoc extends mongoose.Document {
+export interface IAppSettingDoc extends Omit<mongoose.Document, '_id'> {
   _id: string;
   ms365?: IMs365Settings;
   updatedAt: Date;
