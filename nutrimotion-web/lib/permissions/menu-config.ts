@@ -199,6 +199,14 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     requiredPermissions: [Permission.VIEW_ANALYTICS],
     order: 8,
   },
+  {
+    id: 'configure',
+    label: 'Configure',
+    icon: 'Settings',
+    route: '/admin/configure',
+    requiredPermissions: [Permission.ADMIN_DASHBOARD],
+    order: 9,
+  },
 ];
 
 export const DRIVER_MENU_ITEMS: MenuItem[] = [

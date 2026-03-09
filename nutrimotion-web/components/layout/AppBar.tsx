@@ -108,9 +108,17 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
             <MenuIcon />
           </IconButton>
         )}
-        <Typography variant="h6" component={Link} href={isAuthenticated ? "/dashboard" : "/"} sx={{ textDecoration: 'none', color: 'inherit', mr: 3, flexShrink: 0 }}>
-          Nutrimotion
-        </Typography>
+        <Link
+          href={isAuthenticated ? '/dashboard' : '/'}
+          sx={{ display: 'flex', alignItems: 'center', mr: 3, flexShrink: 0 }}
+        >
+          <Box
+            component="img"
+            src="/nutrimotion-logo.png"
+            alt="Nutrimotion"
+            sx={{ height: 40, display: 'block' }}
+          />
+        </Link>
 
         {/* Top nav: Meals, Training, Books, Recipes - only when not logged in */}
         {!isAuthenticated && (

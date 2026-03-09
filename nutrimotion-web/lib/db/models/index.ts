@@ -10,6 +10,7 @@ export { Order } from './Order';
 export { DiscountCode } from './DiscountCode';
 export { DeliveryAssignment } from './DeliveryAssignment';
 export { DeliveryTracking } from './DeliveryTracking';
+export { AppSetting } from './AppSetting';
 
 export type { IUser } from './User';
 export type { IMealPackage } from './MealPackage';
@@ -19,3 +20,4 @@ export type { IOrder, IOrderItem, IOrderStatusHistory } from './Order';
 export type { IDiscountCode } from './DiscountCode';
 export type { IDeliveryAssignment } from './DeliveryAssignment';
 export type { IDeliveryTracking } from './DeliveryTracking';
+export type { IAppSettingDoc, IMs365Settings } from './AppSetting';
