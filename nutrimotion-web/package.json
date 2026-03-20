@@ -16,7 +16,7 @@
     "start": "NODE_ENV=production node server.js",
     "start:http": "next start -p 3000",
     "lint": "next lint",
-    "test": "jest --watch",
+    "test": "jest  --watch",
     "test:ci": "jest --ci",
     "test:coverage": "jest --coverage"
   },
