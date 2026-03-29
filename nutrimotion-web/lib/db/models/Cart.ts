@@ -21,7 +21,9 @@ export interface ICart {
   subtotal: number;
   discount: number;
   total: number;
+  /** @deprecated Use appliedDiscountCodes; kept for older carts */
   discountCode?: string;
+  appliedDiscountCodes?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -48,6 +50,7 @@ const CartSchema = new Schema<ICart>(
     discount: { type: Number, default: 0, min: 0 },
     total: { type: Number, default: 0, min: 0 },
     discountCode: { type: String },
+    appliedDiscountCodes: { type: [String], default: [] },
   },
   {
     timestamps: true,

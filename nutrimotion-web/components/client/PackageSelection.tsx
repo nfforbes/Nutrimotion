@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
     Box,
     Typography,
@@ -19,6 +19,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { MealSlot } from '@/types/catalog';
 import { PackageDoc } from '@/app/meals/page'; // We'll export this or define it properly
+import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
 
 const SLOT_LABELS: Record<string, string> = {
     [MealSlot.BREAKFAST]: 'Breakfast',
@@ -27,11 +28,6 @@ const SLOT_LABELS: Record<string, string> = {
 };
 const SLOT_ORDER = [MealSlot.BREAKFAST, MealSlot.LUNCH, MealSlot.DINNER];
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DAY_LABELS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-function isoDate(d: Date): string {
-    return d.toISOString().slice(0, 10);
-}
 
 function formatDate(d: Date): string {
     return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -60,11 +56,10 @@ export default function PackageSelection({
 
     const [activeTab, setActiveTab] = useState(0);
 
-    // selections map: isoDate -> slot -> array of selected meals
-    const [selections, setSelections] = useState<Record<string, Record<string, any[]>>>(() => {
+    const emptySelectionsForDays = (days: Date[]) => {
         const init: Record<string, Record<string, any[]>> = {};
-        availableDays.forEach((day) => {
-            const key = isoDate(day);
+        days.forEach((day) => {
+            const key = getLocalCalendarDayKey(day);
             init[key] = {
                 [MealSlot.BREAKFAST]: [],
                 [MealSlot.LUNCH]: [],
@@ -72,7 +67,22 @@ export default function PackageSelection({
             };
         });
         return init;
-    });
+    };
+
+    // selections map: local calendar YYYY-MM-DD -> slot -> meals (package limits are totals across all days below)
+    const [selections, setSelections] = useState<Record<string, Record<string, any[]>>>(() =>
+        emptySelectionsForDays(availableDays)
+    );
+
+    const availableDaysKey = useMemo(
+        () => availableDays.map((d) => getLocalCalendarDayKey(d)).join('|'),
+        [availableDays]
+    );
+
+    useEffect(() => {
+        setSelections(emptySelectionsForDays(availableDays));
+        setActiveTab(0);
+    }, [pkg._id, availableDaysKey]);
 
     const getSlotLimit = (slot: string) => {
         switch (slot) {
@@ -87,6 +97,28 @@ export default function PackageSelection({
         }
     };
 
+    /** Total selections for a slot across all available days (package-wide quota). */
+    const countSlotAcrossPackage = (
+        sel: Record<string, Record<string, any[]>>,
+        slot: string
+    ): number => {
+        let n = 0;
+        for (const day of availableDays) {
+            const k = getLocalCalendarDayKey(day);
+            n += (sel[k]?.[slot] || []).length;
+        }
+        return n;
+    };
+
+    const totalsBySlot = useMemo(
+        () => ({
+            [MealSlot.BREAKFAST]: countSlotAcrossPackage(selections, MealSlot.BREAKFAST),
+            [MealSlot.LUNCH]: countSlotAcrossPackage(selections, MealSlot.LUNCH),
+            [MealSlot.DINNER]: countSlotAcrossPackage(selections, MealSlot.DINNER),
+        }),
+        [selections, availableDays]
+    );
+
     const handleToggleMeal = (dayKey: string, slot: string, meal: any) => {
         setSelections((prev) => {
             const currentSlotSelections = prev[dayKey]?.[slot] || [];
@@ -99,12 +131,11 @@ export default function PackageSelection({
                 );
             } else {
                 const limit = getSlotLimit(slot);
-                if (currentSlotSelections.length < limit) {
-                    newSlotSelections.push(meal);
-                } else {
-                    // Optional: Show a snackbar or alert that the limit is reached
+                const totalForSlot = countSlotAcrossPackage(prev, slot);
+                if (totalForSlot >= limit) {
                     return prev;
                 }
+                newSlotSelections.push(meal);
             }
 
             return {
@@ -118,20 +149,16 @@ export default function PackageSelection({
     };
 
     const isSelectionComplete = useMemo(() => {
-        return availableDays.every((day) => {
-            const dayKey = isoDate(day);
-            const daySels = selections[dayKey] || {};
-            return (
-                (daySels[MealSlot.BREAKFAST] || []).length === pkg.breakfastCount &&
-                (daySels[MealSlot.LUNCH] || []).length === pkg.lunchCount &&
-                (daySels[MealSlot.DINNER] || []).length === pkg.dinnerCount
-            );
-        });
-    }, [availableDays, selections, pkg]);
+        return (
+            (pkg.breakfastCount === 0 || totalsBySlot[MealSlot.BREAKFAST] === pkg.breakfastCount) &&
+            (pkg.lunchCount === 0 || totalsBySlot[MealSlot.LUNCH] === pkg.lunchCount) &&
+            (pkg.dinnerCount === 0 || totalsBySlot[MealSlot.DINNER] === pkg.dinnerCount)
+        );
+    }, [totalsBySlot, pkg]);
 
     const currentDay = availableDays[activeTab];
     if (!currentDay) return null;
-    const currentDayKey = isoDate(currentDay);
+    const currentDayKey = getLocalCalendarDayKey(currentDay);
     const currentDayMeals = mealsByDaySlot[currentDayKey] || {};
 
     return (
@@ -151,19 +178,55 @@ export default function PackageSelection({
             <Card sx={{ mb: 4, bgcolor: 'background.default' }}>
                 <CardContent>
                     <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                        Package Requirements per Day
+                        What&apos;s included in this package
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                        These counts are for the whole package (spread across the days you choose below), not per day.
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
                         {pkg.breakfastCount > 0 && (
-                            <Chip label={`${pkg.breakfastCount} Breakfast(s)`} color="primary" variant="outlined" />
+                            <Chip
+                                label={`${pkg.breakfastCount} breakfast${pkg.breakfastCount === 1 ? '' : 's'} total`}
+                                color="primary"
+                                variant="outlined"
+                            />
                         )}
                         {pkg.lunchCount > 0 && (
-                            <Chip label={`${pkg.lunchCount} Lunch(es)`} color="primary" variant="outlined" />
+                            <Chip
+                                label={`${pkg.lunchCount} lunch${pkg.lunchCount === 1 ? '' : 'es'} total`}
+                                color="primary"
+                                variant="outlined"
+                            />
                         )}
                         {pkg.dinnerCount > 0 && (
-                            <Chip label={`${pkg.dinnerCount} Dinner(s)`} color="primary" variant="outlined" />
+                            <Chip
+                                label={`${pkg.dinnerCount} dinner${pkg.dinnerCount === 1 ? '' : 's'} total`}
+                                color="primary"
+                                variant="outlined"
+                            />
                         )}
                     </Box>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                        Progress:{' '}
+                        {pkg.breakfastCount > 0 && (
+                            <>
+                                {SLOT_LABELS[MealSlot.BREAKFAST]} {totalsBySlot[MealSlot.BREAKFAST]}/
+                                {pkg.breakfastCount}
+                                {pkg.lunchCount > 0 || pkg.dinnerCount > 0 ? ' · ' : ''}
+                            </>
+                        )}
+                        {pkg.lunchCount > 0 && (
+                            <>
+                                {SLOT_LABELS[MealSlot.LUNCH]} {totalsBySlot[MealSlot.LUNCH]}/{pkg.lunchCount}
+                                {pkg.dinnerCount > 0 ? ' · ' : ''}
+                            </>
+                        )}
+                        {pkg.dinnerCount > 0 && (
+                            <>
+                                {SLOT_LABELS[MealSlot.DINNER]} {totalsBySlot[MealSlot.DINNER]}/{pkg.dinnerCount}
+                            </>
+                        )}
+                    </Typography>
                 </CardContent>
             </Card>
 
@@ -175,12 +238,11 @@ export default function PackageSelection({
                 sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
             >
                 {availableDays.map((day, i) => {
-                    const dayKey = isoDate(day);
+                    const dayKey = getLocalCalendarDayKey(day);
                     const daySels = selections[dayKey] || {};
-                    const isDayComplete =
-                        (daySels[MealSlot.BREAKFAST] || []).length === pkg.breakfastCount &&
-                        (daySels[MealSlot.LUNCH] || []).length === pkg.lunchCount &&
-                        (daySels[MealSlot.DINNER] || []).length === pkg.dinnerCount;
+                    const hasAnySelection = SLOT_ORDER.some(
+                        (slot) => (daySels[slot] || []).length > 0
+                    );
 
                     return (
                         <Tab
@@ -188,7 +250,7 @@ export default function PackageSelection({
                             label={
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     <span>{`${DAY_NAMES[day.getDay()]} ${formatDate(day)}`}</span>
-                                    {isDayComplete && <CheckCircleOutlineIcon color="success" fontSize="small" />}
+                                    {hasAnySelection && <CheckCircleOutlineIcon color="action" fontSize="small" />}
                                 </Box>
                             }
                         />
@@ -203,18 +265,22 @@ export default function PackageSelection({
 
                     const slotMeals = currentDayMeals[slot] || [];
                     const currentSlotSelections = selections[currentDayKey]?.[slot] || [];
-                    const remaining = limit - currentSlotSelections.length;
+                    const totalForSlot = totalsBySlot[slot as MealSlot] ?? 0;
+                    const remainingGlobal = limit - totalForSlot;
 
                     return (
                         <Grid size={{ xs: 12 }} key={slot}>
-                            <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 2, flexWrap: 'wrap' }}>
                                 <Typography variant="h6" color="primary">
                                     {SLOT_LABELS[slot]}
                                 </Typography>
-                                <Typography variant="body2" color={remaining === 0 ? 'success.main' : 'text.secondary'}>
-                                    {remaining === 0
-                                        ? `Selected ${limit}/${limit} — Done`
-                                        : `Please select ${remaining} more`}
+                                <Typography
+                                    variant="body2"
+                                    color={remainingGlobal === 0 ? 'success.main' : 'text.secondary'}
+                                >
+                                    {remainingGlobal === 0
+                                        ? `All ${limit} selected for this package`
+                                        : `${totalForSlot}/${limit} selected — ${remainingGlobal} left to assign`}
                                 </Typography>
                             </Box>
 
@@ -228,7 +294,7 @@ export default function PackageSelection({
                                         const isSelected = currentSlotSelections.some(
                                             (m) => (m.id || m._id) === (meal.id || meal._id)
                                         );
-                                        const disabled = !isSelected && remaining === 0;
+                                        const disabled = !isSelected && remainingGlobal === 0;
 
                                         return (
                                             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={meal.id || meal._id}>

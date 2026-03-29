@@ -21,6 +21,9 @@ import {
   applyDiscountRequest,
   applyDiscountSuccess,
   applyDiscountFailure,
+  removeDiscountRequest,
+  removeDiscountSuccess,
+  removeDiscountFailure,
 } from '../slices/cartSlice';
 
 function* fetchCartSaga(): Generator<any, void, any> {
@@ -87,11 +90,24 @@ function* applyDiscountSaga(action: PayloadAction<string>): Generator<any, void,
     });
     yield put(applyDiscountSuccess(response.data));
   } catch (error: any) {
-    yield put(
-      applyDiscountFailure(
-        error?.response?.data?.message || 'Failed to apply discount'
-      )
-    );
+    const msg =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      'Failed to apply coupon';
+    yield put(applyDiscountFailure(msg));
+  }
+}
+
+function* removeDiscountSaga(): Generator<any, void, any> {
+  try {
+    const response = yield call(axios.delete, '/api/cart/discount');
+    yield put(removeDiscountSuccess(response.data));
+  } catch (error: any) {
+    const msg =
+      error?.response?.data?.error ||
+      error?.response?.data?.message ||
+      'Failed to remove coupon';
+    yield put(removeDiscountFailure(msg));
   }
 }
 
@@ -101,4 +117,5 @@ export function* watchCart() {
   yield takeLatest(removeFromCartRequest.type, removeFromCartSaga);
   yield takeLatest(updateCartItemRequest.type, updateCartItemSaga);
   yield takeLatest(applyDiscountRequest.type, applyDiscountSaga);
+  yield takeLatest(removeDiscountRequest.type, removeDiscountSaga);
 }

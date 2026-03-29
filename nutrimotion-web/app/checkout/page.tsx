@@ -16,17 +16,19 @@ import {
   Grid,
   Alert,
   MenuItem,
+  Chip,
 } from '@mui/material';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { fetchCartRequest } from '@/store/slices/cartSlice';
+import { fetchCartRequest, applyDiscountRequest, removeDiscountRequest } from '@/store/slices/cartSlice';
 import { createOrderRequest } from '@/store/slices/orderSlice';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { useRouter } from 'next/navigation';
 
 export default function CheckoutPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: '',
     parish: '',
@@ -35,7 +37,7 @@ export default function CheckoutPage() {
 
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { cart } = useAppSelector((state) => state.cart);
+  const { cart, error: cartError } = useAppSelector((state) => state.cart);
   const { currentOrder, isLoading, error } = useAppSelector((state) => state.order);
   const auth = useAppSelector((state) => state.auth);
 
@@ -170,6 +172,49 @@ export default function CheckoutPage() {
                   <Typography variant="h6" gutterBottom>
                     Order Summary
                   </Typography>
+
+                  {cartError && (
+                    <Alert severity="error" sx={{ mb: 2 }} onClose={() => dispatch(fetchCartRequest())}>
+                      {cartError}
+                    </Alert>
+                  )}
+
+                  <Box sx={{ mb: 2 }}>
+                    {(cart.discountCodes?.length ?? 0) > 0 && (
+                      <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Applied coupons:
+                        </Typography>
+                        {cart.discountCodes!.map((c) => (
+                          <Chip key={c} size="small" label={c} color="primary" variant="outlined" />
+                        ))}
+                        <Button size="small" onClick={() => dispatch(removeDiscountRequest())}>
+                          Remove
+                        </Button>
+                      </Box>
+                    )}
+                    <TextField
+                      fullWidth
+                      size="small"
+                      label="Coupon code"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      placeholder="Enter code"
+                    />
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      sx={{ mt: 1 }}
+                      disabled={!couponInput.trim()}
+                      onClick={() => {
+                        dispatch(applyDiscountRequest(couponInput.trim()));
+                        setCouponInput('');
+                      }}
+                    >
+                      Apply coupon
+                    </Button>
+                  </Box>
 
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                     <Typography>Subtotal:</Typography>

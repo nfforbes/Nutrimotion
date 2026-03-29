@@ -15,9 +15,12 @@ export default function Footer() {
     <Box
       component="footer"
       sx={{
+        width: '100%',
+        maxWidth: '100%',
+        boxSizing: 'border-box',
         mt: 'auto',
         py: 2,
-        px: 2,
+        px: { xs: 2, sm: 2 },
         borderTop: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',

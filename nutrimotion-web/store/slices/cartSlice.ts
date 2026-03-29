@@ -100,6 +100,19 @@ const cartSlice = createSlice({
       state.isLoading = false;
       state.error = action.payload;
     },
+    removeDiscountRequest: (state) => {
+      state.isLoading = true;
+      state.error = null;
+    },
+    removeDiscountSuccess: (state, action: PayloadAction<Cart>) => {
+      state.cart = action.payload;
+      state.isLoading = false;
+      state.error = null;
+    },
+    removeDiscountFailure: (state, action: PayloadAction<string>) => {
+      state.isLoading = false;
+      state.error = action.payload;
+    },
     clearCart: (state) => {
       state.cart = null;
       state.isLoading = false;
@@ -124,6 +137,9 @@ export const {
   applyDiscountRequest,
   applyDiscountSuccess,
   applyDiscountFailure,
+  removeDiscountRequest,
+  removeDiscountSuccess,
+  removeDiscountFailure,
   clearCart,
 } = cartSlice.actions;
 

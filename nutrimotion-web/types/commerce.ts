@@ -25,7 +25,10 @@ export interface Cart {
   subtotal: number;
   discount: number;
   total: number;
+  /** First applied code (legacy) */
   discountCode?: string;
+  /** All applied coupon codes */
+  discountCodes?: string[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -57,6 +60,7 @@ export interface Order {
   discount: number;
   total: number;
   discountCode?: string;
+  discountCodes?: string[];
   status: OrderStatus;
   deliveryAddress?: {
     street: string;
@@ -106,6 +110,8 @@ export interface DiscountCode {
   validUntil: Date;
   usageLimit?: number;
   usageCount: number;
+  stackable: boolean;
+  oneTimePerUser: boolean;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;

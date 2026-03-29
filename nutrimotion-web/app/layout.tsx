@@ -14,6 +14,11 @@ export const metadata: Metadata = {
   description: 'Professional meal planning and delivery service with personalized training',
 };
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -21,12 +26,31 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning style={{ margin: 0, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <body
+        suppressHydrationWarning
+        style={{
+          margin: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+          width: '100%',
+          overflowX: 'hidden',
+        }}
+      >
         <Auth0Provider>
           <ReduxProvider>
             <ThemeProvider>
               <TopBar />
-              <main style={{ flex: 1 }}>
+              <main
+                style={{
+                  flex: 1,
+                  width: '100%',
+                  minWidth: 0,
+                  maxWidth: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
                 {children}
               </main>
               <Footer />

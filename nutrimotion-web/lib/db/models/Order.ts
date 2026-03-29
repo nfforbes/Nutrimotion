@@ -31,6 +31,7 @@ export interface IOrder extends Document {
   discount: number;
   total: number;
   discountCode?: string;
+  discountCodes?: string[];
   status: OrderStatus;
   deliveryAddress?: {
     street: string;
@@ -77,6 +78,7 @@ const OrderSchema = new Schema<IOrder>(
     discount: { type: Number, default: 0, min: 0 },
     total: { type: Number, required: true, min: 0 },
     discountCode: { type: String },
+    discountCodes: { type: [String], default: [] },
     status: {
       type: String,
       enum: Object.values(OrderStatus),

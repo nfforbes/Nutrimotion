@@ -20,4 +20,4 @@ export type { IOrder, IOrderItem, IOrderStatusHistory } from './Order';
 export type { IDiscountCode } from './DiscountCode';
 export type { IDeliveryAssignment } from './DeliveryAssignment';
 export type { IDeliveryTracking } from './DeliveryTracking';
-export type { IAppSettingDoc, IMs365Settings } from './AppSetting';
+export type { IAppSettingDoc, IMs365Settings, IGoogleDriveSettings, FileStorageProvider } from './AppSetting';

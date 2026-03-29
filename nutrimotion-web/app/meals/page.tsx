@@ -31,6 +31,7 @@ import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { MealSlot } from '@/types/catalog';
 import axios from 'axios';
 import PackageSelection from '@/components/client/PackageSelection';
+import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
 
 const SLOT_LABELS: Record<string, string> = {
   [MealSlot.BREAKFAST]: 'Breakfast',
@@ -70,10 +71,6 @@ function getWeekDays(weekStart: Date): Date[] {
 
 function formatDate(d: Date): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
-function isoDate(d: Date): string {
-  return d.toISOString().slice(0, 10);
 }
 
 export default function MealsPage() {
@@ -148,13 +145,13 @@ export default function MealsPage() {
   const mealsByDaySlot = useMemo(() => {
     const map: Record<string, Record<string, any[]>> = {};
     for (const day of weekDays) {
-      const key = isoDate(day);
+      const key = getLocalCalendarDayKey(day);
       map[key] = {};
       SLOT_ORDER.forEach((slot) => (map[key][slot] = []));
     }
     for (const meal of meals) {
       const d = new Date(meal.scheduledDate);
-      const key = isoDate(d);
+      const key = getLocalCalendarDayKey(d);
       if (map[key]) {
         const slot = meal.slot in SLOT_LABELS ? meal.slot : MealSlot.BREAKFAST;
         map[key][slot].push(meal);
@@ -210,7 +207,11 @@ export default function MealsPage() {
                           </Typography>
                         )}
                         <Typography variant="body2">
-                          {pkg.breakfastCount} Breakfasts · {pkg.lunchCount} Lunches · {pkg.dinnerCount} Dinners
+                          {pkg.breakfastCount} breakfast{pkg.breakfastCount === 1 ? '' : 's'} · {pkg.lunchCount} lunch
+                          {pkg.lunchCount === 1 ? '' : 'es'} · {pkg.dinnerCount} dinner{pkg.dinnerCount === 1 ? '' : 's'}{' '}
+                          <Typography component="span" variant="body2" color="text.secondary">
+                            (package total)
+                          </Typography>
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                           {pkg.daysOption === 'any'
@@ -279,7 +280,7 @@ export default function MealsPage() {
               </Box>
             ) : (
               (() => {
-                const dayKey = isoDate(weekDays[activeTab]);
+                const dayKey = getLocalCalendarDayKey(weekDays[activeTab]);
                 const daySlots = mealsByDaySlot[dayKey] || {};
                 const hasAny = SLOT_ORDER.some((s) => (daySlots[s] || []).length > 0);
 

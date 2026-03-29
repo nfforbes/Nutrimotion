@@ -126,6 +126,14 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     order: 3,
   },
   {
+    id: 'coupons-management',
+    label: 'Coupons',
+    icon: 'LocalOffer',
+    route: '/admin/coupons',
+    requiredPermissions: [Permission.MANAGE_COUPONS],
+    order: 3.5,
+  },
+  {
     id: 'content-management',
     label: 'Content',
     icon: 'LibraryBooks',

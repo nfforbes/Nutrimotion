@@ -98,6 +98,35 @@ const theme = createTheme({
     borderRadius: 12, // Rounded corners like original
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        html: {
+          width: '100%',
+          overflowX: 'hidden',
+        },
+        body: {
+          width: '100%',
+          overflowX: 'hidden',
+        },
+      },
+    },
+    MuiContainer: {
+      styleOverrides: {
+        root: {
+          width: '100%',
+          boxSizing: 'border-box',
+        },
+      },
+    },
+    MuiToolbar: {
+      styleOverrides: {
+        root: {
+          minHeight: { xs: 56, sm: 64 },
+          paddingLeft: { xs: 1, sm: 2 },
+          paddingRight: { xs: 1, sm: 2 },
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {

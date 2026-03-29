@@ -7,6 +7,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
 import { Cart, User, Order, DiscountCode } from '@/lib/db/models';
 import { OrderStatus } from '@/types/commerce';
+import { getAppliedCodesFromCart, recalculateCartDiscounts } from '@/lib/discount/cartDiscounts';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -35,6 +36,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    try {
+      await recalculateCartDiscounts(cart as never, user._id);
+      await cart.save();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Coupons could not be applied';
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
+
+    const discountCodes = getAppliedCodesFromCart(cart as never);
+
     // Generate order number
     const count = await Order.countDocuments();
     const orderNumber = `ORD-${Date.now()}-${count + 1}`;
@@ -55,7 +66,8 @@ export async function POST(request: NextRequest) {
       subtotal: cart.subtotal,
       discount: cart.discount,
       total: cart.total,
-      discountCode: cart.discountCode,
+      discountCode: discountCodes[0],
+      discountCodes,
       status: OrderStatus.PURCHASED,
       deliveryAddress: deliveryAddress || user.address,
       deliveryInstructions,
@@ -72,12 +84,8 @@ export async function POST(request: NextRequest) {
 
     const order = await Order.create(orderPayload);
 
-    // Increment discount code usage
-    if (cart.discountCode) {
-      await DiscountCode.findOneAndUpdate(
-        { code: cart.discountCode },
-        { $inc: { usageCount: 1 } }
-      );
+    for (const code of discountCodes) {
+      await DiscountCode.findOneAndUpdate({ code }, { $inc: { usageCount: 1 } });
     }
 
     // Clear cart

@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
 import { Cart, User } from '@/lib/db/models';
-import mongoose from 'mongoose';
+import { cartToResponse } from '@/lib/discount/cartDiscounts';
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -37,26 +37,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      id: cart._id.toString(),
-      userId: cart.userId.toString(),
-      items: cart.items.map((item) => ({
-        id: item._id?.toString(),
-        itemType: item.itemType,
-        itemId: item.itemId.toString(),
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        imageUrl: item.imageUrl,
-        packageDetails: item.packageDetails,
-      })),
-      subtotal: cart.subtotal,
-      discount: cart.discount,
-      total: cart.total,
-      discountCode: cart.discountCode,
-      createdAt: cart.createdAt,
-      updatedAt: cart.updatedAt,
-    });
+    return NextResponse.json(cartToResponse(cart as never));
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch cart' },

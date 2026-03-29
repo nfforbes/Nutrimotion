@@ -31,6 +31,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.MANAGE_VIDEOS,
     Permission.MANAGE_USERS,
     Permission.MANAGE_ORDERS,
+    Permission.MANAGE_COUPONS,
     Permission.ASSIGN_DRIVERS,
     Permission.UPDATE_DELIVERY_STATUS,
     Permission.VIEW_ANALYTICS,

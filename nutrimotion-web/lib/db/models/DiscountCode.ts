@@ -15,6 +15,10 @@ export interface IDiscountCode {
   validUntil: Date;
   usageLimit?: number;
   usageCount: number;
+  /** If true, may be combined with other stackable coupons on the same order. */
+  stackable: boolean;
+  /** If true, each user may redeem at most once (checked against past orders). */
+  oneTimePerUser: boolean;
   active: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -36,6 +40,8 @@ const DiscountCodeSchema = new Schema<IDiscountCode>(
     validUntil: { type: Date, required: true },
     usageLimit: { type: Number, min: 0 },
     usageCount: { type: Number, default: 0, min: 0 },
+    stackable: { type: Boolean, default: false },
+    oneTimePerUser: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
   },
   {

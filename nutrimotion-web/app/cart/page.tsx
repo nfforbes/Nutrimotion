@@ -21,6 +21,8 @@ import {
   Button,
   Divider,
   Grid,
+  Alert,
+  Chip,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -28,16 +30,65 @@ import RemoveIcon from '@mui/icons-material/Remove';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { fetchCartRequest, removeFromCartRequest, updateCartItemRequest, applyDiscountRequest } from '@/store/slices/cartSlice';
+import {
+  fetchCartRequest,
+  removeFromCartRequest,
+  updateCartItemRequest,
+  applyDiscountRequest,
+  removeDiscountRequest,
+} from '@/store/slices/cartSlice';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { useRouter } from 'next/navigation';
+
+const PACKAGE_SLOT_ORDER = ['breakfast', 'lunch', 'dinner'] as const;
+
+function formatPackageDayLabel(dateIso: string): string {
+  const trimmed = dateIso.trim();
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (parts) {
+    const y = Number(parts[1]);
+    const m = Number(parts[2]);
+    const d = Number(parts[3]);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+  const t = new Date(trimmed);
+  return Number.isNaN(t.getTime())
+    ? dateIso
+    : t.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function slotLabel(slot: string): string {
+  if (slot === 'breakfast') return 'Breakfast';
+  if (slot === 'lunch') return 'Lunch';
+  if (slot === 'dinner') return 'Dinner';
+  return slot.charAt(0).toUpperCase() + slot.slice(1);
+}
+
+/** Stored names are plain strings; support legacy `{ name: string }` if present. */
+function formatMealNamesList(meals: unknown): string {
+  if (!Array.isArray(meals)) return '';
+  return meals
+    .map((m) =>
+      typeof m === 'string'
+        ? m
+        : m && typeof m === 'object' && m !== null && 'name' in m
+          ? String((m as { name: string }).name)
+          : ''
+    )
+    .filter(Boolean)
+    .join(', ');
+}
 
 export default function CartPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const dispatch = useAppDispatch();
   const router = useRouter();
-  const { cart } = useAppSelector((state) => state.cart);
+  const { cart, error: cartError } = useAppSelector((state) => state.cart);
   const auth = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -57,6 +108,10 @@ export default function CartPage() {
     if (discountCode.trim()) {
       dispatch(applyDiscountRequest(discountCode.trim()));
     }
+  };
+
+  const handleRemoveDiscounts = () => {
+    dispatch(removeDiscountRequest());
   };
 
   const handleCheckout = () => {
@@ -116,27 +171,46 @@ export default function CartPage() {
                               {item.itemType === 'package' && item.packageDetails && (
                                 <Box component="span" sx={{ mt: 1, display: 'block' }}>
                                   <Typography component="span" variant="caption" color="text.secondary" display="block" fontWeight="bold">
-                                    Package Selections:
+                                    Selected meals:
                                   </Typography>
-                                  {Object.entries(item.packageDetails).map(([date, slots]: [string, any]) => {
-                                    const hasSelections = Object.values(slots).some((meals: any) => meals && meals.length > 0);
-                                    if (!hasSelections) return null;
-                                    return (
-                                      <Box component="span" key={date} display="block" sx={{ ml: 1, mt: 0.5 }}>
-                                        <Typography component="span" variant="caption" display="block" fontWeight="medium" sx={{ color: 'text.primary' }}>
-                                          {new Date(date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}:
-                                        </Typography>
-                                        {Object.entries(slots).map(([slot, meals]: [string, any]) => {
-                                          if (!meals || meals.length === 0) return null;
-                                          return (
-                                            <Typography component="span" variant="caption" display="block" sx={{ ml: 2, color: 'text.secondary' }} key={slot}>
-                                              • {slot.charAt(0).toUpperCase() + slot.slice(1)}: {meals.map((m: any) => m.name).join(', ')}
-                                            </Typography>
-                                          );
-                                        })}
-                                      </Box>
-                                    );
-                                  })}
+                                  {Object.entries(item.packageDetails)
+                                    .sort(([a], [b]) => a.localeCompare(b))
+                                    .map(([date, slots]: [string, Record<string, unknown>]) => {
+                                      const hasSelections = PACKAGE_SLOT_ORDER.some(
+                                        (key) => Array.isArray(slots[key]) && (slots[key] as unknown[]).length > 0
+                                      );
+                                      if (!hasSelections) return null;
+                                      return (
+                                        <Box component="span" key={date} display="block" sx={{ ml: 1, mt: 0.5 }}>
+                                          <Typography
+                                            component="span"
+                                            variant="caption"
+                                            display="block"
+                                            fontWeight="medium"
+                                            sx={{ color: 'text.primary' }}
+                                          >
+                                            {formatPackageDayLabel(date)}
+                                          </Typography>
+                                          {PACKAGE_SLOT_ORDER.map((slotKey) => {
+                                            const meals = slots[slotKey];
+                                            if (!Array.isArray(meals) || meals.length === 0) return null;
+                                            const line = formatMealNamesList(meals);
+                                            if (!line) return null;
+                                            return (
+                                              <Typography
+                                                component="span"
+                                                variant="caption"
+                                                display="block"
+                                                sx={{ ml: 2, color: 'text.secondary' }}
+                                                key={`${date}-${slotKey}`}
+                                              >
+                                                {slotLabel(slotKey)}: {line}
+                                              </Typography>
+                                            );
+                                          })}
+                                        </Box>
+                                      );
+                                    })}
                                 </Box>
                               )}
                             </Box>
@@ -176,20 +250,40 @@ export default function CartPage() {
                   </Typography>
 
                   <Box sx={{ my: 2 }}>
+                    {cartError && (
+                      <Alert severity="error" sx={{ mb: 1 }} onClose={() => dispatch(fetchCartRequest())}>
+                        {cartError}
+                      </Alert>
+                    )}
+                    {(cart.discountCodes?.length ?? 0) > 0 && (
+                      <Box sx={{ mb: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5, alignItems: 'center' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ mr: 0.5 }}>
+                          Applied:
+                        </Typography>
+                        {cart.discountCodes!.map((c) => (
+                          <Chip key={c} size="small" label={c} color="primary" variant="outlined" />
+                        ))}
+                        <Button size="small" onClick={handleRemoveDiscounts} sx={{ ml: 1 }}>
+                          Remove
+                        </Button>
+                      </Box>
+                    )}
                     <TextField
                       fullWidth
-                      label="Discount Code"
+                      label="Coupon code"
                       value={discountCode}
                       onChange={(e) => setDiscountCode(e.target.value)}
                       size="small"
+                      placeholder="Add another stackable code or replace"
                     />
                     <Button
                       fullWidth
                       variant="outlined"
                       onClick={handleApplyDiscount}
                       sx={{ mt: 1 }}
+                      disabled={!discountCode.trim()}
                     >
-                      Apply
+                      Apply coupon
                     </Button>
                   </Box>
 

@@ -35,17 +35,52 @@ function formatScheduledDate(value: string | Date | undefined): string {
   return d.toISOString().split('T')[0];
 }
 
+export interface MealFormInitial {
+  _id: string;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  price: number;
+  slot: string;
+  scheduledDate: string | Date;
+  instagramLink?: string;
+}
+
 export interface AddMealFormProps {
   onSuccess: () => void;
   onCancel: () => void;
+  /** When set, form updates this meal (PATCH) instead of creating (POST). */
+  initialMeal?: MealFormInitial | null;
 }
 
-export default function AddMealForm({ onSuccess, onCancel }: AddMealFormProps) {
+export default function AddMealForm({ onSuccess, onCancel, initialMeal }: AddMealFormProps) {
   const [formData, setFormData] = useState(initialFormData);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingMeals, setExistingMeals] = useState<Array<{ _id: string; name: string; description?: string; imageUrl?: string; price: number; slot: string; scheduledDate: string | Date; instagramLink?: string }>>([]);
   const [copyFromId, setCopyFromId] = useState<string>('');
+
+  const isEdit = Boolean(initialMeal?._id);
+
+  useEffect(() => {
+    if (initialMeal?._id) {
+      setFormData({
+        name: initialMeal.name ?? '',
+        description: initialMeal.description ?? '',
+        imageUrl: initialMeal.imageUrl ?? '',
+        price: String(initialMeal.price ?? ''),
+        instagramLink: initialMeal.instagramLink ?? '',
+        slot: (initialMeal.slot as MealSlot) ?? MealSlot.BREAKFAST,
+        scheduledDate: formatScheduledDate(initialMeal.scheduledDate),
+      });
+      setCopyFromId('');
+      setError(null);
+    } else {
+      setFormData(initialFormData);
+      setCopyFromId('');
+      setError(null);
+    }
+  }, [initialMeal]);
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -100,7 +135,11 @@ export default function AddMealForm({ onSuccess, onCancel }: AddMealFormProps) {
         slot: formData.slot,
         scheduledDate: formData.scheduledDate,
       };
-      await axios.post('/api/admin/meals', payload);
+      if (isEdit && initialMeal?._id) {
+        await axios.patch(`/api/admin/meals/${initialMeal._id}`, payload);
+      } else {
+        await axios.post('/api/admin/meals', payload);
+      }
       setFormData(initialFormData);
       setCopyFromId('');
       onSuccess();
@@ -110,7 +149,9 @@ export default function AddMealForm({ onSuccess, onCancel }: AddMealFormProps) {
           ? String(err.response.data.error)
           : err instanceof Error
             ? err.message
-            : 'Failed to create meal';
+            : isEdit
+              ? 'Failed to update meal'
+              : 'Failed to create meal';
       setError(message);
     } finally {
       setSubmitting(false);
@@ -129,9 +170,7 @@ export default function AddMealForm({ onSuccess, onCancel }: AddMealFormProps) {
           >
             Back
           </Button>
-          <Typography variant="h6">
-            Add New Meal
-          </Typography>
+          <Typography variant="h6">{isEdit ? 'Edit Meal' : 'Add New Meal'}</Typography>
         </Box>
 
         {error && (
@@ -176,21 +215,23 @@ export default function AddMealForm({ onSuccess, onCancel }: AddMealFormProps) {
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             required
           />
-          <TextField
-            fullWidth
-            select
-            label="Copy from existing meal"
-            value={copyFromId}
-            onChange={(e) => handleCopyFromMeal(e.target.value)}
-            sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}
-          >
-            <MenuItem value="">— New meal (do not copy) —</MenuItem>
-            {existingMeals.map((meal) => (
-              <MenuItem key={meal._id} value={meal._id}>
-                {meal.name} {meal.slot ? `(${meal.slot})` : ''}
-              </MenuItem>
-            ))}
-          </TextField>
+          {!isEdit && (
+            <TextField
+              fullWidth
+              select
+              label="Copy from existing meal"
+              value={copyFromId}
+              onChange={(e) => handleCopyFromMeal(e.target.value)}
+              sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}
+            >
+              <MenuItem value="">— New meal (do not copy) —</MenuItem>
+              {existingMeals.map((meal) => (
+                <MenuItem key={meal._id} value={meal._id}>
+                  {meal.name} {meal.slot ? `(${meal.slot})` : ''}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
           <TextField
             fullWidth
             label="Description"
@@ -230,7 +271,7 @@ export default function AddMealForm({ onSuccess, onCancel }: AddMealFormProps) {
                 variant="contained"
                 disabled={submitting}
               >
-                {submitting ? 'Creating…' : 'Create Meal'}
+                {submitting ? (isEdit ? 'Saving…' : 'Creating…') : isEdit ? 'Save Changes' : 'Create Meal'}
               </Button>
               <Button onClick={onCancel} variant="outlined">
                 Cancel

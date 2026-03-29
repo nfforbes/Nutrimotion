@@ -39,6 +39,7 @@ export enum Permission {
   MANAGE_VIDEOS = 'manage:videos',
   MANAGE_USERS = 'manage:users',
   MANAGE_ORDERS = 'manage:orders',
+  MANAGE_COUPONS = 'manage:coupons',
   ASSIGN_DRIVERS = 'assign:drivers',
   UPDATE_DELIVERY_STATUS = 'update:delivery_status',
   VIEW_ANALYTICS = 'view:analytics',
