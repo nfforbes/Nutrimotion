@@ -98,7 +98,10 @@ export default function Home() {
     return (
       <>
         <AppBar />
-        <Skeleton variant="rounded" height={{ xs: 420, md: 520 }} sx={{ mb: 3, borderRadius: 0, width: '100%' }} />
+        <Skeleton
+          variant="rounded"
+          sx={{ mb: 3, borderRadius: 0, width: '100%', height: { xs: 420, md: 520 } }}
+        />
         <Container maxWidth="lg" sx={{ py: 4, width: '100%', px: { xs: 2, sm: 3 } }}>
           <Skeleton variant="rounded" height={48} sx={{ mb: 2, maxWidth: 480 }} />
           <Box
