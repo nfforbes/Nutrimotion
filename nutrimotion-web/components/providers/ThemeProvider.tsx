@@ -120,11 +120,16 @@ const theme = createTheme({
     },
     MuiToolbar: {
       styleOverrides: {
-        root: {
-          minHeight: { xs: 56, sm: 64 },
-          paddingLeft: { xs: 1, sm: 2 },
-          paddingRight: { xs: 1, sm: 2 },
-        },
+        root: ({ theme }) => ({
+          minHeight: 56,
+          paddingLeft: theme.spacing(1),
+          paddingRight: theme.spacing(1),
+          [theme.breakpoints.up('sm')]: {
+            minHeight: 64,
+            paddingLeft: theme.spacing(2),
+            paddingRight: theme.spacing(2),
+          },
+        }),
       },
     },
     MuiButton: {
