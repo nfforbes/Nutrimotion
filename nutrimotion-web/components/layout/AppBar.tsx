@@ -125,7 +125,7 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
         <Box component={Link} href={isAuthenticated ? '/dashboard' : '/'} sx={{ display: 'flex', alignItems: 'center', mr: 3, flexShrink: 0 }}>
           <Box
             component="img"
-            src="/nutrimotion-logo-transparent.png"
+            src="/nutrimotion-logo.png"
             alt="Nutrimotion"
             sx={{ height: 40, display: 'block' }}
           />

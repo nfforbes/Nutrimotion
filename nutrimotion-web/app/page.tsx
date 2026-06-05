@@ -27,10 +27,19 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import AppBar from '@/components/layout/AppBar';
 import Link from 'next/link';
 
-const heroImages = [
-  "/hero_pilates_studio.png",
-  "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg?auto=compress&cs=tinysrgb&w=1920",
-  "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1920"
+const heroContent = [
+  {
+    image: "/hero_pilates_studio.png",
+    subheadline: "personal training",
+  },
+  {
+    image: "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg?auto=compress&cs=tinysrgb&w=1920",
+    subheadline: "Premium meal prep",
+  },
+  {
+    image: "/virtual_coaching.png",
+    subheadline: "virtual coaching and nutrition support designed for real results.",
+  }
 ];
 
 const BRAND = {
@@ -58,7 +67,7 @@ const highlightCards = [
     icon: RestaurantIcon,
     href: '/meals',
     image:
-      '/jamaican_dishes.png',
+      '/meal_prep.png',
   },
   {
     id: 'books',
@@ -68,7 +77,7 @@ const highlightCards = [
     icon: MenuBookIcon,
     href: '/books',
     image:
-      'https://images.pexels.com/photos/5327580/pexels-photo-5327580.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      '/pilates_topics.png',
   },
 ];
 
@@ -89,13 +98,13 @@ export default function Home() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+      setCurrentHeroIndex((prev) => (prev + 1) % heroContent.length);
     }, 20000);
     return () => clearInterval(timer);
   }, []);
 
-  const nextImage = () => setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
-  const prevImage = () => setCurrentHeroIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
+  const nextImage = () => setCurrentHeroIndex((prev) => (prev + 1) % heroContent.length);
+  const prevImage = () => setCurrentHeroIndex((prev) => (prev - 1 + heroContent.length) % heroContent.length);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -155,7 +164,7 @@ export default function Home() {
         >
           <Box
             component="img"
-            src={heroImages[currentHeroIndex]}
+            src={heroContent[currentHeroIndex].image}
             alt="Hero background"
             key={currentHeroIndex}
             sx={{
@@ -192,7 +201,7 @@ export default function Home() {
               zIndex: 2,
             }}
           >
-            {heroImages.map((_, index) => (
+            {heroContent.map((_, index) => (
               <Box
                 key={index}
                 onClick={() => setCurrentHeroIndex(index)}
@@ -239,15 +248,18 @@ export default function Home() {
                 Transform Your Body With Structured Nutrition &amp; Expert Coaching
               </Typography>
               <Typography
-                variant="body1"
+                variant="h5"
                 sx={{
                   mb: 3,
                   maxWidth: 640,
                   color: 'rgba(255,255,255,0.92)',
                   textShadow: '0 1px 12px rgba(0,0,0,0.4)',
+                  fontWeight: 400,
+                  lineHeight: 1.4,
+                  textTransform: 'capitalize',
                 }}
               >
-                Join Nutrimotion to train smarter, eat with structure, and learn fitness topics through curated meals and books.
+                {heroContent[currentHeroIndex].subheadline}
               </Typography>
               <Box
                 sx={{
