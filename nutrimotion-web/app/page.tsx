@@ -18,12 +18,20 @@ import {
   Container,
   Skeleton,
   Typography,
+  IconButton,
 } from '@mui/material';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+
 import AppBar from '@/components/layout/AppBar';
 import Link from 'next/link';
+
+const heroImages = [
+  "/hero_pilates_studio.png",
+  "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg?auto=compress&cs=tinysrgb&w=1920",
+  "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1920"
+];
 
 const BRAND = {
   primary: '#ee4d24',
@@ -50,7 +58,7 @@ const highlightCards = [
     icon: RestaurantIcon,
     href: '/meals',
     image:
-      'https://images.pexels.com/photos/4056535/pexels-photo-4056535.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      '/jamaican_dishes.png',
   },
   {
     id: 'books',
@@ -77,6 +85,17 @@ export default function Home() {
   const router = useRouter();
   const { user, isLoading } = useUser();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 20000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const nextImage = () => setCurrentHeroIndex((prev) => (prev + 1) % heroImages.length);
+  const prevImage = () => setCurrentHeroIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -135,22 +154,23 @@ export default function Home() {
           }}
         >
           <Box
-            component="video"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
+            component="img"
+            src={heroImages[currentHeroIndex]}
+            alt="Hero background"
+            key={currentHeroIndex}
             sx={{
               position: 'absolute',
               inset: 0,
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              animation: 'fadeIn 0.5s ease-in-out',
+              '@keyframes fadeIn': {
+                '0%': { opacity: 0.8 },
+                '100%': { opacity: 1 },
+              }
             }}
-          >
-            <source src="/Camera_pan_people_202603281424.mp4" type="video/mp4" />
-          </Box>
+          />
           <Box
             sx={{
               position: 'absolute',
@@ -159,6 +179,38 @@ export default function Home() {
               pointerEvents: 'none',
             }}
           />
+
+          <Box
+            sx={{
+              position: 'absolute',
+              right: { xs: 16, md: 32 },
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+              zIndex: 2,
+            }}
+          >
+            {heroImages.map((_, index) => (
+              <Box
+                key={index}
+                onClick={() => setCurrentHeroIndex(index)}
+                sx={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  bgcolor: index === currentHeroIndex ? '#ffffff' : 'rgba(255,255,255,0.4)',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  '&:hover': {
+                    bgcolor: index === currentHeroIndex ? '#ffffff' : 'rgba(255,255,255,0.8)',
+                    transform: 'scale(1.2)'
+                  }
+                }}
+              />
+            ))}
+          </Box>
           <Container
             maxWidth="lg"
             sx={{
@@ -184,7 +236,7 @@ export default function Home() {
                   textShadow: '0 2px 24px rgba(0,0,0,0.35)',
                 }}
               >
-                Personal training and meal prep subscriptions built for real life.
+                Transform Your Body With Structured Nutrition &amp; Expert Coaching
               </Typography>
               <Typography
                 variant="body1"

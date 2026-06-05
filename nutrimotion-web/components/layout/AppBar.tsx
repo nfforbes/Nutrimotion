@@ -95,7 +95,21 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
   };
 
   return (
-    <MuiAppBar position="sticky">
+    <MuiAppBar 
+      position="fixed"
+      sx={{
+        top: { xs: 10, md: 20 },
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: { xs: '95%', md: '90%' },
+        maxWidth: 1200,
+        borderRadius: '100px',
+        bgcolor: 'transparent',
+        color: '#ffffff',
+        border: '1px solid #000000',
+        boxShadow: 'none',
+      }}
+    >
       <Toolbar>
         {isAuthenticated && (
           <IconButton
@@ -111,7 +125,7 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
         <Box component={Link} href={isAuthenticated ? '/dashboard' : '/'} sx={{ display: 'flex', alignItems: 'center', mr: 3, flexShrink: 0 }}>
           <Box
             component="img"
-            src="/nutrimotion-logo.png"
+            src="/nutrimotion-logo-transparent.png"
             alt="Nutrimotion"
             sx={{ height: 40, display: 'block' }}
           />
