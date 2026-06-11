@@ -5,7 +5,7 @@
 
 'use client';
 
-import { Box, Typography, Link, SvgIcon } from '@mui/material';
+import { Box, Typography, Link, SvgIcon, Button } from '@mui/material';
 
 /** Default digits; wa.me link uses the same digits without separators. */
 const CONTACT_PHONE_DISPLAY = '18764282339';
@@ -33,36 +33,70 @@ export default function TopBar() {
   const whatsappHref = getWhatsAppHref(CONTACT_PHONE);
 
   return (
-    <Link
-      href={whatsappHref}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Chat on WhatsApp"
+    <Box
+      sx={{
+        position: 'fixed',
+        bottom: { xs: 16, md: 24 },
+        right: { xs: 16, md: 24 },
+        zIndex: 9999,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-end',
+        gap: 2,
+      }}
     >
-      <Box
+      <Link
+        href={whatsappHref}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat on WhatsApp"
+        sx={{ display: 'block' }}
+      >
+        <Box
+          sx={{
+            width: 56,
+            height: 56,
+            bgcolor: '#25D366',
+            color: 'white',
+            borderRadius: '50%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+            transition: 'transform 0.2s',
+            '&:hover': {
+              transform: 'scale(1.1)',
+              bgcolor: '#20ba59'
+            },
+          }}
+        >
+          <WhatsAppIcon />
+        </Box>
+      </Link>
+      
+      <Button
+        href="https://cal.com/malik-reid-sdeiig/consultations"
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="contained"
         sx={{
-          position: 'fixed',
-          bottom: { xs: 16, md: 24 },
-          right: { xs: 16, md: 24 },
-          zIndex: 9999,
-          width: 56,
-          height: 56,
-          bgcolor: '#25D366',
+          bgcolor: '#ee4d24',
           color: 'white',
-          borderRadius: '50%',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
+          borderRadius: 28,
+          px: 3,
+          py: 1.5,
           boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+          textTransform: 'none',
+          fontWeight: 600,
           transition: 'transform 0.2s',
           '&:hover': {
-            transform: 'scale(1.1)',
-            bgcolor: '#20ba59'
-          },
+            bgcolor: '#da451f',
+            transform: 'scale(1.05)'
+          }
         }}
       >
-        <WhatsAppIcon />
-      </Box>
-    </Link>
+        Book Consultation
+      </Button>
+    </Box>
   );
 }

@@ -33,7 +33,7 @@ const heroContent = [
     subheadline: "personal training",
   },
   {
-    image: "https://images.pexels.com/photos/1954524/pexels-photo-1954524.jpeg?auto=compress&cs=tinysrgb&w=1920",
+    image: "/healthy_food.png",
     subheadline: "Premium meal prep",
   },
   {
@@ -57,7 +57,7 @@ const highlightCards = [
     icon: FitnessCenterIcon,
     href: '/training',
     image:
-      'https://images.pexels.com/photos/6456150/pexels-photo-6456150.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop',
   },
   {
     id: 'meals',
@@ -88,6 +88,39 @@ const topics = [
   'High-protein meal prep',
   'Performance hydration',
   'Sustainable habit building',
+];
+
+const wellnessContent = [
+  {
+    title: 'Holistic Health',
+    description: 'Embrace a comprehensive approach to well-being that nurtures your physical, mental, and emotional health.',
+    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    title: 'Stress Management',
+    description: 'Learn proven techniques to lower cortisol levels, build resilience, and maintain inner calm in a busy world.',
+    image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    title: 'Mindful Eating',
+    description: 'Transform your relationship with food by cultivating awareness, savoring each bite, and listening to your body.',
+    image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    title: 'Sleep Optimization',
+    description: 'Unlock the power of restorative rest with strategies to improve sleep architecture and wake up energized.',
+    image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    title: 'Work-Life Balance',
+    description: 'Create sustainable boundaries that allow you to excel professionally while thriving in your personal life.',
+    image: 'https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=800&auto=format&fit=crop',
+  },
+  {
+    title: 'Longevity',
+    description: 'Implement science-backed protocols for healthspan extension, maintaining vitality and mobility as you age.',
+    image: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71?q=80&w=800&auto=format&fit=crop',
+  },
 ];
 
 export default function Home() {
@@ -372,39 +405,123 @@ export default function Home() {
             })}
           </Box>
 
-          <Card
+          <Box
             sx={{
-              p: { xs: 2, md: 3 },
-              borderRadius: 4,
-              border: '1px solid rgba(0,0,0,0.08)',
-              bgcolor: BRAND.surface,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: { xs: 2, md: 3 },
               width: '100%',
-              boxSizing: 'border-box',
             }}
           >
-            <Typography variant="h5" sx={{ mb: 2 }}>
-              Fitness Topics Covered in Meals and Books
-            </Typography>
-            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 3 }}>
-              {topics.map((topic) => (
-                <Chip key={topic} label={topic} sx={{ bgcolor: 'rgba(238,77,36,0.08)', color: '#8a2b16' }} />
-              ))}
-            </Box>
-            <Button
-              component={Link}
-              href="/books"
-              variant="contained"
-              fullWidth
+            <Card
               sx={{
-                bgcolor: '#121212',
-                '&:hover': { bgcolor: '#1f1f1f' },
-                display: { xs: 'flex', sm: 'inline-flex' },
-                width: { xs: '100%', sm: 'auto' },
+                p: { xs: 2, md: 3 },
+                borderRadius: 4,
+                border: '1px solid rgba(0,0,0,0.08)',
+                bgcolor: BRAND.surface,
+                width: '100%',
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'column',
               }}
             >
-              Subscribe for Meals and Books
-            </Button>
-          </Card>
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                Wellness & Lifestyle Integration
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 2, color: 'text.secondary' }}>
+                Discover how training and nutrition combine to create a holistic lifestyle designed for long-term health, real results, and optimal well-being.
+              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, mb: 'auto', pb: 3, pt: 2 }}>
+                {wellnessContent.map((item, index) => {
+                  const isEven = index % 2 === 0;
+                  return (
+                    <Box 
+                      key={item.title} 
+                      sx={{ 
+                        display: 'flex', 
+                        flexDirection: { xs: 'column', md: isEven ? 'row' : 'row-reverse' }, 
+                        alignItems: 'center',
+                        gap: 3,
+                        bgcolor: 'rgba(0,0,0,0.02)',
+                        p: 2,
+                        borderRadius: 3
+                      }}
+                    >
+                      <Box 
+                        component="img" 
+                        src={item.image} 
+                        alt={item.title} 
+                        sx={{ 
+                          width: { xs: '100%', md: '45%' }, 
+                          height: 200, 
+                          objectFit: 'cover', 
+                          borderRadius: 2 
+                        }} 
+                      />
+                      <Box sx={{ width: { xs: '100%', md: '55%' }, px: { md: 2 } }}>
+                        <Typography variant="h6" sx={{ mb: 1, color: BRAND.primary }}>
+                          {item.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {item.description}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+              <Button
+                component={Link}
+                href="/training"
+                variant="contained"
+                fullWidth
+                sx={{
+                  bgcolor: '#121212',
+                  '&:hover': { bgcolor: '#1f1f1f' },
+                  display: { xs: 'flex', sm: 'inline-flex' },
+                  width: { xs: '100%', sm: 'auto' },
+                }}
+              >
+                Start Your Wellness Journey
+              </Button>
+            </Card>
+
+            <Card
+              sx={{
+                p: { xs: 2, md: 3 },
+                borderRadius: 4,
+                border: '1px solid rgba(0,0,0,0.08)',
+                bgcolor: BRAND.surface,
+                width: '100%',
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                Fitness Topics Covered in Meals and Books
+              </Typography>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 'auto', pb: 3 }}>
+                {topics.map((topic) => (
+                  <Chip key={topic} label={topic} sx={{ bgcolor: 'rgba(238,77,36,0.08)', color: '#8a2b16' }} />
+                ))}
+              </Box>
+              <Button
+                component={Link}
+                href="/books"
+                variant="contained"
+                fullWidth
+                sx={{
+                  bgcolor: '#121212',
+                  '&:hover': { bgcolor: '#1f1f1f' },
+                  display: { xs: 'flex', sm: 'inline-flex' },
+                  width: { xs: '100%', sm: 'auto' },
+                }}
+              >
+                Subscribe for Meals and Books
+              </Button>
+            </Card>
+          </Box>
         </Container>
       </>
     );

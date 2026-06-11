@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.decodeFromString
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -41,19 +43,28 @@ class NetworkService {
     
     private suspend inline fun <reified T> request(
         endpoint: String,
-        method: String = "GET",
-        body: Any? = null
+        method: String = "GET"
+    ): Result<T> = executeRequest(endpoint, method, null)
+
+    private suspend inline fun <reified T, reified B> request(
+        endpoint: String,
+        method: String,
+        body: B
+    ): Result<T> = executeRequest(
+        endpoint,
+        method,
+        json.encodeToString(body).toRequestBody("application/json".toMediaType())
+    )
+
+    private suspend inline fun <reified T> executeRequest(
+        endpoint: String,
+        method: String,
+        requestBody: okhttp3.RequestBody?
     ): Result<T> = withContext(Dispatchers.IO) {
         try {
             val requestBuilder = Request.Builder()
                 .url("$baseUrl$endpoint")
-                .method(
-                    method,
-                    body?.let {
-                        json.encodeToString(it::class.serializer(), it)
-                            .toRequestBody("application/json".toMediaType())
-                    }
-                )
+                .method(method, requestBody)
             
             val response = client.newCall(requestBuilder.build()).execute()
             
