@@ -19,13 +19,21 @@ import {
   Skeleton,
   Typography,
   IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Avatar,
+  Grid,
 } from '@mui/material';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 import AppBar from '@/components/layout/AppBar';
 import Link from 'next/link';
+import Image from 'next/image';
+import Script from 'next/script';
 
 const heroContent = [
   {
@@ -123,6 +131,64 @@ const wellnessContent = [
   },
 ];
 
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'HealthAndBeautyBusiness',
+  name: 'Nutrimotion Jamaica',
+  image: 'https://www.nutrimotionjamaica.com/nutrimotion-logo.png',
+  '@id': 'https://www.nutrimotionjamaica.com',
+  url: 'https://www.nutrimotionjamaica.com',
+  telephone: '+18765555555',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Kingston',
+    addressRegion: 'St. Andrew',
+    addressCountry: 'JM',
+  },
+  geo: {
+    '@type': 'GeoCoordinates',
+    latitude: 18.0179,
+    longitude: -76.8099,
+  },
+  openingHoursSpecification: {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    opens: '06:00',
+    closes: '20:00',
+  },
+};
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Do you deliver meal prep across Jamaica?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Currently, we deliver premium meal prep across Kingston and St. Andrew, Jamaica. We ensure meals stay fresh during transit.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Are the personal trainers certified?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes, all Nutrimotion coaches hold advanced certifications in personal training and sports nutrition, ensuring you get expert, science-backed guidance.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Can I track my macros with your meal prep?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Absolutely. Every Nutrimotion meal comes with a detailed macronutrient breakdown, making it easy to fit into your structured nutrition plan.',
+      },
+    },
+  ],
+};
+
 export default function Home() {
   const router = useRouter();
   const { user, isLoading } = useUser();
@@ -185,6 +251,16 @@ export default function Home() {
   if (!user) {
     return (
       <>
+        <Script
+          id="local-business-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+        <Script
+          id="faq-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
         <AppBar />
         <Box
           sx={{
@@ -196,23 +272,27 @@ export default function Home() {
           }}
         >
           <Box
-            component="img"
-            src={heroContent[currentHeroIndex].image}
-            alt="Hero background"
             key={currentHeroIndex}
             sx={{
               position: 'absolute',
               inset: 0,
               width: '100%',
               height: '100%',
-              objectFit: 'cover',
               animation: 'fadeIn 0.5s ease-in-out',
               '@keyframes fadeIn': {
                 '0%': { opacity: 0.8 },
                 '100%': { opacity: 1 },
               }
             }}
-          />
+          >
+            <Image
+              src={heroContent[currentHeroIndex].image}
+              alt="Hero background"
+              fill
+              priority
+              style={{ objectFit: 'cover' }}
+            />
+          </Box>
           <Box
             sx={{
               position: 'absolute',
@@ -269,6 +349,7 @@ export default function Home() {
             <Box sx={{ width: '100%', maxWidth: { xs: '100%', md: '58%' } }}>
               <Typography
                 variant="h2"
+                component="h1"
                 sx={{
                   fontSize: { xs: '2rem', md: '3.4rem' },
                   lineHeight: 1.05,
@@ -372,17 +453,14 @@ export default function Home() {
                     boxShadow: '0 12px 30px -18px rgba(0,0,0,0.2)',
                   }}
                 >
-                  <Box
-                    component="img"
-                    src={item.image}
-                    alt={item.title}
-                    sx={{
-                      width: '100%',
-                      height: 220,
-                      objectFit: 'cover',
-                      display: 'block',
-                    }}
-                  />
+                  <Box sx={{ position: 'relative', width: '100%', height: 220 }}>
+                    <Image
+                      src={item.image}
+                      alt={item.title}
+                      fill
+                      style={{ objectFit: 'cover', display: 'block' }}
+                    />
+                  </Box>
                   <CardContent>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <Icon sx={{ color: BRAND.primary }} />
@@ -448,16 +526,21 @@ export default function Home() {
                       }}
                     >
                       <Box 
-                        component="img" 
-                        src={item.image} 
-                        alt={item.title} 
                         sx={{ 
+                          position: 'relative',
                           width: { xs: '100%', md: '45%' }, 
                           height: 200, 
-                          objectFit: 'cover', 
-                          borderRadius: 2 
+                          borderRadius: 2,
+                          overflow: 'hidden'
                         }} 
-                      />
+                      >
+                        <Image
+                          src={item.image} 
+                          alt={item.title}
+                          fill
+                          style={{ objectFit: 'cover' }}
+                        />
+                      </Box>
                       <Box sx={{ width: { xs: '100%', md: '55%' }, px: { md: 2 } }}>
                         <Typography variant="h6" sx={{ mb: 1, color: BRAND.primary }}>
                           {item.title}
@@ -521,6 +604,65 @@ export default function Home() {
                 Subscribe for Meals and Books
               </Button>
             </Card>
+
+            {/* E-E-A-T: Expert Coaches Section */}
+            <Card
+              sx={{
+                p: { xs: 2, md: 3 },
+                borderRadius: 4,
+                border: '1px solid rgba(0,0,0,0.08)',
+                bgcolor: BRAND.surface,
+                width: '100%',
+                boxSizing: 'border-box',
+                mt: 2,
+              }}
+            >
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                Meet Our Expert Coaches
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
+                At Nutrimotion Jamaica, our coaches hold advanced certifications in sports nutrition and strength conditioning to guarantee science-backed results.
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ width: 64, height: 64, bgcolor: BRAND.primary }}>NC</Avatar>
+                    <Box>
+                      <Typography variant="h6">Nutrimotion Coach</Typography>
+                      <Typography variant="body2" color="text.secondary">Certified Personal Trainer & Nutritionist</Typography>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Card>
+
+            {/* GEO/FAQ Section */}
+            <Card
+              sx={{
+                p: { xs: 2, md: 3 },
+                borderRadius: 4,
+                border: '1px solid rgba(0,0,0,0.08)',
+                bgcolor: BRAND.surface,
+                width: '100%',
+                boxSizing: 'border-box',
+                mt: 2,
+              }}
+            >
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                Frequently Asked Questions
+              </Typography>
+              {faqSchema.mainEntity.map((faq, index) => (
+                <Accordion key={index} elevation={0} sx={{ '&:before': { display: 'none' }, borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+                    <Typography fontWeight={600}>{faq.name}</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                    <Typography color="text.secondary">{faq.acceptedAnswer.text}</Typography>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Card>
+
           </Box>
         </Container>
       </>

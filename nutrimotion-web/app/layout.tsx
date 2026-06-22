@@ -10,8 +10,21 @@ import Footer from '@/components/layout/Footer';
 import TopBar from '@/components/layout/TopBar';
 
 export const metadata: Metadata = {
-  title: 'Nutrimotion - Meal Planning & Delivery',
-  description: 'Professional meal planning and delivery service with personalized training',
+  title: 'Nutrimotion Jamaica | Premium Meal Prep & Personal Training',
+  description: 'Professional meal planning, healthy delivery services, and personal training coaching in Jamaica. Transform your body with structured nutrition.',
+  openGraph: {
+    title: 'Nutrimotion Jamaica | Premium Meal Prep & Personal Training',
+    description: 'Professional meal planning, healthy delivery services, and personal training coaching in Jamaica. Transform your body with structured nutrition.',
+    url: 'https://www.nutrimotionjamaica.com',
+    siteName: 'Nutrimotion Jamaica',
+    locale: 'en_JM',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Nutrimotion Jamaica | Premium Meal Prep & Personal Training',
+    description: 'Professional meal planning, healthy delivery services, and personal training coaching in Jamaica. Transform your body with structured nutrition.',
+  },
 };
 
 export const viewport = {
