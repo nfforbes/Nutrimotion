@@ -1,0 +1,28 @@
+# Nutrimotion Jamaica
+
+Nutrimotion Jamaica is a premium meal prep and personal training service located in Kingston, Jamaica.
+We provide science-backed structured nutrition, habit coaching, and fitness training to help users achieve their body goals.
+
+## Services
+- **Premium Meal Prep**: Fresh, macro-calculated meals delivered across Kingston and St. Andrew.
+- **Personal Training**: Expert coaching with customized workout routines and certified professionals.
+- **Books & Education**: Guides on fat loss, mobility, recovery, and strength training nutrition.
+
+## Technical Details
+This application is built using:
+- **Framework**: Next.js (App Router)
+- **UI Library**: Material UI (MUI v7)
+- **Authentication**: Auth0
+- **Database**: MongoDB via Mongoose
+
+## Important URLs
+- **Main Website**: [https://www.nutrimotionjamaica.com](https://www.nutrimotionjamaica.com)
+- **Training**: [https://www.nutrimotionjamaica.com/training](https://www.nutrimotionjamaica.com/training)
+- **Meals**: [https://www.nutrimotionjamaica.com/meals](https://www.nutrimotionjamaica.com/meals)
+
+## SEO & Accessibility
+Nutrimotion is fully optimized with JSON-LD structured data (HealthAndBeautyBusiness, FAQPage) for Generative Engine Optimization (GEO) and Local SEO.
+
+## Contact
+Email: Malikjcreid@gmail.com
+Location: Kingston & St. Andrew, Jamaica
