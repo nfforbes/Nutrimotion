@@ -32,6 +32,7 @@ import { UserRole } from '@/types/auth';
 import { fetchUserRequest } from '@/store/slices/authSlice';
 import { fetchCartRequest } from '@/store/slices/cartSlice';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface AppBarProps {
   onMenuClick?: () => void;
@@ -40,6 +41,7 @@ interface AppBarProps {
 export default function AppBar({ onMenuClick }: AppBarProps) {
   const { user, isLoading } = useUser();
   const dispatch = useAppDispatch();
+  const pathname = usePathname();
   const cart = useAppSelector((state) => state.cart.cart);
   const auth = useAppSelector((state) => state.auth);
   const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
@@ -105,20 +107,29 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
     }
   };
 
+  const isHomePage = pathname === '/';
+
   return (
     <MuiAppBar 
-      position="absolute"
+      position={isHomePage ? 'absolute' : 'static'}
       sx={{
-        top: { xs: 10, md: 20 },
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: { xs: '95%', md: '90%' },
-        maxWidth: 1200,
-        borderRadius: '100px',
-        bgcolor: 'transparent',
+        position: isHomePage ? 'absolute' : 'static !important',
+        ...(isHomePage ? {
+          top: { xs: 10, md: 20 },
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: { xs: '95%', md: '90%' },
+          maxWidth: 1200,
+        } : {
+          top: 0,
+          mb: { xs: 6, md: 6 },
+          zIndex: 1100,
+        }),
+        borderRadius: isHomePage ? '100px' : 0,
+        bgcolor: isHomePage ? 'transparent' : '#121212',
         color: '#ffffff',
-        border: '1px solid #000000',
-        boxShadow: 'none',
+        border: isHomePage ? '1px solid #000000' : 'none',
+        boxShadow: isHomePage ? 'none' : '0 4px 20px rgba(0,0,0,0.1)',
       }}
     >
       <Toolbar>
@@ -138,7 +149,7 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
             component="img"
             src="/nutrimotion-logo.png"
             alt="Nutrimotion"
-            sx={{ height: 40, display: 'block' }}
+            sx={{ height: 56, display: 'block' }}
           />
         </Box>
 
@@ -204,16 +215,16 @@ export default function AppBar({ onMenuClick }: AppBarProps) {
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           {!isLoading && !isAuthenticated ? (
             <Button
-              color="inherit"
-              variant="outlined"
+              variant="contained"
               href="/auth/login?returnTo=/dashboard"
               component={Link}
               sx={{ 
-                borderColor: 'rgba(255,255,255,0.5)',
+                bgcolor: '#ee4d24 !important',
+                color: '#ffffff !important',
                 minWidth: { xs: 'auto', md: 64 },
                 px: { xs: 1, md: 2 },
                 py: { xs: 1, md: 0.5 },
-                '&:hover': { borderColor: 'white', bgcolor: 'rgba(255,255,255,0.08)' } 
+                '&:hover': { bgcolor: '#da451f !important' } 
               }}
               aria-label="Login"
             >

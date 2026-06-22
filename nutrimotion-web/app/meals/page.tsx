@@ -169,7 +169,7 @@ export default function MealsPage() {
       <AppBar onMenuClick={() => setSidebarOpen(true)} />
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} menuItems={menuItems} />
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="lg" sx={{ mt: { xs: 12, md: 6 }, mb: 4 }}>
         {selectedPackage ? (
           <PackageSelection
             pkg={selectedPackage}
