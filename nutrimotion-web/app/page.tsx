@@ -624,7 +624,7 @@ export default function Home() {
                 At Nutrimotion Jamaica, our coaches hold advanced certifications in sports nutrition and strength conditioning to guarantee science-backed results.
               </Typography>
               <Grid container spacing={3}>
-                <Grid item xs={12} sm={6}>
+                <Grid size={{ xs: 12, sm: 6 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ width: 64, height: 64, bgcolor: BRAND.primary }}>NC</Avatar>
                     <Box>
