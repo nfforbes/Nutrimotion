@@ -205,7 +205,8 @@ export default function AddMealForm({ onSuccess, onCancel, initialMeal }: AddMea
           >
             <MenuItem value={MealSlot.BREAKFAST}>Breakfast</MenuItem>
             <MenuItem value={MealSlot.LUNCH}>Lunch</MenuItem>
-            <MenuItem value={MealSlot.DINNER}>Dinner</MenuItem>
+            <MenuItem value={MealSlot.SMOOTHIES}>Smoothies</MenuItem>
+            <MenuItem value={MealSlot.JUICE_SHOT}>Juice Shots</MenuItem>
           </TextField>
 
           <TextField

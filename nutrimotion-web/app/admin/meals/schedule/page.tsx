@@ -256,7 +256,8 @@ export default function AdminMealSchedulePage() {
               >
                 <MenuItem value={MealSlot.BREAKFAST}>Breakfast</MenuItem>
                 <MenuItem value={MealSlot.LUNCH}>Lunch</MenuItem>
-                <MenuItem value={MealSlot.DINNER}>Dinner</MenuItem>
+                <MenuItem value={MealSlot.SMOOTHIES}>Smoothies</MenuItem>
+                <MenuItem value={MealSlot.JUICE_SHOT}>Juice Shots</MenuItem>
               </TextField>
             </Grid>
             <Grid size={{ xs: 12, sm: 6 }}>

@@ -37,16 +37,12 @@ import Sidebar from '@/components/layout/Sidebar';
 import AddMealForm from '@/components/admin/AddMealForm';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
+import { MEAL_SLOT_ORDER, MEAL_SLOT_LABELS, normalizeSlotKey } from '@/lib/meals/slots';
 import { MealSlot } from '@/types/catalog';
 import axios from 'axios';
 
-const SLOT_LABELS: Record<string, string> = {
-  [MealSlot.BREAKFAST]: 'Breakfast',
-  [MealSlot.LUNCH]: 'Lunch',
-  [MealSlot.DINNER]: 'Dinner',
-};
-
-const SLOT_ORDER = [MealSlot.BREAKFAST, MealSlot.LUNCH, MealSlot.DINNER];
+const SLOT_LABELS = MEAL_SLOT_LABELS;
+const SLOT_ORDER = MEAL_SLOT_ORDER;
 
 type OrganizationMode = 'week' | 'day';
 
@@ -181,8 +177,10 @@ export default function AdminMealsPage() {
       if (!byDay.has(dayKey)) {
         byDay.set(dayKey, buildSlotMap());
       }
-      const slot = meal.slot in SLOT_LABELS ? meal.slot : MealSlot.BREAKFAST;
-      byDay.get(dayKey)!.get(slot)!.push(meal);
+      const slot = normalizeSlotKey(meal.slot) as MealSlot;
+      if (byDay.get(dayKey)!.has(slot)) {
+        byDay.get(dayKey)!.get(slot)!.push(meal);
+      }
     }
     map.forEach((byDay) => {
       byDay.forEach((slotMap) => {
@@ -203,8 +201,10 @@ export default function AdminMealsPage() {
       if (!map.has(dayKey)) {
         map.set(dayKey, buildSlotMap());
       }
-      const slot = meal.slot in SLOT_LABELS ? meal.slot : MealSlot.BREAKFAST;
-      map.get(dayKey)!.get(slot)!.push(meal);
+      const slot = normalizeSlotKey(meal.slot) as MealSlot;
+      if (map.get(dayKey)!.has(slot)) {
+        map.get(dayKey)!.get(slot)!.push(meal);
+      }
     }
     map.forEach((slotMap) => {
       slotMap.forEach((arr) =>
@@ -385,7 +385,7 @@ export default function AdminMealsPage() {
       {SLOT_ORDER.map((slot) => {
         const slotMeals = slotMap.get(slot) || [];
         return (
-          <Grid size={{ xs: 12, md: 4 }} key={slot}>
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={slot}>
             <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
               {SLOT_LABELS[slot]}
             </Typography>

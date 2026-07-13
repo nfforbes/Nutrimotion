@@ -22,7 +22,9 @@ interface PackageDoc {
   description?: string;
   breakfastCount: number;
   lunchCount: number;
-  dinnerCount: number;
+  smoothieCount?: number;
+  juiceShotCount?: number;
+  dinnerCount?: number;
   cost?: number;
   daysOption: 'any' | 'specific';
   specificDays: number[];

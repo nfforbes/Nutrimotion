@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     const { session } = authResult;
     const body = await request.json();
 
-    const { itemType, itemId, name, price, quantity, imageUrl, packageDetails } = body;
+    const { itemType, itemId, name, price, quantity, imageUrl, packageDetails, mealSlot, scheduledDate } = body;
 
     if (!itemType || !itemId || !name || price === undefined || !quantity) {
       return NextResponse.json(
@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
         quantity,
         imageUrl,
         packageDetails,
+        mealSlot,
+        scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
       } as any);
     }
 

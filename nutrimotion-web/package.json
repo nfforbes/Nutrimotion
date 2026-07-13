@@ -6,6 +6,7 @@
     "cert:generate": "node scripts/generate-cert.js",
     "cert:force": "node scripts/generate-cert.js --force",
     "make-admin": "node scripts/make-admin.js",
+    "seed:meals": "node scripts/seed-weekly-meals.js --clear",
     "manage-roles": "node scripts/manage-roles.js",
     "dev": "npm-run-all --parallel dev:next dev:proxy",
     "dev:next": "cross-env NODE_OPTIONS=--max-http-header-size=81920 next dev -p 3001 --webpack",

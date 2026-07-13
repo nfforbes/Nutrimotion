@@ -1,6 +1,6 @@
 /**
  * Add Package Form Component
- * Define a package: counts for breakfast/lunch/dinner and any days or specific days.
+ * Define a package: counts for breakfast/lunch/smoothies/juice shots and any days or specific days.
  */
 
 'use client';
@@ -28,7 +28,10 @@ export interface PackageDoc {
   description?: string;
   breakfastCount: number;
   lunchCount: number;
-  dinnerCount: number;
+  smoothieCount?: number;
+  juiceShotCount?: number;
+  /** @deprecated legacy */
+  dinnerCount?: number;
   cost?: number;
   daysOption: 'any' | 'specific';
   specificDays: number[];
@@ -40,7 +43,8 @@ const initialFormData = {
   description: '',
   breakfastCount: 0,
   lunchCount: 0,
-  dinnerCount: 0,
+  smoothieCount: 0,
+  juiceShotCount: 0,
   cost: 0,
   daysOption: 'any' as 'any' | 'specific',
   specificDays: [] as number[],
@@ -61,7 +65,8 @@ export default function AddPackageForm({ onSuccess, onCancel, initialPackage }: 
           description: initialPackage.description ?? '',
           breakfastCount: initialPackage.breakfastCount,
           lunchCount: initialPackage.lunchCount,
-          dinnerCount: initialPackage.dinnerCount,
+          smoothieCount: initialPackage.smoothieCount ?? initialPackage.dinnerCount ?? 0,
+          juiceShotCount: initialPackage.juiceShotCount ?? 0,
           cost: initialPackage.cost ?? 0,
           daysOption: initialPackage.daysOption,
           specificDays: [...(initialPackage.specificDays || [])],
@@ -77,7 +82,8 @@ export default function AddPackageForm({ onSuccess, onCancel, initialPackage }: 
         description: initialPackage.description ?? '',
         breakfastCount: initialPackage.breakfastCount,
         lunchCount: initialPackage.lunchCount,
-        dinnerCount: initialPackage.dinnerCount,
+        smoothieCount: initialPackage.smoothieCount ?? initialPackage.dinnerCount ?? 0,
+        juiceShotCount: initialPackage.juiceShotCount ?? 0,
         cost: initialPackage.cost ?? 0,
         daysOption: initialPackage.daysOption,
         specificDays: [...(initialPackage.specificDays || [])],
@@ -119,7 +125,8 @@ export default function AddPackageForm({ onSuccess, onCancel, initialPackage }: 
         description: formData.description?.trim() || undefined,
         breakfastCount: formData.breakfastCount,
         lunchCount: formData.lunchCount,
-        dinnerCount: formData.dinnerCount,
+        smoothieCount: formData.smoothieCount,
+        juiceShotCount: formData.juiceShotCount,
         cost: Number(formData.cost ?? 0),
         daysOption: formData.daysOption,
         specificDays: formData.daysOption === 'specific' ? formData.specificDays : [],
@@ -207,12 +214,22 @@ export default function AddPackageForm({ onSuccess, onCancel, initialPackage }: 
           />
           <TextField
             fullWidth
-            label="Dinners"
+            label="Smoothies"
             type="number"
             inputProps={{ min: 0, step: 1 }}
-            value={formData.dinnerCount}
+            value={formData.smoothieCount}
             onChange={(e) =>
-              setFormData({ ...formData, dinnerCount: Math.max(0, parseInt(e.target.value, 10) || 0) })
+              setFormData({ ...formData, smoothieCount: Math.max(0, parseInt(e.target.value, 10) || 0) })
+            }
+          />
+          <TextField
+            fullWidth
+            label="Juice Shots"
+            type="number"
+            inputProps={{ min: 0, step: 1 }}
+            value={formData.juiceShotCount}
+            onChange={(e) =>
+              setFormData({ ...formData, juiceShotCount: Math.max(0, parseInt(e.target.value, 10) || 0) })
             }
           />
           <TextField

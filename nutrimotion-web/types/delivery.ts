@@ -9,7 +9,7 @@ export interface DeliveryBatch {
   mealId: string;
   mealName: string;
   scheduledDate: Date;
-  slot: 'breakfast' | 'lunch' | 'dinner';
+  slot: 'breakfast' | 'lunch' | 'smoothies' | 'juice_shot';
   totalOrders: number;
   status: 'pending' | 'preparing' | 'ready' | 'dispatched' | 'completed';
   assignments: DeliveryAssignment[];

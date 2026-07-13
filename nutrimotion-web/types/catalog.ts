@@ -5,7 +5,8 @@
 export enum MealSlot {
   BREAKFAST = 'breakfast',
   LUNCH = 'lunch',
-  DINNER = 'dinner',
+  SMOOTHIES = 'smoothies',
+  JUICE_SHOT = 'juice_shot',
 }
 
 export interface MealPackage {
@@ -90,5 +91,6 @@ export interface MealSchedule {
   date: Date;
   breakfast: MealPackage[];
   lunch: MealPackage[];
-  dinner: MealPackage[];
+  smoothies: MealPackage[];
+  juice_shot: MealPackage[];
 }

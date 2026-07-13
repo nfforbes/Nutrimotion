@@ -14,15 +14,17 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
 import type { CouponDoc } from './AddCouponForm';
 
 export interface CouponListProps {
   coupons: CouponDoc[];
   onEdit: (c: CouponDoc) => void;
   onDeactivate: (c: CouponDoc) => void;
+  onSend: (c: CouponDoc) => void;
 }
 
-export default function CouponList({ coupons, onEdit, onDeactivate }: CouponListProps) {
+export default function CouponList({ coupons, onEdit, onDeactivate, onSend }: CouponListProps) {
   if (coupons.length === 0) {
     return (
       <Typography color="text.secondary" sx={{ py: 2 }}>
@@ -81,6 +83,15 @@ export default function CouponList({ coupons, onEdit, onDeactivate }: CouponList
                 {c.active ? <Chip size="small" label="Active" color="success" /> : <Chip size="small" label="Inactive" />}
               </TableCell>
               <TableCell align="right">
+                <IconButton
+                  size="small"
+                  aria-label="Send to client"
+                  onClick={() => onSend(c)}
+                  disabled={!c.active}
+                  title="Send to client"
+                >
+                  <SendIcon fontSize="small" />
+                </IconButton>
                 <IconButton size="small" aria-label="Edit" onClick={() => onEdit(c)}>
                   <EditIcon fontSize="small" />
                 </IconButton>

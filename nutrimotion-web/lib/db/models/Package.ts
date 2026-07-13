@@ -1,6 +1,6 @@
 /**
  * Package Model
- * Defines meal packages (e.g. 5 breakfasts, 5 lunches, 5 dinners per week).
+ * Defines meal packages (e.g. 5 breakfasts, 5 lunches, 3 smoothies per week).
  * daysOption: 'any' = any days; 'specific' = only on specificDays (0=Sun .. 6=Sat).
  */
 
@@ -13,7 +13,8 @@ export interface IPackage {
   description?: string;
   breakfastCount: number;
   lunchCount: number;
-  dinnerCount: number;
+  smoothieCount: number;
+  juiceShotCount: number;
   cost: number;
   daysOption: DaysOption;
   specificDays: number[]; // 0 = Sunday, 1 = Monday, ... 6 = Saturday
@@ -28,7 +29,8 @@ const PackageSchema = new Schema<IPackage>(
     description: { type: String },
     breakfastCount: { type: Number, required: true, min: 0, default: 0 },
     lunchCount: { type: Number, required: true, min: 0, default: 0 },
-    dinnerCount: { type: Number, required: true, min: 0, default: 0 },
+    smoothieCount: { type: Number, required: true, min: 0, default: 0 },
+    juiceShotCount: { type: Number, required: true, min: 0, default: 0 },
     cost: { type: Number, min: 0, default: 0 },
     daysOption: {
       type: String,

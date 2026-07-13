@@ -5,6 +5,7 @@
 import mongoose, { Types } from 'mongoose';
 import { Cart, DiscountCode, Order } from '@/lib/db/models';
 import type { ICart } from '@/lib/db/models/Cart';
+import { assertCouponAccessibleToUser } from '@/lib/discount/couponDelivery';
 
 type CartWithCodes = ICart & {
   appliedDiscountCodes?: string[];
@@ -86,6 +87,7 @@ export async function recalculateCartDiscounts(cart: CartWithCodes, userId: Type
     if (!m.isValid()) {
       throw new Error(`Coupon ${c} has expired or is no longer available.`);
     }
+    await assertCouponAccessibleToUser(userId, doc._id as Types.ObjectId);
     await assertUserMayUseCode(userId, c);
     if (m.minOrderAmount != null && cart.subtotal < m.minOrderAmount) {
       throw new Error(
@@ -140,6 +142,8 @@ export async function applyCouponCodeToCart(
     throw new Error('Invalid or inactive coupon code.');
   }
 
+  await assertCouponAccessibleToUser(userId, newDoc._id as Types.ObjectId);
+
   await validateStacking(existing, newDoc as { stackable?: boolean; code: string });
 
   const nextCodes = [...existing, codeUpper];
@@ -187,6 +191,8 @@ export function cartToResponse(cart: CartWithCodes & { _id: unknown; items: unkn
       price: item.price,
       quantity: item.quantity,
       imageUrl: item.imageUrl,
+      mealSlot: item.mealSlot,
+      scheduledDate: item.scheduledDate,
       packageDetails: item.packageDetails,
     })),
     subtotal: cart.subtotal,

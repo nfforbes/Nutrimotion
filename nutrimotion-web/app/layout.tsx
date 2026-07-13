@@ -8,6 +8,7 @@ import ThemeProvider from '@/components/providers/ThemeProvider';
 import ReduxProvider from '@/components/providers/ReduxProvider';
 import Footer from '@/components/layout/Footer';
 import TopBar from '@/components/layout/TopBar';
+import Script from 'next/script';
 
 export const metadata: Metadata = {
   title: 'Nutrimotion Jamaica | Premium Meal Prep & Personal Training',
@@ -50,6 +51,15 @@ export default function RootLayout({
           overflowX: 'hidden',
         }}
       >
+        <Script id="microsoft-clarity" strategy="afterInteractive">
+          {`
+            (function(c,l,a,r,i,t,y){
+                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "xloiqdp9xb");
+          `}
+        </Script>
         <Auth0Provider>
           <ReduxProvider>
             <ThemeProvider>

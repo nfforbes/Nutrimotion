@@ -40,7 +40,9 @@ import {
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { useRouter } from 'next/navigation';
 
-const PACKAGE_SLOT_ORDER = ['breakfast', 'lunch', 'dinner'] as const;
+import { PACKAGE_DETAIL_SLOT_KEYS, slotLabel } from '@/lib/meals/slots';
+
+const PACKAGE_SLOT_ORDER = [...PACKAGE_DETAIL_SLOT_KEYS, 'dinner'] as const;
 
 function formatPackageDayLabel(dateIso: string): string {
   const trimmed = dateIso.trim();
@@ -61,11 +63,8 @@ function formatPackageDayLabel(dateIso: string): string {
     : t.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-function slotLabel(slot: string): string {
-  if (slot === 'breakfast') return 'Breakfast';
-  if (slot === 'lunch') return 'Lunch';
-  if (slot === 'dinner') return 'Dinner';
-  return slot.charAt(0).toUpperCase() + slot.slice(1);
+function slotLabelForCart(slot: string): string {
+  return slotLabel(slot);
 }
 
 /** Stored names are plain strings; support legacy `{ name: string }` if present. */
@@ -204,7 +203,7 @@ export default function CartPage() {
                                                 sx={{ ml: 2, color: 'text.secondary' }}
                                                 key={`${date}-${slotKey}`}
                                               >
-                                                {slotLabel(slotKey)}: {line}
+                                                {slotLabelForCart(slotKey)}: {line}
                                               </Typography>
                                             );
                                           })}

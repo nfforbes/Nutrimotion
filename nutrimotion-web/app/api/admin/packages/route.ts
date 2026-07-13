@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
       breakfastCount,
       lunchCount,
       dinnerCount,
+      smoothieCount,
+      juiceShotCount,
       cost,
       daysOption,
       specificDays,
@@ -54,8 +56,12 @@ export async function POST(request: NextRequest) {
       missing.push('breakfastCount');
     if (lunchCount === undefined || lunchCount === null || Number.isNaN(Number(lunchCount)) || Number(lunchCount) < 0)
       missing.push('lunchCount');
-    if (dinnerCount === undefined || dinnerCount === null || Number.isNaN(Number(dinnerCount)) || Number(dinnerCount) < 0)
-      missing.push('dinnerCount');
+    const smoothie = smoothieCount ?? dinnerCount;
+    const juiceShot = juiceShotCount;
+    if (smoothie === undefined || smoothie === null || Number.isNaN(Number(smoothie)) || Number(smoothie) < 0)
+      missing.push('smoothieCount');
+    if (juiceShot === undefined || juiceShot === null || Number.isNaN(Number(juiceShot)) || Number(juiceShot) < 0)
+      missing.push('juiceShotCount');
     if (!daysOption || (daysOption !== 'any' && daysOption !== 'specific'))
       missing.push('daysOption');
 
@@ -80,7 +86,8 @@ export async function POST(request: NextRequest) {
       description: description && typeof description === 'string' ? description.trim() : undefined,
       breakfastCount: Number(breakfastCount),
       lunchCount: Number(lunchCount),
-      dinnerCount: Number(dinnerCount),
+      smoothieCount: Number(smoothie),
+      juiceShotCount: Number(juiceShot),
       cost: costNum >= 0 ? costNum : 0,
       daysOption: opt,
       specificDays: opt === 'specific' ? specificDays : [],

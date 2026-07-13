@@ -43,6 +43,8 @@ const cartSlice = createSlice({
         price: number;
         quantity: number;
         imageUrl?: string;
+        mealSlot?: string;
+        scheduledDate?: string;
         packageDetails?: CartItem['packageDetails'];
       }>
     ) => {

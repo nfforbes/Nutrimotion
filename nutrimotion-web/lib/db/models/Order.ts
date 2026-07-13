@@ -13,6 +13,8 @@ export interface IOrderItem {
   price: number;
   quantity: number;
   imageUrl?: string;
+  mealSlot?: string;
+  scheduledDate?: Date;
   packageDetails?: any;
 }
 
@@ -55,6 +57,8 @@ const OrderItemSchema = new Schema<IOrderItem>({
   price: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 1 },
   imageUrl: { type: String },
+  mealSlot: { type: String },
+  scheduledDate: { type: Date },
   packageDetails: { type: Schema.Types.Mixed },
 });
 

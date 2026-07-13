@@ -5,7 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
-import { DiscountCode } from '@/lib/db/models';
+import { DiscountCode, User } from '@/lib/db/models';
+import { assertCouponAccessibleToUser } from '@/lib/discount/couponDelivery';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -41,6 +42,16 @@ export async function POST(request: NextRequest) {
         { error: 'Discount code has expired or reached usage limit' },
         { status: 400 }
       );
+    }
+
+    const user = await User.findOne({ auth0Sub: authResult.session.user.sub });
+    if (user) {
+      try {
+        await assertCouponAccessibleToUser(user._id, discountCode._id);
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Coupon not available';
+        return NextResponse.json({ error: message }, { status: 400 });
+      }
     }
     
     const discountAmount = (discountCode as any).calculateDiscount(subtotal || 0);

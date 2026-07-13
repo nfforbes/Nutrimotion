@@ -7,6 +7,7 @@ import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import AddCouponForm, { CouponDoc } from '@/components/admin/AddCouponForm';
 import CouponList from '@/components/admin/CouponList';
+import SendCouponDialog from '@/components/admin/SendCouponDialog';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import axios from 'axios';
@@ -16,6 +17,7 @@ export default function AdminCouponsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<CouponDoc | null>(null);
   const [coupons, setCoupons] = useState<CouponDoc[]>([]);
+  const [sendingCoupon, setSendingCoupon] = useState<CouponDoc | null>(null);
 
   const auth = useAppSelector((state) => state.auth);
 
@@ -75,8 +77,19 @@ export default function AdminCouponsPage() {
             }}
           />
         ) : (
-          <CouponList coupons={coupons} onEdit={(c) => setEditing(c)} onDeactivate={handleDeactivate} />
+          <CouponList
+            coupons={coupons}
+            onEdit={(c) => setEditing(c)}
+            onDeactivate={handleDeactivate}
+            onSend={(c) => setSendingCoupon(c)}
+          />
         )}
+
+        <SendCouponDialog
+          coupon={sendingCoupon}
+          open={!!sendingCoupon}
+          onClose={() => setSendingCoupon(null)}
+        />
       </Container>
     </>
   );

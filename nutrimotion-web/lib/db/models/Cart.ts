@@ -12,6 +12,8 @@ export interface ICartItem {
   price: number;
   quantity: number;
   imageUrl?: string;
+  mealSlot?: string;
+  scheduledDate?: Date;
   packageDetails?: any;
 }
 
@@ -39,6 +41,8 @@ const CartItemSchema = new Schema<ICartItem>({
   price: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, min: 1, default: 1 },
   imageUrl: { type: String },
+  mealSlot: { type: String },
+  scheduledDate: { type: Date },
   packageDetails: { type: Schema.Types.Mixed },
 });
 

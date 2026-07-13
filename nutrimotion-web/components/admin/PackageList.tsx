@@ -20,7 +20,9 @@ interface PackageDoc {
   description?: string;
   breakfastCount: number;
   lunchCount: number;
-  dinnerCount: number;
+  smoothieCount?: number;
+  juiceShotCount?: number;
+  dinnerCount?: number;
   cost?: number;
   daysOption: 'any' | 'specific';
   specificDays: number[];
@@ -36,7 +38,7 @@ export default function PackageList({ packages, onEdit }: PackageListProps) {
   if (packages.length === 0) {
     return (
       <Typography color="text.secondary">
-        No packages yet. Click &quot;Add Package&quot; to define one (e.g. number of breakfasts, lunches, dinners and any or specific days).
+        No packages yet. Click &quot;Add Package&quot; to define one (e.g. breakfasts, lunches, smoothies, juice shots and any or specific days).
       </Typography>
     );
   }
@@ -59,7 +61,8 @@ export default function PackageList({ packages, onEdit }: PackageListProps) {
                 </Typography>
               )}
               <Typography variant="body2">
-                Breakfasts: {pkg.breakfastCount} · Lunches: {pkg.lunchCount} · Dinners: {pkg.dinnerCount}
+                Breakfasts: {pkg.breakfastCount} · Lunches: {pkg.lunchCount} · Smoothies:{' '}
+                {pkg.smoothieCount ?? pkg.dinnerCount ?? 0} · Juice Shots: {pkg.juiceShotCount ?? 0}
               </Typography>
               <Typography variant="body2" fontWeight="medium" sx={{ mt: 0.5 }}>
                 Cost: ${(pkg.cost ?? 0).toFixed(2)}

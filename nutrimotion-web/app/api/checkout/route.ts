@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
         price: item.price,
         quantity: item.quantity,
         imageUrl: item.imageUrl,
+        mealSlot: item.mealSlot,
+        scheduledDate: item.scheduledDate,
         packageDetails: item.packageDetails,
       })),
       subtotal: cart.subtotal,

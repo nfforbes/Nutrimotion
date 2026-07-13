@@ -29,16 +29,13 @@ import { fetchMealsRequest } from '@/store/slices/catalogSlice';
 import { addToCartRequest } from '@/store/slices/cartSlice';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { MealSlot } from '@/types/catalog';
+import { MEAL_SLOT_LABELS, MEAL_SLOT_ORDER, normalizeSlotKey } from '@/lib/meals/slots';
 import axios from 'axios';
 import PackageSelection from '@/components/client/PackageSelection';
 import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
 
-const SLOT_LABELS: Record<string, string> = {
-  [MealSlot.BREAKFAST]: 'Breakfast',
-  [MealSlot.LUNCH]: 'Lunch',
-  [MealSlot.DINNER]: 'Dinner',
-};
-const SLOT_ORDER = [MealSlot.BREAKFAST, MealSlot.LUNCH, MealSlot.DINNER];
+const SLOT_LABELS = MEAL_SLOT_LABELS;
+const SLOT_ORDER = MEAL_SLOT_ORDER;
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_LABELS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -48,7 +45,10 @@ export interface PackageDoc {
   description?: string;
   breakfastCount: number;
   lunchCount: number;
-  dinnerCount: number;
+  smoothieCount?: number;
+  juiceShotCount?: number;
+  /** @deprecated legacy packages */
+  dinnerCount?: number;
   cost?: number;
   daysOption: 'any' | 'specific';
   specificDays: number[];
@@ -102,20 +102,23 @@ export default function MealsPage() {
         price: meal.price,
         quantity: 1,
         imageUrl: meal.imageUrl,
+        mealSlot: meal.slot,
+        scheduledDate: meal.scheduledDate,
       })
     );
     setSnackbarMessage(`${meal.name} added to cart`);
   };
 
   const handleAddPackageToCart = (pkg: PackageDoc, selections: Record<string, Record<string, any[]>>) => {
-    const packageDetails: Record<string, { breakfast?: string[]; lunch?: string[]; dinner?: string[] }> = {};
+    const packageDetails: Record<string, Record<string, string[] | undefined>> = {};
 
     Object.keys(selections).forEach((dateIso) => {
       const daySels = selections[dateIso];
       packageDetails[dateIso] = {
-        breakfast: daySels[MealSlot.BREAKFAST]?.map(m => m.name),
-        lunch: daySels[MealSlot.LUNCH]?.map(m => m.name),
-        dinner: daySels[MealSlot.DINNER]?.map(m => m.name),
+        breakfast: daySels[MealSlot.BREAKFAST]?.map((m) => m.name),
+        lunch: daySels[MealSlot.LUNCH]?.map((m) => m.name),
+        smoothies: daySels[MealSlot.SMOOTHIES]?.map((m) => m.name),
+        juice_shot: daySels[MealSlot.JUICE_SHOT]?.map((m) => m.name),
       };
     });
 
@@ -153,8 +156,10 @@ export default function MealsPage() {
       const d = new Date(meal.scheduledDate);
       const key = getLocalCalendarDayKey(d);
       if (map[key]) {
-        const slot = meal.slot in SLOT_LABELS ? meal.slot : MealSlot.BREAKFAST;
-        map[key][slot].push(meal);
+        const slot = normalizeSlotKey(meal.slot);
+        if (map[key][slot]) {
+          map[key][slot].push(meal);
+        }
       }
     }
     return map;
@@ -208,7 +213,9 @@ export default function MealsPage() {
                         )}
                         <Typography variant="body2">
                           {pkg.breakfastCount} breakfast{pkg.breakfastCount === 1 ? '' : 's'} · {pkg.lunchCount} lunch
-                          {pkg.lunchCount === 1 ? '' : 'es'} · {pkg.dinnerCount} dinner{pkg.dinnerCount === 1 ? '' : 's'}{' '}
+                          {pkg.lunchCount === 1 ? '' : 'es'} · {(pkg.smoothieCount ?? pkg.dinnerCount ?? 0)} smoothie
+                          {(pkg.smoothieCount ?? pkg.dinnerCount ?? 0) === 1 ? '' : 's'} · {pkg.juiceShotCount ?? 0} juice shot
+                          {(pkg.juiceShotCount ?? 0) === 1 ? '' : 's'}{' '}
                           <Typography component="span" variant="body2" color="text.secondary">
                             (package total)
                           </Typography>
@@ -245,7 +252,7 @@ export default function MealsPage() {
               Meals
             </Typography>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-              Browse meals by day — breakfast, lunch and dinner
+              Browse meals by day — breakfast, lunch, smoothies, and juice shots
             </Typography>
 
             {/* Week navigation */}
@@ -297,7 +304,7 @@ export default function MealsPage() {
                     {SLOT_ORDER.map((slot) => {
                       const slotMeals = daySlots[slot] || [];
                       return (
-                        <Grid size={{ xs: 12, md: 4 }} key={slot}>
+                        <Grid size={{ xs: 12, sm: 6, md: 3 }} key={slot}>
                           <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
                             {SLOT_LABELS[slot]}
                           </Typography>

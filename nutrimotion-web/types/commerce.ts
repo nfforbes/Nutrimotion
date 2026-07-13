@@ -42,10 +42,15 @@ export interface CartItem {
   price: number;
   quantity: number;
   imageUrl?: string;
+  mealSlot?: string;
+  scheduledDate?: string;
   packageDetails?: {
     [dateIso: string]: {
       breakfast?: string[];
       lunch?: string[];
+      smoothies?: string[];
+      juice_shot?: string[];
+      /** @deprecated legacy orders */
       dinner?: string[];
     };
   };
@@ -82,10 +87,15 @@ export interface OrderItem {
   price: number;
   quantity: number;
   imageUrl?: string;
+  mealSlot?: string;
+  scheduledDate?: string;
   packageDetails?: {
     [dateIso: string]: {
       breakfast?: string[];
       lunch?: string[];
+      smoothies?: string[];
+      juice_shot?: string[];
+      /** @deprecated legacy orders */
       dinner?: string[];
     };
   };

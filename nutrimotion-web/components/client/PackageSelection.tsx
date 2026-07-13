@@ -18,15 +18,12 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { MealSlot } from '@/types/catalog';
+import { MEAL_SLOT_LABELS, MEAL_SLOT_ORDER } from '@/lib/meals/slots';
 import { PackageDoc } from '@/app/meals/page'; // We'll export this or define it properly
 import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
 
-const SLOT_LABELS: Record<string, string> = {
-    [MealSlot.BREAKFAST]: 'Breakfast',
-    [MealSlot.LUNCH]: 'Lunch',
-    [MealSlot.DINNER]: 'Dinner',
-};
-const SLOT_ORDER = [MealSlot.BREAKFAST, MealSlot.LUNCH, MealSlot.DINNER];
+const SLOT_LABELS = MEAL_SLOT_LABELS;
+const SLOT_ORDER = MEAL_SLOT_ORDER;
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 function formatDate(d: Date): string {
@@ -63,7 +60,8 @@ export default function PackageSelection({
             init[key] = {
                 [MealSlot.BREAKFAST]: [],
                 [MealSlot.LUNCH]: [],
-                [MealSlot.DINNER]: [],
+                [MealSlot.SMOOTHIES]: [],
+                [MealSlot.JUICE_SHOT]: [],
             };
         });
         return init;
@@ -90,8 +88,10 @@ export default function PackageSelection({
                 return pkg.breakfastCount;
             case MealSlot.LUNCH:
                 return pkg.lunchCount;
-            case MealSlot.DINNER:
-                return pkg.dinnerCount;
+            case MealSlot.SMOOTHIES:
+                return pkg.smoothieCount ?? pkg.dinnerCount ?? 0;
+            case MealSlot.JUICE_SHOT:
+                return pkg.juiceShotCount ?? 0;
             default:
                 return 0;
         }
@@ -114,10 +114,14 @@ export default function PackageSelection({
         () => ({
             [MealSlot.BREAKFAST]: countSlotAcrossPackage(selections, MealSlot.BREAKFAST),
             [MealSlot.LUNCH]: countSlotAcrossPackage(selections, MealSlot.LUNCH),
-            [MealSlot.DINNER]: countSlotAcrossPackage(selections, MealSlot.DINNER),
+            [MealSlot.SMOOTHIES]: countSlotAcrossPackage(selections, MealSlot.SMOOTHIES),
+            [MealSlot.JUICE_SHOT]: countSlotAcrossPackage(selections, MealSlot.JUICE_SHOT),
         }),
         [selections, availableDays]
     );
+
+    const smoothieLimit = pkg.smoothieCount ?? pkg.dinnerCount ?? 0;
+    const juiceShotLimit = pkg.juiceShotCount ?? 0;
 
     const handleToggleMeal = (dayKey: string, slot: string, meal: any) => {
         setSelections((prev) => {
@@ -152,9 +156,10 @@ export default function PackageSelection({
         return (
             (pkg.breakfastCount === 0 || totalsBySlot[MealSlot.BREAKFAST] === pkg.breakfastCount) &&
             (pkg.lunchCount === 0 || totalsBySlot[MealSlot.LUNCH] === pkg.lunchCount) &&
-            (pkg.dinnerCount === 0 || totalsBySlot[MealSlot.DINNER] === pkg.dinnerCount)
+            (smoothieLimit === 0 || totalsBySlot[MealSlot.SMOOTHIES] === smoothieLimit) &&
+            (juiceShotLimit === 0 || totalsBySlot[MealSlot.JUICE_SHOT] === juiceShotLimit)
         );
-    }, [totalsBySlot, pkg]);
+    }, [totalsBySlot, pkg, smoothieLimit, juiceShotLimit]);
 
     const currentDay = availableDays[activeTab];
     if (!currentDay) return null;
@@ -198,9 +203,16 @@ export default function PackageSelection({
                                 variant="outlined"
                             />
                         )}
-                        {pkg.dinnerCount > 0 && (
+                        {smoothieLimit > 0 && (
                             <Chip
-                                label={`${pkg.dinnerCount} dinner${pkg.dinnerCount === 1 ? '' : 's'} total`}
+                                label={`${smoothieLimit} smoothie${smoothieLimit === 1 ? '' : 's'} total`}
+                                color="primary"
+                                variant="outlined"
+                            />
+                        )}
+                        {juiceShotLimit > 0 && (
+                            <Chip
+                                label={`${juiceShotLimit} juice shot${juiceShotLimit === 1 ? '' : 's'} total`}
                                 color="primary"
                                 variant="outlined"
                             />
@@ -212,18 +224,24 @@ export default function PackageSelection({
                             <>
                                 {SLOT_LABELS[MealSlot.BREAKFAST]} {totalsBySlot[MealSlot.BREAKFAST]}/
                                 {pkg.breakfastCount}
-                                {pkg.lunchCount > 0 || pkg.dinnerCount > 0 ? ' · ' : ''}
+                                {pkg.lunchCount > 0 || smoothieLimit > 0 || juiceShotLimit > 0 ? ' · ' : ''}
                             </>
                         )}
                         {pkg.lunchCount > 0 && (
                             <>
                                 {SLOT_LABELS[MealSlot.LUNCH]} {totalsBySlot[MealSlot.LUNCH]}/{pkg.lunchCount}
-                                {pkg.dinnerCount > 0 ? ' · ' : ''}
+                                {smoothieLimit > 0 || juiceShotLimit > 0 ? ' · ' : ''}
                             </>
                         )}
-                        {pkg.dinnerCount > 0 && (
+                        {smoothieLimit > 0 && (
                             <>
-                                {SLOT_LABELS[MealSlot.DINNER]} {totalsBySlot[MealSlot.DINNER]}/{pkg.dinnerCount}
+                                {SLOT_LABELS[MealSlot.SMOOTHIES]} {totalsBySlot[MealSlot.SMOOTHIES]}/{smoothieLimit}
+                                {juiceShotLimit > 0 ? ' · ' : ''}
+                            </>
+                        )}
+                        {juiceShotLimit > 0 && (
+                            <>
+                                {SLOT_LABELS[MealSlot.JUICE_SHOT]} {totalsBySlot[MealSlot.JUICE_SHOT]}/{juiceShotLimit}
                             </>
                         )}
                     </Typography>

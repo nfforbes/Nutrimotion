@@ -31,6 +31,7 @@ import { fetchOrdersRequest } from '@/store/slices/orderSlice';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { OrderStatus as statusTypes } from '@/types/commerce';
 import Link from 'next/link';
+import ClientCouponsPanel from '@/components/client/ClientCouponsPanel';
 
 // Nutrimotion brand color scheme
 const BRAND_COLORS = {
@@ -166,6 +167,8 @@ export default function Dashboard() {
             );
           })}
         </Grid>
+
+        <ClientCouponsPanel />
 
         <Box sx={{ mt: 6 }}>
           <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
