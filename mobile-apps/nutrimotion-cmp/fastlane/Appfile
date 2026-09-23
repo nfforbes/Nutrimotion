@@ -1,0 +1,10 @@
+# Fastlane Appfile — Nutrimotion CMP (same Apple team / secret names as Lukaria)
+
+json_key_file(ENV["PLAY_STORE_JSON_KEY_PATH"]) if ENV["PLAY_STORE_JSON_KEY_PATH"]
+package_name("com.nutrimotion.cmp")
+
+for_platform :ios do
+  app_identifier("com.nutrimotion.cmp")
+  team_id(ENV.fetch("APPLE_TEAM_ID", "3CPQ68PXHC"))
+  itc_team_id(ENV["APP_STORE_CONNECT_TEAM_ID"]) if ENV["APP_STORE_CONNECT_TEAM_ID"]
+end

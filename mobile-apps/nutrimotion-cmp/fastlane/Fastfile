@@ -1,0 +1,264 @@
+# frozen_string_literal: true
+
+require "base64"
+
+default_platform(:ios)
+
+PACKAGE_NAME = "com.nutrimotion.cmp"
+PROVISIONING_NAME = "Nutrimotion App Store"
+IPA_NAME = "Nutrimotion"
+
+def distribution_identity_in_keychain?(keychain_path)
+  output = sh(
+    "security find-identity -v -p codesigning '#{keychain_path}' | grep 'Apple Distribution' || true",
+    log: false
+  )
+  !output.strip.empty?
+end
+
+def delete_apple_distribution_identities!(keychain_path)
+  output = sh(
+    "security find-identity -v -p codesigning '#{keychain_path}' || true",
+    log: false
+  )
+  output.each_line do |line|
+    next unless line.include?("Apple Distribution")
+    hash = line[/\b([0-9A-Fa-f]{40})\b/]
+    next unless hash
+    UI.important("Removing Apple Distribution identity #{hash} from CI keychain")
+    sh("security delete-identity -Z #{hash} '#{keychain_path}' || true", log: false)
+  end
+end
+
+def import_distribution_p12!(keychain_name:, keychain_password:)
+  p12_b64 = ENV["IOS_DISTRIBUTION_CERT_P12_BASE64"]
+  return if p12_b64.nil? || p12_b64.strip.empty?
+
+  p12_path = File.join(Dir.tmpdir, "nutrimotion-distribution.p12")
+  File.binwrite(p12_path, Base64.decode64(p12_b64))
+  import_certificate(
+    certificate_path: p12_path,
+    certificate_password: ENV.fetch("IOS_DISTRIBUTION_CERT_PASSWORD"),
+    keychain_name: keychain_name,
+    keychain_password: keychain_password
+  )
+  UI.success("Imported Apple Distribution certificate from IOS_DISTRIBUTION_CERT_P12_BASE64")
+end
+
+def revoke_one_orphaned_distribution_cert!(api_key:)
+  require "spaceship"
+
+  Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
+    key_id: api_key[:key_id],
+    issuer_id: api_key[:issuer_id],
+    key: api_key[:key],
+    duration: api_key[:duration] || 1200,
+    in_house: api_key[:in_house] || false
+  )
+
+  certs = Spaceship::ConnectAPI::Certificate.all.select do |c|
+    type = c.certificate_type.to_s
+    type == "DISTRIBUTION" || type == "IOS_DISTRIBUTION"
+  end
+
+  if certs.empty?
+    UI.important("No Distribution certificates found to revoke")
+    return false
+  end
+
+  target = certs.max_by { |c| c.expiration_date.to_s }
+  UI.important("Revoking Distribution cert id=#{target.id} type=#{target.certificate_type} (no private key on this runner)")
+  target.delete!
+  true
+end
+
+def ensure_distribution_cert!(api_key:, keychain_path:, keychain_password:)
+  cert(
+    api_key: api_key,
+    development: false,
+    force: false,
+    keychain_path: keychain_path,
+    keychain_password: keychain_password
+  )
+rescue => e
+  message = e.message.to_s
+  unless message.include?("maximum number") || message.include?("another Distribution")
+    raise
+  end
+
+  UI.important("Distribution cert limit hit; revoking one portal cert without a local private key")
+  revoked = revoke_one_orphaned_distribution_cert!(api_key: api_key)
+  UI.user_error!("Could not free a Distribution cert slot: #{message}") unless revoked
+
+  cert(
+    api_key: api_key,
+    development: false,
+    force: false,
+    keychain_path: keychain_path,
+    keychain_password: keychain_password
+  )
+end
+
+platform :ios do
+  desc "Archive, export, and upload Nutrimotion to TestFlight"
+  lane :beta do
+    api_key = app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_filepath: ENV.fetch("ASC_KEY_PATH"),
+      duration: 1200,
+      in_house: false
+    )
+
+    team_id = ENV.fetch("APPLE_TEAM_ID")
+    bundle_id = PACKAGE_NAME
+    keychain_name = "nutrimotion-ci.keychain-db"
+    keychain_password = ENV.fetch("CI_KEYCHAIN_PASSWORD", "nutrimotion-ci-temp")
+    keychain_path = File.expand_path("~/Library/Keychains/#{keychain_name}")
+    project_root = File.expand_path("..", __dir__)
+
+    unless File.exist?(keychain_path)
+      create_keychain(
+        name: keychain_name,
+        password: keychain_password,
+        default_keychain: true,
+        unlock: true,
+        timeout: 3600,
+        lock_when_sleeps: false
+      )
+    else
+      unlock_keychain(
+        path: keychain_path,
+        password: keychain_password
+      )
+    end
+
+    delete_apple_distribution_identities!(keychain_path)
+
+    import_distribution_p12!(
+      keychain_name: keychain_name,
+      keychain_password: keychain_password
+    )
+
+    if distribution_identity_in_keychain?(keychain_path)
+      UI.success("Using Apple Distribution identity from IOS_DISTRIBUTION_CERT_P12_BASE64")
+    else
+      UI.important("Creating a fresh Apple Distribution certificate via App Store Connect API")
+      ensure_distribution_cert!(
+        api_key: api_key,
+        keychain_path: keychain_path,
+        keychain_password: keychain_password
+      )
+    end
+
+    unless distribution_identity_in_keychain?(keychain_path)
+      UI.user_error!("No Apple Distribution identity available after cert setup")
+    end
+
+    profile_uuid = sigh(
+      api_key: api_key,
+      app_identifier: bundle_id,
+      provisioning_name: PROVISIONING_NAME,
+      filename: "Nutrimotion_AppStore.mobileprovision",
+      force: true
+    )
+
+    output_dir = ENV.fetch("RUNNER_TEMP", "/tmp")
+
+    Dir.chdir(project_root) do
+      sh("./gradlew :composeApp:linkReleaseFrameworkIosArm64")
+    end
+
+    build_app(
+      project: File.join(project_root, "iosApp/iosApp.xcodeproj"),
+      scheme: "iosApp",
+      configuration: "Release",
+      clean: false,
+      export_method: "app-store",
+      output_directory: output_dir,
+      output_name: IPA_NAME,
+      skip_profile_detection: true,
+      xcargs: [
+        "DEVELOPMENT_TEAM=#{team_id}",
+        "CODE_SIGN_STYLE=Manual",
+        "CODE_SIGN_IDENTITY='Apple Distribution'",
+        "PROVISIONING_PROFILE=#{profile_uuid}"
+      ].join(" "),
+      export_options: {
+        method: "app-store",
+        signingStyle: "manual",
+        teamID: team_id,
+        provisioningProfiles: {
+          bundle_id => PROVISIONING_NAME
+        },
+        uploadSymbols: true,
+        manageAppVersionAndBuildNumber: false
+      }
+    )
+
+    upload_to_testflight(
+      api_key: api_key,
+      ipa: File.join(output_dir, "#{IPA_NAME}.ipa"),
+      skip_waiting_for_build_processing: true,
+      distribute_external: false
+    )
+  end
+
+  desc "Link Kotlin framework for iOS simulator"
+  lane :simulator do
+    project_root = File.expand_path("..", __dir__)
+    Dir.chdir(project_root) do
+      sh("./gradlew :composeApp:linkDebugFrameworkIosSimulatorArm64")
+    end
+  end
+end
+
+platform :android do
+  desc "Compile release APK (unsigned OK for CI checks)"
+  lane :build do
+    project_root = File.expand_path("..", __dir__)
+    gradle(
+      task: ":composeApp:assembleRelease",
+      project_dir: project_root,
+      properties: {
+        "VERSION_CODE" => ENV.fetch("VERSION_CODE", "1"),
+        "VERSION_NAME" => ENV.fetch("VERSION_NAME", "1.0.0")
+      }
+    )
+  end
+
+  desc "Build signed AAB and upload to Play Console internal testing"
+  lane :internal do
+    version_code = ENV.fetch("VERSION_CODE")
+    version_name = ENV.fetch("VERSION_NAME", "1.0.0")
+    json_key = ENV.fetch("PLAY_STORE_JSON_KEY_PATH")
+    project_root = File.expand_path("..", __dir__)
+
+    gradle(
+      task: ":composeApp:bundleRelease",
+      project_dir: project_root,
+      properties: {
+        "VERSION_CODE" => version_code,
+        "VERSION_NAME" => version_name
+      }
+    )
+
+    aab_path = File.join(
+      project_root,
+      "composeApp/build/outputs/bundle/release/composeApp-release.aab"
+    )
+    UI.user_error!("AAB not found at #{aab_path}") unless File.exist?(aab_path)
+
+    upload_to_play_store(
+      package_name: PACKAGE_NAME,
+      track: "internal",
+      aab: aab_path,
+      json_key: json_key,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+      release_status: "completed"
+    )
+  end
+end

@@ -1,0 +1,5 @@
+TEAM_ID=3CPQ68PXHC
+BUNDLE_ID=com.nutrimotion.cmp
+APP_NAME=Nutrimotion
+// xcconfig treats // as a comment — break the URL with an empty $( ) so https:// survives.
+API_BASE_URL=https:/$()/app.nutrimotion.com

@@ -51,10 +51,31 @@ export interface AddMealFormProps {
   onCancel: () => void;
   /** When set, form updates this meal (PATCH) instead of creating (POST). */
   initialMeal?: MealFormInitial | null;
+  /** Prefill scheduled date when creating from a calendar cell (YYYY-MM-DD). */
+  defaultDate?: string;
+  /** Prefill meal slot when creating from a calendar cell. */
+  defaultSlot?: MealSlot;
+  /** Hide the back button (e.g. when shown inside a dialog). */
+  hideBackButton?: boolean;
 }
 
-export default function AddMealForm({ onSuccess, onCancel, initialMeal }: AddMealFormProps) {
-  const [formData, setFormData] = useState(initialFormData);
+function createBlankForm(defaultDate?: string, defaultSlot?: MealSlot) {
+  return {
+    ...initialFormData,
+    scheduledDate: defaultDate || initialFormData.scheduledDate,
+    slot: defaultSlot || initialFormData.slot,
+  };
+}
+
+export default function AddMealForm({
+  onSuccess,
+  onCancel,
+  initialMeal,
+  defaultDate,
+  defaultSlot,
+  hideBackButton = false,
+}: AddMealFormProps) {
+  const [formData, setFormData] = useState(() => createBlankForm(defaultDate, defaultSlot));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingMeals, setExistingMeals] = useState<Array<{ _id: string; name: string; description?: string; imageUrl?: string; price: number; slot: string; scheduledDate: string | Date; instagramLink?: string }>>([]);
@@ -76,11 +97,11 @@ export default function AddMealForm({ onSuccess, onCancel, initialMeal }: AddMea
       setCopyFromId('');
       setError(null);
     } else {
-      setFormData(initialFormData);
+      setFormData(createBlankForm(defaultDate, defaultSlot));
       setCopyFromId('');
       setError(null);
     }
-  }, [initialMeal]);
+  }, [initialMeal, defaultDate, defaultSlot]);
 
   useEffect(() => {
     const fetchMeals = async () => {
@@ -140,7 +161,7 @@ export default function AddMealForm({ onSuccess, onCancel, initialMeal }: AddMea
       } else {
         await axios.post('/api/admin/meals', payload);
       }
-      setFormData(initialFormData);
+      setFormData(createBlankForm(defaultDate, defaultSlot));
       setCopyFromId('');
       onSuccess();
     } catch (err: unknown) {
@@ -162,14 +183,16 @@ export default function AddMealForm({ onSuccess, onCancel, initialMeal }: AddMea
     <Card>
       <CardContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-          <Button
-            startIcon={<ArrowBackIcon />}
-            onClick={onCancel}
-            size="small"
-            sx={{ mr: 1 }}
-          >
-            Back
-          </Button>
+          {!hideBackButton && (
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={onCancel}
+              size="small"
+              sx={{ mr: 1 }}
+            >
+              Back
+            </Button>
+          )}
           <Typography variant="h6">{isEdit ? 'Edit Meal' : 'Add New Meal'}</Typography>
         </Box>
 

@@ -44,9 +44,10 @@ Once you have the ADMINISTRATOR role, you can access:
 
 ### Meal Management
 - **URL**: `https://localhost:3000/admin/meals`
-- Create and edit meal packages
-- **URL**: `https://localhost:3000/admin/meals/schedule`
-- Calendar-based meal scheduling (breakfast, lunch, dinner)
+- Calendar-based meal scheduling (day / week / month views)
+- Defaults to today; add meals with the + button on each slot/day cell
+- Create, edit, delete, and copy day/week meal packages
+- Legacy URL `/admin/meals/schedule` redirects here
 
 ### Order Management
 - **URL**: `https://localhost:3000/admin/orders`

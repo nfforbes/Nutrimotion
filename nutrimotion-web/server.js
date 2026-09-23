@@ -10,7 +10,7 @@ const path = require('path');
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
-const port = 3000;
+const port = Number(process.env.PORT) || 3600;
 
 // SSL certificate paths
 const certPath = path.join(__dirname, 'cert', 'localhost.pem');

@@ -1,0 +1,129 @@
+name: Android Build & Play Store
+
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - "mobile-apps/nutrimotion-cmp/**"
+      - ".github/workflows/deploy-android-play.yml"
+  pull_request:
+    paths:
+      - "mobile-apps/nutrimotion-cmp/**"
+      - ".github/workflows/deploy-android-play.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: android-nutrimotion-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "17"
+  GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dkotlin.daemon.jvmargs=-Xmx4g"
+  VERSION_NAME: "1.0.0"
+
+jobs:
+  build-release:
+    name: Assemble ComposeApp (Android release)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-apps/nutrimotion-cmp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Assemble release (unsigned compile check)
+        run: ./gradlew :composeApp:assembleRelease -PVERSION_CODE=${{ github.run_number }} -PVERSION_NAME=${{ env.VERSION_NAME }} --stacktrace
+
+  deploy-play:
+    name: Sign & upload Play internal
+    needs: build-release
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-apps/nutrimotion-cmp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require Play / signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        run: |
+          missing=0
+          for name in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD PLAY_STORE_JSON_KEY; do
+            eval "val=\${$name}"
+            if [ -z "$val" ]; then
+              echo "::error::Missing secret $name. See mobile-apps/nutrimotion-cmp/docs/STORE_CI.md"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: mobile-apps/nutrimotion-cmp
+
+      - name: Write upload keystore and Play API JSON
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        run: |
+          KEYSTORE_PATH="${RUNNER_TEMP}/nutrimotion-upload.jks"
+          JSON_KEY_PATH="${RUNNER_TEMP}/play-store.json"
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$KEYSTORE_PATH"
+          printf '%s\n' "$PLAY_STORE_JSON_KEY" > "$JSON_KEY_PATH"
+          echo "ANDROID_KEYSTORE_PATH=$KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "PLAY_STORE_JSON_KEY_PATH=$JSON_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Build AAB + upload to Play internal (Fastlane)
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ env.VERSION_NAME }}
+        run: bundle exec fastlane android internal
+
+      - name: Upload AAB artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nutrimotion-android-aab
+          path: mobile-apps/nutrimotion-cmp/composeApp/build/outputs/bundle/release/*.aab
+          if-no-files-found: ignore
+          retention-days: 14
