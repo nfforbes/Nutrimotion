@@ -50,7 +50,14 @@ In GitHub → Nutrimotion repo → **Settings → Secrets and variables → Acti
 
 1. ASC: **Nutrimotion Jamaica** / `com.nutrimotion.cmp` exists (already verified).
 2. Play Console: create app `com.nutrimotion.cmp` and grant the service account release-to-testing access.
+   - Invite: `android-developer@api-project-43186447288.iam.gserviceaccount.com`
+   - Path: **Users and permissions** → Invite user → App access for **Nutrimotion** → **Release apps to testing tracks** (Account permissions also need Play Console API access enabled for the SA).
+   - Until this invite is accepted/granted, CI fails with `Google Api Error: The caller does not have permission` (403). The same SA already works for Lukaria (`com.lukariagroup.app`).
 3. ASC API key needs **Admin** (Fastlane creates Distribution cert + App Store profile named **Nutrimotion App Store**).
+
+### Store listing images (Play)
+
+`fastlane/metadata/android/en-US/images/` ships icon (512), featureGraphic (1024×500), and phoneScreenshots. The Android lane uploads them (`skip_upload_images/screenshots: false`). App binary icons live under `composeApp/src/androidMain/res/mipmap-*` and iOS `Assets.xcassets/AppIcon.appiconset`.
 
 ---
 
