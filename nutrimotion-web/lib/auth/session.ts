@@ -84,7 +84,9 @@ export async function getSessionFromBearerToken(token: string) {
       permissions: getPermissionsForRoles([UserRole.CLIENT]),
       dbUserId: newUser._id.toString(),
     };
-  } catch {
+  } catch (error) {
+    const err = error as { code?: string; name?: string; message?: string };
+    console.warn('[auth] Bearer token rejected:', err.code || err.name, err.message);
     return null;
   }
 }
@@ -100,7 +102,8 @@ export async function getBearerToken(): Promise<string | null> {
       return auth.slice(7);
     }
     return null;
-  } catch {
+  } catch (error) {
+    console.warn('[auth] Could not read Authorization header:', (error as Error)?.message);
     return null;
   }
 }
