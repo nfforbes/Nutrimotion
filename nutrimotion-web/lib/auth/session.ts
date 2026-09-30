@@ -28,20 +28,66 @@ export async function getSession() {
   return session;
 }
 
+function defaultClientSession(user: { sub: string; email: string; name: string; picture?: string }) {
+  return {
+    user,
+    roles: [UserRole.CLIENT],
+    permissions: getPermissionsForRoles([UserRole.CLIENT]),
+    dbUserId: '',
+  };
+}
+
+/** Access tokens often omit profile claims. The website gets them from the Auth0 session cookie. */
+async function profileForBearerToken(token: string, payload: any, sub: string) {
+  let email: string = payload.email || '';
+  let name: string = payload.name || payload.nickname || '';
+  let picture: string | undefined = payload.picture;
+
+  if (!email || !name) {
+    try {
+      const domain = AUTH0_DOMAIN.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const response = await fetch(`https://${domain}/userinfo`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const info = await response.json();
+        email = email || info.email || '';
+        name = name || info.name || info.nickname || email || 'User';
+        picture = picture || info.picture;
+      }
+    } catch (error) {
+      console.warn('[auth] Could not read Auth0 profile:', (error as Error)?.message);
+    }
+  }
+
+  return { sub, email, name: name || email || 'User', picture };
+}
+
 /**
  * Verify a JWT Bearer token from a mobile client and return a session-like object.
+ * A valid token is enough to sign in. Database failures fall back to the default
+ * client session, matching cookie login on the website.
  */
 export async function getSessionFromBearerToken(token: string) {
+  let payload: any;
   try {
     const domain = AUTH0_DOMAIN.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    const { payload } = await jwtVerify(token, getJWKS(), {
+    ({ payload } = await jwtVerify(token, getJWKS(), {
       issuer: `https://${domain}/`,
       audience: AUTH0_AUDIENCE || undefined,
-    });
+    }));
+  } catch (error) {
+    const err = error as { code?: string; name?: string; message?: string };
+    console.warn('[auth] Bearer token rejected:', err.code || err.name, err.message);
+    return null;
+  }
 
-    const sub = payload.sub;
-    if (!sub) return null;
+  const sub = payload.sub as string | undefined;
+  if (!sub) return null;
 
+  const profile = await profileForBearerToken(token, payload, sub);
+
+  try {
     const userWithRoles = await getUserWithRoles(sub);
 
     if (userWithRoles) {
@@ -50,6 +96,7 @@ export async function getSessionFromBearerToken(token: string) {
           sub,
           email: userWithRoles.email,
           name: userWithRoles.name,
+          picture: profile.picture,
         },
         roles: userWithRoles.roles,
         permissions: userWithRoles.permissions,
@@ -57,37 +104,29 @@ export async function getSessionFromBearerToken(token: string) {
       };
     }
 
-    // First-time mobile user: create with default role
     await connectDB();
-    const email = (payload as any).email || '';
-    const name = (payload as any).name || (payload as any).nickname || email || 'User';
 
-    if (!email) {
-      return {
-        user: { sub, email: '', name: 'User' },
-        roles: [UserRole.CLIENT],
-        permissions: getPermissionsForRoles([UserRole.CLIENT]),
-        dbUserId: '',
-      };
+    if (!profile.email) {
+      return defaultClientSession(profile);
     }
 
     const newUser = await User.create({
       auth0Sub: sub,
-      email,
-      name,
+      email: profile.email,
+      name: profile.name,
       roles: [UserRole.CLIENT],
     });
 
     return {
-      user: { sub, email, name },
+      user: profile,
       roles: [UserRole.CLIENT],
       permissions: getPermissionsForRoles([UserRole.CLIENT]),
       dbUserId: newUser._id.toString(),
     };
   } catch (error) {
-    const err = error as { code?: string; name?: string; message?: string };
-    console.warn('[auth] Bearer token rejected:', err.code || err.name, err.message);
-    return null;
+    const err = error as { code?: string; message?: string };
+    console.warn('[auth] Database unavailable for mobile session:', err.code, err.message);
+    return defaultClientSession(profile);
   }
 }
 
