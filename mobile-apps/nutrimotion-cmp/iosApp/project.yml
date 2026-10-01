@@ -25,6 +25,8 @@ targets:
       - path: iosApp
         excludes:
           - "**/*.md"
+    dependencies:
+      - sdk: AuthenticationServices.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID)

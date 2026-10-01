@@ -2,11 +2,23 @@ package com.nutrimotion.cmp
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Autorenew
+import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -18,34 +30,59 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nutrimotion.cmp.data.model.CartItemRequest
 import com.nutrimotion.cmp.data.model.DeliveryAssignmentDto
+import com.nutrimotion.cmp.data.model.RecipeDto
 import com.nutrimotion.cmp.data.repository.NutrimotionRepository
 import com.nutrimotion.cmp.session.AppMode
 import com.nutrimotion.cmp.session.SessionViewModel
-import com.nutrimotion.cmp.ui.components.LoadingBox
+import com.nutrimotion.cmp.ui.components.DashboardItem
+import com.nutrimotion.cmp.ui.components.IconDashboard
 import com.nutrimotion.cmp.ui.screens.LoginScreen
 import com.nutrimotion.cmp.ui.screens.admin.AnalyticsScreen
 import com.nutrimotion.cmp.ui.screens.client.CartScreen
 import com.nutrimotion.cmp.ui.screens.client.CatalogScreen
 import com.nutrimotion.cmp.ui.screens.client.CheckoutScreen
-import com.nutrimotion.cmp.ui.screens.client.ClientHomeScreen
 import com.nutrimotion.cmp.ui.screens.client.MealsScreen
 import com.nutrimotion.cmp.ui.screens.client.OrdersScreen
 import com.nutrimotion.cmp.ui.screens.client.ProfileScreen
+import com.nutrimotion.cmp.ui.screens.client.RecipeDetailScreen
+import com.nutrimotion.cmp.ui.screens.client.RecipesScreen
 import com.nutrimotion.cmp.ui.screens.client.SubscriptionsScreen
 import com.nutrimotion.cmp.ui.screens.client.TrackingScreen
 import com.nutrimotion.cmp.ui.screens.driver.DriverAssignmentDetailScreen
 import com.nutrimotion.cmp.ui.screens.driver.DriverAssignmentsScreen
-import com.nutrimotion.cmp.ui.screens.driver.DriverDashboardScreen
 import com.nutrimotion.cmp.ui.theme.NutrimotionTheme
 
-private enum class ClientTab { Home, Meals, Catalog, Cart, Orders, Subs, Profile }
-private enum class DriverTab { Home, Assignments, Profile }
-private enum class AdminTab { Analytics, Profile }
-private enum class CatalogKind { Training, Books, Recipes, Videos }
+private enum class ClientSection(
+    val label: String,
+    val icon: ImageVector,
+    val color: Color,
+) {
+    Meals("Meals", Icons.Filled.Restaurant, Color(0xFFEE4D24)),
+    Training("Training", Icons.Filled.FitnessCenter, Color(0xFF34C759)),
+    Books("Books", Icons.Filled.MenuBook, Color(0xFF007AFF)),
+    Recipes("Recipes", Icons.Filled.RestaurantMenu, Color(0xFFFF9500)),
+    Videos("Videos", Icons.Filled.PlayCircle, Color(0xFFAF52DE)),
+    Cart("Cart", Icons.Filled.ShoppingCart, Color(0xFFFF2D55)),
+    Orders("Orders", Icons.Filled.ReceiptLong, Color(0xFF5AC8FA)),
+    Subscriptions("Subscriptions", Icons.Filled.Autorenew, Color(0xFF5856D6)),
+    Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
+}
+
+private enum class DriverSection(val label: String, val icon: ImageVector, val color: Color) {
+    Deliveries("Deliveries", Icons.Filled.LocalShipping, Color(0xFFEE4D24)),
+    Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
+}
+
+private enum class AdminSection(val label: String, val icon: ImageVector, val color: Color) {
+    Analytics("Analytics", Icons.Filled.BarChart, Color(0xFF30B0C7)),
+    Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,12 +92,9 @@ fun App(sessionViewModel: SessionViewModel = viewModel { SessionViewModel() }) {
 
     NutrimotionTheme {
         when {
-            session.loading && !session.loggedIn -> LoadingBox()
             !session.loggedIn -> LoginScreen(
                 state = session,
-                onTokenChange = sessionViewModel::onTokenInputChange,
-                onLoginWithToken = sessionViewModel::loginWithToken,
-                onLoginWithAuth0 = sessionViewModel::loginWithAuth0,
+                onLogin = sessionViewModel::login,
             )
             session.mode == AppMode.ADMIN || sessionViewModel.isAdminOnly() -> AdminShell(
                 sessionViewModel = sessionViewModel,
@@ -100,31 +134,30 @@ private fun AdminShell(
     sessionViewModel: SessionViewModel,
     repo: NutrimotionRepository,
 ) {
-    var tab by remember { mutableStateOf(AdminTab.Analytics) }
+    var section by remember { mutableStateOf<AdminSection?>(null) }
+    val open = section
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Admin") },
-                actions = { ModeSwitcher(sessionViewModel, AppMode.ADMIN) },
-            )
-        },
-        bottomBar = {
-            NavigationBar {
-                AdminTab.entries.forEach { t ->
-                    NavigationBarItem(
-                        selected = tab == t,
-                        onClick = { tab = t },
-                        icon = { Text(t.name.take(1)) },
-                        label = { Text(t.name) },
-                    )
+            if (open != null) {
+                SectionTopBar(open.label, onBack = { section = null }) {
+                    ModeSwitcher(sessionViewModel, AppMode.ADMIN)
                 }
             }
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            when (tab) {
-                AdminTab.Analytics -> {
+            if (open == null) {
+                IconDashboard(
+                    title = "Nutrimotion",
+                    subtitle = "Admin",
+                    items = AdminSection.entries.map { item ->
+                        DashboardItem(item.label, item.icon, item.color) { section = item }
+                    },
+                    headerActions = { ModeSwitcher(sessionViewModel, AppMode.ADMIN) },
+                )
+            } else when (open) {
+                AdminSection.Analytics -> {
                     if (sessionViewModel.canViewAnalytics()) {
                         AnalyticsScreen(repo)
                     } else {
@@ -134,7 +167,7 @@ private fun AdminShell(
                         }
                     }
                 }
-                AdminTab.Profile -> ProfileScreen(repo, sessionViewModel::logout)
+                AdminSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
             }
         }
     }
@@ -147,35 +180,52 @@ private fun ClientShell(
     repo: NutrimotionRepository,
     userName: String?,
 ) {
-    var tab by remember { mutableStateOf(ClientTab.Home) }
-    var catalogKind by remember { mutableStateOf(CatalogKind.Training) }
+    var section by remember { mutableStateOf<ClientSection?>(null) }
+    var selectedRecipe by remember { mutableStateOf<RecipeDto?>(null) }
     var checkout by remember { mutableStateOf(false) }
     var trackingOrderId by remember { mutableStateOf<String?>(null) }
+    val open = section
+    val recipe = selectedRecipe
+    val showDashboard = open == null && !checkout && trackingOrderId == null
+    val title = when {
+        trackingOrderId != null -> "Tracking"
+        checkout -> "Checkout"
+        recipe != null -> recipe.title
+        else -> open?.label ?: "Nutrimotion"
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Nutrimotion") },
-                actions = { ModeSwitcher(sessionViewModel, AppMode.CLIENT) },
-            )
-        },
-        bottomBar = {
-            if (trackingOrderId == null && !checkout) {
-                NavigationBar {
-                    ClientTab.entries.forEach { t ->
-                        NavigationBarItem(
-                            selected = tab == t,
-                            onClick = { tab = t },
-                            icon = { Text(t.name.take(1)) },
-                            label = { Text(t.name) },
-                        )
-                    }
+            if (!showDashboard) {
+                SectionTopBar(
+                    title = title,
+                    onBack = {
+                        when {
+                            trackingOrderId != null -> trackingOrderId = null
+                            checkout -> checkout = false
+                            recipe != null -> selectedRecipe = null
+                            else -> section = null
+                        }
+                    },
+                ) {
+                    ModeSwitcher(sessionViewModel, AppMode.CLIENT)
                 }
             }
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             when {
+                showDashboard -> IconDashboard(
+                    title = "Nutrimotion",
+                    subtitle = userName?.let { "Hello, $it" } ?: "Hello",
+                    items = ClientSection.entries.map { item ->
+                        DashboardItem(item.label, item.icon, item.color) {
+                            selectedRecipe = null
+                            section = item
+                        }
+                    },
+                    headerActions = { ModeSwitcher(sessionViewModel, AppMode.CLIENT) },
+                )
                 trackingOrderId != null -> TrackingScreen(
                     repo = repo,
                     orderId = trackingOrderId!!,
@@ -183,82 +233,60 @@ private fun ClientShell(
                 )
                 checkout -> CheckoutScreen(repo) {
                     checkout = false
-                    tab = ClientTab.Orders
+                    section = ClientSection.Orders
                 }
-                else -> when (tab) {
-                    ClientTab.Home -> ClientHomeScreen(repo, userName)
-                    ClientTab.Meals -> MealsScreen(repo) { tab = ClientTab.Cart }
-                    ClientTab.Catalog -> CatalogHub(repo, catalogKind) { catalogKind = it }
-                    ClientTab.Cart -> CartScreen(repo) { checkout = true }
-                    ClientTab.Orders -> OrdersScreen(repo) { trackingOrderId = it }
-                    ClientTab.Subs -> SubscriptionsScreen(repo)
-                    ClientTab.Profile -> ProfileScreen(repo, sessionViewModel::logout)
-                }
+                open == ClientSection.Meals -> MealsScreen(repo) { section = ClientSection.Cart }
+                open == ClientSection.Training -> CatalogPage(repo, ClientSection.Training)
+                open == ClientSection.Books -> CatalogPage(repo, ClientSection.Books)
+                open == ClientSection.Recipes && recipe != null -> RecipeDetailScreen(recipe)
+                open == ClientSection.Recipes -> RecipesScreen(repo) { selectedRecipe = it }
+                open == ClientSection.Videos -> CatalogPage(repo, ClientSection.Videos)
+                open == ClientSection.Cart -> CartScreen(repo) { checkout = true }
+                open == ClientSection.Orders -> OrdersScreen(repo) { trackingOrderId = it }
+                open == ClientSection.Subscriptions -> SubscriptionsScreen(repo)
+                open == ClientSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
             }
         }
     }
 }
 
 @Composable
-private fun CatalogHub(
-    repo: NutrimotionRepository,
-    kind: CatalogKind,
-    onKind: (CatalogKind) -> Unit,
-) {
-    Column {
-        Row(modifier = Modifier.padding(8.dp)) {
-            CatalogKind.entries.forEach { k ->
-                TextButton(onClick = { onKind(k) }) {
-                    Text(if (k == kind) "[${k.name}]" else k.name)
-                }
-            }
+private fun CatalogPage(repo: NutrimotionRepository, section: ClientSection) {
+    when (section) {
+        ClientSection.Training -> CatalogScreen("training", { repo.getTraining() }) { item ->
+            repo.addCartItem(
+                CartItemRequest(
+                    itemType = "training",
+                    itemId = item.catalogId(),
+                    name = item.name ?: item.title.orEmpty(),
+                    price = item.price,
+                    imageUrl = item.imageUrl,
+                )
+            )
         }
-        when (kind) {
-            CatalogKind.Training -> CatalogScreen("training", { repo.getTraining() }) { item ->
-                repo.addCartItem(
-                    CartItemRequest(
-                        itemType = "training",
-                        itemId = item.id.orEmpty(),
-                        name = item.name ?: item.title.orEmpty(),
-                        price = item.price,
-                        imageUrl = item.imageUrl,
-                    )
+        ClientSection.Books -> CatalogScreen("books", { repo.getBooks() }) { item ->
+            repo.addCartItem(
+                CartItemRequest(
+                    itemType = "book",
+                    itemId = item.catalogId(),
+                    name = item.title ?: item.name.orEmpty(),
+                    price = item.price,
+                    imageUrl = item.coverImageUrl ?: item.imageUrl,
                 )
-            }
-            CatalogKind.Books -> CatalogScreen("books", { repo.getBooks() }) { item ->
-                repo.addCartItem(
-                    CartItemRequest(
-                        itemType = "book",
-                        itemId = item.id.orEmpty(),
-                        name = item.title ?: item.name.orEmpty(),
-                        price = item.price,
-                        imageUrl = item.coverImageUrl ?: item.imageUrl,
-                    )
-                )
-            }
-            CatalogKind.Recipes -> CatalogScreen("recipes", { repo.getRecipes() }) { item ->
-                repo.addCartItem(
-                    CartItemRequest(
-                        itemType = "subscription",
-                        itemId = item.id.orEmpty(),
-                        name = item.title ?: item.name.orEmpty(),
-                        price = item.price,
-                        imageUrl = item.imageUrl,
-                    )
-                )
-            }
-            CatalogKind.Videos -> CatalogScreen("videos", { repo.getVideos() }) { item ->
-                repo.addCartItem(
-                    CartItemRequest(
-                        itemType = "subscription",
-                        itemId = item.id.orEmpty(),
-                        name = item.title ?: item.name.orEmpty(),
-                        price = item.price,
-                        imageUrl = item.thumbnailUrl ?: item.imageUrl,
-                    )
-                )
-            }
+            )
         }
+        ClientSection.Videos -> CatalogScreen("videos", { repo.getVideos() }) { item ->
+            repo.addCartItem(
+                CartItemRequest(
+                    itemType = "subscription",
+                    itemId = item.catalogId(),
+                    name = item.title ?: item.name.orEmpty(),
+                    price = item.price,
+                    imageUrl = item.thumbnailUrl ?: item.imageUrl,
+                )
+            )
+        }
+        else -> Unit
     }
 }
 
@@ -269,42 +297,61 @@ private fun DriverShell(
     repo: NutrimotionRepository,
     userName: String?,
 ) {
-    var tab by remember { mutableStateOf(DriverTab.Home) }
+    var section by remember { mutableStateOf<DriverSection?>(null) }
     var selected by remember { mutableStateOf<DeliveryAssignmentDto?>(null) }
+    val open = section
+    val showDashboard = open == null && selected == null
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Driver${userName?.let { " · $it" } ?: ""}") },
-                actions = { ModeSwitcher(sessionViewModel, AppMode.DRIVER) },
-            )
-        },
-        bottomBar = {
-            if (selected == null) {
-                NavigationBar {
-                    DriverTab.entries.forEach { t ->
-                        NavigationBarItem(
-                            selected = tab == t,
-                            onClick = { tab = t },
-                            icon = { Text(t.name.take(1)) },
-                            label = { Text(t.name) },
-                        )
-                    }
+            if (!showDashboard) {
+                SectionTopBar(
+                    title = if (selected != null) "Delivery" else open?.label ?: "Driver",
+                    onBack = {
+                        if (selected != null) selected = null else section = null
+                    },
+                ) {
+                    ModeSwitcher(sessionViewModel, AppMode.DRIVER)
                 }
             }
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
             when {
+                showDashboard -> IconDashboard(
+                    title = "Nutrimotion",
+                    subtitle = userName?.let { "Driver · $it" } ?: "Driver",
+                    items = DriverSection.entries.map { item ->
+                        DashboardItem(item.label, item.icon, item.color) { section = item }
+                    },
+                    headerActions = { ModeSwitcher(sessionViewModel, AppMode.DRIVER) },
+                )
                 selected != null -> DriverAssignmentDetailScreen(
                     repo = repo,
                     assignment = selected!!,
                     onBack = { selected = null },
                 )
-                tab == DriverTab.Home -> DriverDashboardScreen(repo)
-                tab == DriverTab.Assignments -> DriverAssignmentsScreen(repo) { selected = it }
-                tab == DriverTab.Profile -> ProfileScreen(repo, sessionViewModel::logout)
+                open == DriverSection.Deliveries -> DriverAssignmentsScreen(repo) { selected = it }
+                open == DriverSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SectionTopBar(
+    title: String,
+    onBack: () -> Unit,
+    actions: @Composable () -> Unit,
+) {
+    TopAppBar(
+        title = { Text(title) },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+            }
+        },
+        actions = { actions() },
+    )
 }

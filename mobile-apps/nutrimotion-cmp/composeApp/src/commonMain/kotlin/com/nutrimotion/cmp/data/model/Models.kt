@@ -95,7 +95,8 @@ data class PackageDto(
 
 @Serializable
 data class CatalogItemDto(
-    @SerialName("_id") val id: String? = null,
+    val id: String? = null,
+    @SerialName("_id") val mongoId: String? = null,
     val name: String? = null,
     val title: String? = null,
     val description: String = "",
@@ -107,6 +108,24 @@ data class CatalogItemDto(
     val duration: String? = null,
     val level: String? = null,
     val category: String? = null,
+) {
+    fun catalogId(): String = id?.takeIf { it.isNotBlank() } ?: mongoId.orEmpty()
+}
+
+@Serializable
+data class RecipeDto(
+    val id: String? = null,
+    @SerialName("_id") val mongoId: String? = null,
+    val title: String = "",
+    val description: String = "",
+    val imageUrl: String? = null,
+    val ingredients: List<String> = emptyList(),
+    val instructions: List<String> = emptyList(),
+    val prepTime: Int = 0,
+    val cookTime: Int = 0,
+    val servings: Int = 0,
+    val difficulty: String = "",
+    val tags: List<String> = emptyList(),
 )
 
 @Serializable

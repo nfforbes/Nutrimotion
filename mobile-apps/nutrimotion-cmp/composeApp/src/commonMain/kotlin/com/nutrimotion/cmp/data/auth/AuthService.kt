@@ -1,8 +1,11 @@
 package com.nutrimotion.cmp.data.auth
 
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+
 /**
  * Platform auth (Auth0 native). Returns an access token for API Bearer auth.
- * Debug builds may use [DevAuthService] when Auth0 client IDs are placeholders.
  */
 interface AuthService {
     suspend fun login(): Result<String>
@@ -16,6 +19,10 @@ expect fun createAuthService(): AuthService
 /** In-memory / shared prefs token holder used by ApiClient. */
 object TokenStore {
     private var token: String? = null
+    private val _unauthorized = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+
+    /** Emits when the API rejects the current token (401). */
+    val unauthorized: SharedFlow<Unit> = _unauthorized.asSharedFlow()
 
     fun set(token: String?) {
         this.token = token
@@ -25,5 +32,10 @@ object TokenStore {
 
     fun clear() {
         token = null
+    }
+
+    fun notifyUnauthorized() {
+        token = null
+        _unauthorized.tryEmit(Unit)
     }
 }

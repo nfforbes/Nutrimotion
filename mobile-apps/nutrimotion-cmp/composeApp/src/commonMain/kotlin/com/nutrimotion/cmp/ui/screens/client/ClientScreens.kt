@@ -34,6 +34,7 @@ import com.nutrimotion.cmp.data.model.MealSlots
 import com.nutrimotion.cmp.data.model.OrderDto
 import com.nutrimotion.cmp.data.model.PackageDto
 import com.nutrimotion.cmp.data.model.ProfileUpdateRequest
+import com.nutrimotion.cmp.data.model.RecipeDto
 import com.nutrimotion.cmp.data.model.SubscriptionDto
 import com.nutrimotion.cmp.data.model.TrackingResponse
 import com.nutrimotion.cmp.data.model.UserProfile
@@ -463,6 +464,82 @@ fun TrackingScreen(repo: NutrimotionRepository, orderId: String, onBack: () -> U
                     centerLat = loc?.lat,
                     centerLng = loc?.lng,
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun RecipesScreen(repo: NutrimotionRepository, onOpen: (RecipeDto) -> Unit) {
+    var items by remember { mutableStateOf<List<RecipeDto>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(Unit) {
+        loading = true
+        repo.getRecipes()
+            .onSuccess {
+                items = it
+                error = null
+            }
+            .onFailure { error = it.message }
+        loading = false
+    }
+
+    SimpleListScreen(items, loading, error, "No recipes yet", onRetry = {}) { recipe ->
+        Column {
+            Text(recipe.title, style = MaterialTheme.typography.titleMedium)
+            if (recipe.description.isNotBlank()) {
+                Text(
+                    recipe.description,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 3,
+                )
+            }
+            Text(
+                "${recipe.prepTime} min prep · ${recipe.cookTime} min cook · ${recipe.difficulty.replaceFirstChar { it.uppercase() }}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            PrimaryButton(text = "View recipe", onClick = { onOpen(recipe) })
+        }
+    }
+}
+
+@Composable
+fun RecipeDetailScreen(recipe: RecipeDto) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+    ) {
+        Text(recipe.title, style = MaterialTheme.typography.headlineSmall)
+        if (recipe.description.isNotBlank()) {
+            Spacer(Modifier.height(8.dp))
+            Text(recipe.description)
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "${recipe.prepTime} min prep · ${recipe.cookTime} min cook · ${recipe.servings} servings · ${recipe.difficulty.replaceFirstChar { it.uppercase() }}",
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(16.dp))
+        Text("Ingredients", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        if (recipe.ingredients.isEmpty()) {
+            Text("No ingredients listed")
+        } else {
+            recipe.ingredients.forEach { Text("• $it", modifier = Modifier.padding(vertical = 2.dp)) }
+        }
+        Spacer(Modifier.height(16.dp))
+        Text("Instructions", style = MaterialTheme.typography.titleMedium)
+        Spacer(Modifier.height(8.dp))
+        if (recipe.instructions.isEmpty()) {
+            Text("No instructions listed")
+        } else {
+            recipe.instructions.forEachIndexed { index, step ->
+                Text("${index + 1}. $step", modifier = Modifier.padding(vertical = 4.dp))
             }
         }
     }

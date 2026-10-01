@@ -87,6 +87,7 @@ class ApiClient {
         runCatching {
             val response = block()
             if (response.status == HttpStatusCode.Unauthorized) {
+                TokenStore.notifyUnauthorized()
                 throw ApiException(401, "Unauthorized")
             }
             if (!response.status.isSuccess()) {

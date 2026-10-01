@@ -25,7 +25,7 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
 
     suspend fun getBooks(): Result<List<CatalogItemDto>> = api.get("api/books")
 
-    suspend fun getRecipes(): Result<List<CatalogItemDto>> = api.get("api/recipes")
+    suspend fun getRecipes(): Result<List<RecipeDto>> = api.get("api/recipes")
 
     suspend fun getVideos(): Result<List<CatalogItemDto>> = api.get("api/videos")
 
