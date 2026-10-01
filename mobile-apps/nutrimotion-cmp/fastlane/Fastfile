@@ -167,6 +167,9 @@ platform :ios do
 
     Dir.chdir(project_root) do
       sh("./gradlew :composeApp:linkReleaseFrameworkIosArm64")
+      # The Kotlin daemon holds several GB. Xcode's linker is killed (signal)
+      # if that heap is still resident when ld starts.
+      sh("./gradlew --stop")
     end
 
     build_app(

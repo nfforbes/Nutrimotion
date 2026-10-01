@@ -55,6 +55,7 @@ targets:
           fi
           cd "$SRCROOT/.."
           ./gradlew :composeApp:embedAndSignAppleFrameworkForXcode
+          ./gradlew --stop
 schemes:
   iosApp:
     build:
