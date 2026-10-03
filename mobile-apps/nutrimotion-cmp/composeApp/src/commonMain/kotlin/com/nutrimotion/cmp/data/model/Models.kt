@@ -15,10 +15,12 @@ object MealSlots {
     const val LUNCH = "lunch"
     const val SMOOTHIES = "smoothies"
     const val JUICE_SHOT = "juice_shot"
-    val ORDER = listOf(BREAKFAST, LUNCH, SMOOTHIES, JUICE_SHOT)
+    const val DINNER = "dinner"
+    val ORDER = listOf(BREAKFAST, LUNCH, DINNER, SMOOTHIES, JUICE_SHOT)
     val LABELS = mapOf(
         BREAKFAST to "Breakfast",
         LUNCH to "Lunch",
+        DINNER to "Dinner",
         SMOOTHIES to "Smoothies",
         JUICE_SHOT to "Juice Shots",
     )

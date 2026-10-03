@@ -62,6 +62,7 @@ export default function PackageSelection({
                 [MealSlot.LUNCH]: [],
                 [MealSlot.SMOOTHIES]: [],
                 [MealSlot.JUICE_SHOT]: [],
+                dinner: [],
             };
         });
         return init;
@@ -92,6 +93,8 @@ export default function PackageSelection({
                 return pkg.smoothieCount ?? pkg.dinnerCount ?? 0;
             case MealSlot.JUICE_SHOT:
                 return pkg.juiceShotCount ?? 0;
+            case 'dinner':
+                return pkg.smoothieCount == null ? 0 : (pkg.dinnerCount ?? 0);
             default:
                 return 0;
         }
@@ -116,12 +119,14 @@ export default function PackageSelection({
             [MealSlot.LUNCH]: countSlotAcrossPackage(selections, MealSlot.LUNCH),
             [MealSlot.SMOOTHIES]: countSlotAcrossPackage(selections, MealSlot.SMOOTHIES),
             [MealSlot.JUICE_SHOT]: countSlotAcrossPackage(selections, MealSlot.JUICE_SHOT),
+            dinner: countSlotAcrossPackage(selections, 'dinner'),
         }),
         [selections, availableDays]
     );
 
     const smoothieLimit = pkg.smoothieCount ?? pkg.dinnerCount ?? 0;
     const juiceShotLimit = pkg.juiceShotCount ?? 0;
+    const dinnerLimit = pkg.smoothieCount == null ? 0 : (pkg.dinnerCount ?? 0);
 
     const handleToggleMeal = (dayKey: string, slot: string, meal: any) => {
         setSelections((prev) => {
@@ -157,9 +162,10 @@ export default function PackageSelection({
             (pkg.breakfastCount === 0 || totalsBySlot[MealSlot.BREAKFAST] === pkg.breakfastCount) &&
             (pkg.lunchCount === 0 || totalsBySlot[MealSlot.LUNCH] === pkg.lunchCount) &&
             (smoothieLimit === 0 || totalsBySlot[MealSlot.SMOOTHIES] === smoothieLimit) &&
-            (juiceShotLimit === 0 || totalsBySlot[MealSlot.JUICE_SHOT] === juiceShotLimit)
+            (juiceShotLimit === 0 || totalsBySlot[MealSlot.JUICE_SHOT] === juiceShotLimit) &&
+            (dinnerLimit === 0 || totalsBySlot.dinner === dinnerLimit)
         );
-    }, [totalsBySlot, pkg, smoothieLimit, juiceShotLimit]);
+    }, [totalsBySlot, pkg, smoothieLimit, juiceShotLimit, dinnerLimit]);
 
     const currentDay = availableDays[activeTab];
     if (!currentDay) return null;
@@ -217,6 +223,13 @@ export default function PackageSelection({
                                 variant="outlined"
                             />
                         )}
+                        {dinnerLimit > 0 && (
+                            <Chip
+                                label={`${dinnerLimit} dinner${dinnerLimit === 1 ? '' : 's'} total`}
+                                color="primary"
+                                variant="outlined"
+                            />
+                        )}
                     </Box>
                     <Typography variant="caption" color="text.secondary" display="block">
                         Progress:{' '}
@@ -258,9 +271,9 @@ export default function PackageSelection({
                 {availableDays.map((day, i) => {
                     const dayKey = getLocalCalendarDayKey(day);
                     const daySels = selections[dayKey] || {};
-                    const hasAnySelection = SLOT_ORDER.some(
-                        (slot) => (daySels[slot] || []).length > 0
-                    );
+                    const hasAnySelection =
+                        SLOT_ORDER.some((slot) => (daySels[slot] || []).length > 0) ||
+                        (daySels.dinner || []).length > 0;
 
                     return (
                         <Tab
@@ -277,11 +290,27 @@ export default function PackageSelection({
             </Tabs>
 
             <Grid container spacing={4}>
-                {SLOT_ORDER.map((slot) => {
+                {[
+                    ...SLOT_ORDER.map((slot) => ({
+                        key: slot as string,
+                        label: SLOT_LABELS[slot],
+                        meals: currentDayMeals[slot] || [],
+                    })),
+                    ...(dinnerLimit > 0
+                        ? [
+                              {
+                                  key: 'dinner',
+                                  label: 'Dinner',
+                                  meals: currentDayMeals[MealSlot.LUNCH] || [],
+                              },
+                          ]
+                        : []),
+                ].map((entry) => {
+                    const slot = entry.key;
                     const limit = getSlotLimit(slot);
-                    if (limit === 0) return null; // Slot not included in package
+                    if (limit === 0) return null;
 
-                    const slotMeals = currentDayMeals[slot] || [];
+                    const slotMeals = entry.meals;
                     const currentSlotSelections = selections[currentDayKey]?.[slot] || [];
                     const totalForSlot = totalsBySlot[slot as MealSlot] ?? 0;
                     const remainingGlobal = limit - totalForSlot;
@@ -290,7 +319,7 @@ export default function PackageSelection({
                         <Grid size={{ xs: 12 }} key={slot}>
                             <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 2, flexWrap: 'wrap' }}>
                                 <Typography variant="h6" color="primary">
-                                    {SLOT_LABELS[slot]}
+                                    {entry.label}
                                 </Typography>
                                 <Typography
                                     variant="body2"
@@ -304,7 +333,7 @@ export default function PackageSelection({
 
                             {slotMeals.length === 0 ? (
                                 <Typography variant="body2" color="text.secondary">
-                                    No {SLOT_LABELS[slot].toLowerCase()} options available for this day.
+                                    No {entry.label.toLowerCase()} options available for this day.
                                 </Typography>
                             ) : (
                                 <Grid container spacing={2}>

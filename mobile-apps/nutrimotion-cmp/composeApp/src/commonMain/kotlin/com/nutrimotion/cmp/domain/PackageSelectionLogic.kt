@@ -10,7 +10,8 @@ object PackageSelectionLogic {
     fun slotLimit(pkg: PackageDto, slot: String): Int = when (slot) {
         MealSlots.BREAKFAST -> pkg.breakfastCount
         MealSlots.LUNCH -> pkg.lunchCount
-        MealSlots.SMOOTHIES -> pkg.smoothieCount.takeIf { it > 0 } ?: (pkg.dinnerCount ?: 0)
+        MealSlots.DINNER -> pkg.dinnerCount ?: 0
+        MealSlots.SMOOTHIES -> pkg.smoothieCount
         MealSlots.JUICE_SHOT -> pkg.juiceShotCount
         else -> 0
     }

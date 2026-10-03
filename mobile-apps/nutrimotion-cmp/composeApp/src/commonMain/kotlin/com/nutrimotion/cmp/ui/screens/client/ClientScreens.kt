@@ -155,7 +155,10 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
                     style = MaterialTheme.typography.titleMedium,
                 )
                 meals
-                    .filter { it.slot == slot || (slot == MealSlots.SMOOTHIES && it.slot == "dinner") }
+                    .filter {
+                        it.slot == slot ||
+                            (slot == MealSlots.DINNER && (it.slot == "lunch" || it.slot == "dinner"))
+                    }
                     .take(20)
                     .forEach { meal ->
                         val day = meal.scheduledDate.take(10).ifBlank { weekDayKeys(meals).first() }

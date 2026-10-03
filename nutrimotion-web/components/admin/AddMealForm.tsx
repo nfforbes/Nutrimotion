@@ -249,7 +249,9 @@ export default function AddMealForm({
               sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}
             >
               <MenuItem value="">— New meal (do not copy) —</MenuItem>
-              {existingMeals.map((meal) => (
+              {existingMeals
+                .filter((meal, index, all) => all.findIndex((item) => item.name === meal.name && item.slot === meal.slot) === index)
+                .map((meal) => (
                 <MenuItem key={meal._id} value={meal._id}>
                   {meal.name} {meal.slot ? `(${meal.slot})` : ''}
                 </MenuItem>

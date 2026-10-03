@@ -1,5 +1,5 @@
 /**
- * Admin Package by ID API (PATCH)
+ * Admin Package by ID API (PATCH, DELETE)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -79,6 +79,7 @@ export async function PATCH(
       lunchCount: Number(lunchCount),
       smoothieCount: Number(smoothie),
       juiceShotCount: Number(juiceShot),
+      dinnerCount: Math.max(0, Number(body.dinnerCount) || 0),
       cost: costNum >= 0 ? costNum : 0,
       daysOption: opt,
       specificDays: opt === 'specific' ? specificDays : [],
@@ -107,5 +108,32 @@ export async function PATCH(
   } catch (error) {
     console.error('Update package error:', error);
     return NextResponse.json({ error: 'Failed to update package' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const authResult = await requirePermissions(request, [Permission.MANAGE_PACKAGES]);
+  if (authResult instanceof NextResponse) return authResult;
+
+  try {
+    await connectDB();
+    const { id } = await params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid package ID' }, { status: 400 });
+    }
+
+    const deleted = await Package.findByIdAndDelete(id);
+    if (!deleted) {
+      return NextResponse.json({ error: 'Package not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error('Delete package error:', error);
+    return NextResponse.json({ error: 'Failed to delete package' }, { status: 500 });
   }
 }

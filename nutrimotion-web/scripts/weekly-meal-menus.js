@@ -69,8 +69,8 @@ const SLOT = {
 };
 
 const DEFAULT_PRICES = {
-  [SLOT.BREAKFAST]: 12,
-  [SLOT.LUNCH]: 15,
+  [SLOT.BREAKFAST]: 1200,
+  [SLOT.LUNCH]: 1500,
   [SLOT.SMOOTHIES]: 8,
 };
 

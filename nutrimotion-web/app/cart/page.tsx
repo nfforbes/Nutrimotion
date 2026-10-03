@@ -64,6 +64,7 @@ function formatPackageDayLabel(dateIso: string): string {
 }
 
 function slotLabelForCart(slot: string): string {
+  if (slot === 'dinner') return 'Dinner';
   return slotLabel(slot);
 }
 

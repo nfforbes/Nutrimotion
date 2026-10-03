@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const date = searchParams.get('date');
     const slot = searchParams.get('slot');
     
-    let query: any = { available: true };
+    let query: any = { available: { $ne: false } };
     
     if (date) {
       const startOfDay = new Date(date);

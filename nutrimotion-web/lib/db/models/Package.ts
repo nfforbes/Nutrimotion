@@ -15,6 +15,8 @@ export interface IPackage {
   lunchCount: number;
   smoothieCount: number;
   juiceShotCount: number;
+  /** Lunches' matching dinners. 0 for lunch-only sizes such as 5 or 7 meals. */
+  dinnerCount: number;
   cost: number;
   daysOption: DaysOption;
   specificDays: number[]; // 0 = Sunday, 1 = Monday, ... 6 = Saturday
@@ -31,6 +33,7 @@ const PackageSchema = new Schema<IPackage>(
     lunchCount: { type: Number, required: true, min: 0, default: 0 },
     smoothieCount: { type: Number, required: true, min: 0, default: 0 },
     juiceShotCount: { type: Number, required: true, min: 0, default: 0 },
+    dinnerCount: { type: Number, required: true, min: 0, default: 0 },
     cost: { type: Number, min: 0, default: 0 },
     daysOption: {
       type: String,

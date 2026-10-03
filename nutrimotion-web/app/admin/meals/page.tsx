@@ -24,6 +24,7 @@ import MealCalendarToolbar from '@/components/admin/meals/MealCalendarToolbar';
 import MealDayTimetable from '@/components/admin/meals/MealDayTimetable';
 import MealWeekTimetable from '@/components/admin/meals/MealWeekTimetable';
 import MealMonthCalendar from '@/components/admin/meals/MealMonthCalendar';
+import MealLibrary from '@/components/admin/meals/MealLibrary';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { MEAL_SLOT_ORDER } from '@/lib/meals/slots';
@@ -59,6 +60,7 @@ export default function AdminMealsPage() {
   const [anchorDayKey, setAnchorDayKey] = useState(getTodayUtcKey);
   const [meals, setMeals] = useState<MealCalendarDoc[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formContext, setFormContext] = useState<FormContext | null>(null);
 
@@ -69,6 +71,7 @@ export default function AdminMealsPage() {
   const [copySourceWeekKey, setCopySourceWeekKey] = useState<string | null>(null);
   const [copyWeekTargetDate, setCopyWeekTargetDate] = useState('');
   const [copying, setCopying] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const auth = useAppSelector((state) => state.auth);
   const menuItems = getAllMenuItemsForUser(auth.permissions);
@@ -99,8 +102,14 @@ export default function AdminMealsPage() {
         },
       });
       setMeals(Array.isArray(response.data) ? response.data : []);
+      setLoadError(null);
     } catch (error) {
       console.error('Failed to fetch meal schedule:', error);
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.error
+          ? String(error.response.data.error)
+          : 'Could not load meals. Sign in as an admin and refresh.';
+      setLoadError(message);
       setMeals([]);
     } finally {
       setLoading(false);
@@ -248,6 +257,20 @@ export default function AdminMealsPage() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} menuItems={menuItems} />
 
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        {libraryOpen ? (
+          <MealLibrary
+            onBack={() => {
+              setLibraryOpen(false);
+              fetchMeals();
+            }}
+          />
+        ) : (
+          <>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Button variant="contained" onClick={() => setLibraryOpen(true)}>
+            Manage meals
+          </Button>
+        </Box>
         <MealCalendarToolbar
           title={toolbarTitle}
           view={view}
@@ -260,6 +283,11 @@ export default function AdminMealsPage() {
         {loading && (
           <Typography color="text.secondary" sx={{ mb: 2 }}>
             Loading meals…
+          </Typography>
+        )}
+        {loadError && (
+          <Typography color="error" sx={{ mb: 2 }}>
+            {loadError}
           </Typography>
         )}
 
@@ -296,6 +324,8 @@ export default function AdminMealsPage() {
             onAdd={openAddForm}
             onEdit={openEditForm}
           />
+        )}
+          </>
         )}
       </Container>
 
