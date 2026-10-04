@@ -40,6 +40,8 @@ kotlin {
             implementation(libs.androidx.security.crypto)
             implementation(libs.ktor.client.okhttp)
             implementation(libs.firebase.messaging)
+            // Firebase pulls in an old Fragment; ActivityResult (notification permission) needs 1.3+.
+            implementation(libs.androidx.fragment)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
