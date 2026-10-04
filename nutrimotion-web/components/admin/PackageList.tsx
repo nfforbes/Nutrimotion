@@ -11,6 +11,8 @@ import {
   CardActions,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { groupPackages, PackageSort, PackageSpanFilter } from '@/lib/packages/organize';
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -31,10 +33,19 @@ interface PackageDoc {
 
 export interface PackageListProps {
   packages: PackageDoc[];
+  span?: PackageSpanFilter;
+  sort?: PackageSort;
   onEdit?: (pkg: PackageDoc) => void;
+  onDelete?: (pkg: PackageDoc) => void;
 }
 
-export default function PackageList({ packages, onEdit }: PackageListProps) {
+export default function PackageList({
+  packages,
+  span = 'all',
+  sort = 'price-asc',
+  onEdit,
+  onDelete,
+}: PackageListProps) {
   if (packages.length === 0) {
     return (
       <Typography color="text.secondary">
@@ -43,9 +54,20 @@ export default function PackageList({ packages, onEdit }: PackageListProps) {
     );
   }
 
+  const groups = groupPackages(packages, span, sort);
+  if (groups.length === 0) {
+    return <Typography color="text.secondary">No packages in this group.</Typography>;
+  }
+
   return (
-    <Grid container spacing={3}>
-      {packages.map((pkg) => (
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      {groups.map((group) => (
+        <Box key={group.span}>
+          <Typography variant="h5" gutterBottom>
+            {group.label}
+          </Typography>
+          <Grid container spacing={3}>
+            {group.packages.map((pkg) => (
         <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pkg._id}>
           <Card>
             <CardContent>
@@ -73,21 +95,36 @@ export default function PackageList({ packages, onEdit }: PackageListProps) {
                   : `Days: ${pkg.specificDays.map((d) => DAY_LABELS[d]).join(', ')}`}
               </Typography>
             </CardContent>
-            {onEdit && (
+            {(onEdit || onDelete) && (
               <CardActions sx={{ justifyContent: 'flex-end', pt: 0 }}>
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={() => onEdit(pkg)}
-                  aria-label="Edit package"
-                >
-                  <EditIcon />
-                </IconButton>
+                {onEdit && (
+                  <IconButton
+                    size="small"
+                    color="primary"
+                    onClick={() => onEdit(pkg)}
+                    aria-label="Edit package"
+                  >
+                    <EditIcon />
+                  </IconButton>
+                )}
+                {onDelete && (
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => onDelete(pkg)}
+                    aria-label="Delete package"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                )}
               </CardActions>
             )}
           </Card>
         </Grid>
+            ))}
+          </Grid>
+        </Box>
       ))}
-    </Grid>
+    </Box>
   );
 }

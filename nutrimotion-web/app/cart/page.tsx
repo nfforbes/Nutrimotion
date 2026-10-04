@@ -64,21 +64,26 @@ function formatPackageDayLabel(dateIso: string): string {
 }
 
 function slotLabelForCart(slot: string): string {
+  if (slot === 'dinner') return 'Dinner';
   return slotLabel(slot);
 }
 
-/** Stored names are plain strings; support legacy `{ name: string }` if present. */
+/** Stored names are plain strings; support legacy `{ name: string }` if present. Repeats become “Name × 2”. */
 function formatMealNamesList(meals: unknown): string {
   if (!Array.isArray(meals)) return '';
-  return meals
-    .map((m) =>
-      typeof m === 'string'
-        ? m
-        : m && typeof m === 'object' && m !== null && 'name' in m
-          ? String((m as { name: string }).name)
-          : ''
-    )
-    .filter(Boolean)
+  const counts = new Map<string, number>();
+  for (const meal of meals) {
+    const name =
+      typeof meal === 'string'
+        ? meal
+        : meal && typeof meal === 'object' && meal !== null && 'name' in meal
+          ? String((meal as { name: string }).name)
+          : '';
+    if (!name) continue;
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([name, count]) => (count > 1 ? `${name} × ${count}` : name))
     .join(', ');
 }
 
@@ -137,7 +142,7 @@ export default function CartPage() {
               </Typography>
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <Button variant="contained" onClick={() => router.push('/meals')}>
-                  Browse Meals
+                  Continue shopping
                 </Button>
               </Box>
             </CardContent>
@@ -311,10 +316,19 @@ export default function CartPage() {
 
                   <Button
                     fullWidth
+                    variant="outlined"
+                    size="large"
+                    onClick={() => router.push('/meals')}
+                    sx={{ mt: 3 }}
+                  >
+                    Continue shopping
+                  </Button>
+                  <Button
+                    fullWidth
                     variant="contained"
                     size="large"
                     onClick={handleCheckout}
-                    sx={{ mt: 3 }}
+                    sx={{ mt: 1 }}
                   >
                     Proceed to Checkout
                   </Button>

@@ -7,28 +7,19 @@ import {
     Button,
     Card,
     CardContent,
-    Grid,
-    Tabs,
-    Tab,
-    CardMedia,
-    CardActions,
+    Checkbox,
+    IconButton,
     Chip,
-    Divider,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { MealSlot } from '@/types/catalog';
-import { MEAL_SLOT_LABELS, MEAL_SLOT_ORDER } from '@/lib/meals/slots';
+import { MEAL_SLOT_LABELS } from '@/lib/meals/slots';
 import { PackageDoc } from '@/app/meals/page'; // We'll export this or define it properly
 import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
 
 const SLOT_LABELS = MEAL_SLOT_LABELS;
-const SLOT_ORDER = MEAL_SLOT_ORDER;
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-function formatDate(d: Date): string {
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
 
 export interface PackageSelectionProps {
     pkg: PackageDoc;
@@ -51,7 +42,7 @@ export default function PackageSelection({
         return weekDays.filter((d) => pkg.specificDays.includes(d.getDay()));
     }, [pkg, weekDays]);
 
-    const [activeTab, setActiveTab] = useState(0);
+    const [stepIndex, setStepIndex] = useState(0);
 
     const emptySelectionsForDays = (days: Date[]) => {
         const init: Record<string, Record<string, any[]>> = {};
@@ -62,6 +53,7 @@ export default function PackageSelection({
                 [MealSlot.LUNCH]: [],
                 [MealSlot.SMOOTHIES]: [],
                 [MealSlot.JUICE_SHOT]: [],
+                dinner: [],
             };
         });
         return init;
@@ -79,7 +71,7 @@ export default function PackageSelection({
 
     useEffect(() => {
         setSelections(emptySelectionsForDays(availableDays));
-        setActiveTab(0);
+        setStepIndex(0);
     }, [pkg._id, availableDaysKey]);
 
     const getSlotLimit = (slot: string) => {
@@ -92,6 +84,8 @@ export default function PackageSelection({
                 return pkg.smoothieCount ?? pkg.dinnerCount ?? 0;
             case MealSlot.JUICE_SHOT:
                 return pkg.juiceShotCount ?? 0;
+            case 'dinner':
+                return pkg.smoothieCount == null ? 0 : (pkg.dinnerCount ?? 0);
             default:
                 return 0;
         }
@@ -116,40 +110,58 @@ export default function PackageSelection({
             [MealSlot.LUNCH]: countSlotAcrossPackage(selections, MealSlot.LUNCH),
             [MealSlot.SMOOTHIES]: countSlotAcrossPackage(selections, MealSlot.SMOOTHIES),
             [MealSlot.JUICE_SHOT]: countSlotAcrossPackage(selections, MealSlot.JUICE_SHOT),
+            dinner: countSlotAcrossPackage(selections, 'dinner'),
         }),
         [selections, availableDays]
     );
 
     const smoothieLimit = pkg.smoothieCount ?? pkg.dinnerCount ?? 0;
     const juiceShotLimit = pkg.juiceShotCount ?? 0;
+    const dinnerLimit = pkg.smoothieCount == null ? 0 : (pkg.dinnerCount ?? 0);
 
-    const handleToggleMeal = (dayKey: string, slot: string, meal: any) => {
+    const wizardSteps = useMemo(() => {
+        const order = [
+            MealSlot.BREAKFAST,
+            MealSlot.LUNCH,
+            'dinner',
+            MealSlot.SMOOTHIES,
+            MealSlot.JUICE_SHOT,
+        ];
+        return order
+            .filter((slot) => getSlotLimit(slot) > 0)
+            .map((slot) => ({
+                key: slot,
+                label: slot === 'dinner' ? 'Dinner' : SLOT_LABELS[slot as MealSlot],
+            }));
+    }, [pkg]);
+
+    const setMealQuantity = (dayKey: string, slot: string, meal: any, quantity: number) => {
         setSelections((prev) => {
-            const currentSlotSelections = prev[dayKey]?.[slot] || [];
-            const isSelected = currentSlotSelections.some((m) => m.id === meal.id || m._id === meal._id);
-
-            let newSlotSelections = [...currentSlotSelections];
-            if (isSelected) {
-                newSlotSelections = currentSlotSelections.filter(
-                    (m) => (m.id || m._id) !== (meal.id || meal._id)
-                );
-            } else {
-                const limit = getSlotLimit(slot);
-                const totalForSlot = countSlotAcrossPackage(prev, slot);
-                if (totalForSlot >= limit) {
-                    return prev;
-                }
-                newSlotSelections.push(meal);
+            const mealName = meal.name;
+            const limit = getSlotLimit(slot);
+            let others = 0;
+            const cleared: Record<string, Record<string, any[]>> = {};
+            for (const [day, slots] of Object.entries(prev)) {
+                const kept = (slots[slot] || []).filter((m) => m.name !== mealName);
+                others += kept.length;
+                cleared[day] = { ...slots, [slot]: kept };
             }
-
-            return {
-                ...prev,
-                [dayKey]: {
-                    ...prev[dayKey],
-                    [slot]: newSlotSelections,
-                },
+            const capped = Math.max(0, Math.min(quantity, Math.max(0, limit - others)));
+            const daySlots = cleared[dayKey] || {};
+            cleared[dayKey] = {
+                ...daySlots,
+                [slot]: [...(daySlots[slot] || []), ...Array.from({ length: capped }, () => meal)],
             };
+            return cleared;
         });
+    };
+
+    const quantityOf = (slot: string, mealName: string) => {
+        let n = 0;
+        for (const day of Object.values(selections)) {
+            n += (day[slot] || []).filter((m) => m.name === mealName).length;
+        }
+        return n;
     };
 
     const isSelectionComplete = useMemo(() => {
@@ -157,14 +169,27 @@ export default function PackageSelection({
             (pkg.breakfastCount === 0 || totalsBySlot[MealSlot.BREAKFAST] === pkg.breakfastCount) &&
             (pkg.lunchCount === 0 || totalsBySlot[MealSlot.LUNCH] === pkg.lunchCount) &&
             (smoothieLimit === 0 || totalsBySlot[MealSlot.SMOOTHIES] === smoothieLimit) &&
-            (juiceShotLimit === 0 || totalsBySlot[MealSlot.JUICE_SHOT] === juiceShotLimit)
+            (juiceShotLimit === 0 || totalsBySlot[MealSlot.JUICE_SHOT] === juiceShotLimit) &&
+            (dinnerLimit === 0 || totalsBySlot.dinner === dinnerLimit)
         );
-    }, [totalsBySlot, pkg, smoothieLimit, juiceShotLimit]);
+    }, [totalsBySlot, pkg, smoothieLimit, juiceShotLimit, dinnerLimit]);
 
-    const currentDay = availableDays[activeTab];
-    if (!currentDay) return null;
-    const currentDayKey = getLocalCalendarDayKey(currentDay);
-    const currentDayMeals = mealsByDaySlot[currentDayKey] || {};
+    if (availableDays.length === 0) return null;
+    const step = wizardSteps[Math.min(stepIndex, Math.max(0, wizardSteps.length - 1))];
+    const stepMeals = (() => {
+        if (!step) return [];
+        const sourceSlot = step.key === 'dinner' ? MealSlot.LUNCH : step.key;
+        const seen = new Map<string, { meal: any; dayKey: string }>();
+        for (const day of availableDays) {
+            const dayKey = getLocalCalendarDayKey(day);
+            for (const meal of mealsByDaySlot[dayKey]?.[sourceSlot] || []) {
+                if (meal?.name && !seen.has(meal.name)) seen.set(meal.name, { meal, dayKey });
+            }
+        }
+        return [...seen.values()];
+    })();
+    const stepLimit = step ? getSlotLimit(step.key) : 0;
+    const stepUsed = step ? countSlotAcrossPackage(selections, step.key) : 0;
 
     return (
         <Box>
@@ -217,6 +242,13 @@ export default function PackageSelection({
                                 variant="outlined"
                             />
                         )}
+                        {dinnerLimit > 0 && (
+                            <Chip
+                                label={`${dinnerLimit} dinner${dinnerLimit === 1 ? '' : 's'} total`}
+                                color="primary"
+                                variant="outlined"
+                            />
+                        )}
                     </Box>
                     <Typography variant="caption" color="text.secondary" display="block">
                         Progress:{' '}
@@ -230,7 +262,7 @@ export default function PackageSelection({
                         {pkg.lunchCount > 0 && (
                             <>
                                 {SLOT_LABELS[MealSlot.LUNCH]} {totalsBySlot[MealSlot.LUNCH]}/{pkg.lunchCount}
-                                {smoothieLimit > 0 || juiceShotLimit > 0 ? ' · ' : ''}
+                                {smoothieLimit > 0 || juiceShotLimit > 0 || dinnerLimit > 0 ? ' · ' : ''}
                             </>
                         )}
                         {smoothieLimit > 0 && (
@@ -242,177 +274,109 @@ export default function PackageSelection({
                         {juiceShotLimit > 0 && (
                             <>
                                 {SLOT_LABELS[MealSlot.JUICE_SHOT]} {totalsBySlot[MealSlot.JUICE_SHOT]}/{juiceShotLimit}
+                                {dinnerLimit > 0 ? ' · ' : ''}
+                            </>
+                        )}
+                        {dinnerLimit > 0 && (
+                            <>
+                                Dinner {totalsBySlot.dinner}/{dinnerLimit}
                             </>
                         )}
                     </Typography>
                 </CardContent>
             </Card>
 
-            <Tabs
-                value={activeTab}
-                onChange={(_, v) => setActiveTab(v)}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
-            >
-                {availableDays.map((day, i) => {
-                    const dayKey = getLocalCalendarDayKey(day);
-                    const daySels = selections[dayKey] || {};
-                    const hasAnySelection = SLOT_ORDER.some(
-                        (slot) => (daySels[slot] || []).length > 0
-                    );
-
-                    return (
-                        <Tab
-                            key={i}
-                            label={
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                    <span>{`${DAY_NAMES[day.getDay()]} ${formatDate(day)}`}</span>
-                                    {hasAnySelection && <CheckCircleOutlineIcon color="action" fontSize="small" />}
-                                </Box>
-                            }
-                        />
-                    );
-                })}
-            </Tabs>
-
-            <Grid container spacing={4}>
-                {SLOT_ORDER.map((slot) => {
-                    const limit = getSlotLimit(slot);
-                    if (limit === 0) return null; // Slot not included in package
-
-                    const slotMeals = currentDayMeals[slot] || [];
-                    const currentSlotSelections = selections[currentDayKey]?.[slot] || [];
-                    const totalForSlot = totalsBySlot[slot as MealSlot] ?? 0;
-                    const remainingGlobal = limit - totalForSlot;
-
-                    return (
-                        <Grid size={{ xs: 12 }} key={slot}>
-                            <Box sx={{ display: 'flex', alignItems: 'baseline', mb: 2, gap: 2, flexWrap: 'wrap' }}>
-                                <Typography variant="h6" color="primary">
-                                    {SLOT_LABELS[slot]}
-                                </Typography>
-                                <Typography
-                                    variant="body2"
-                                    color={remainingGlobal === 0 ? 'success.main' : 'text.secondary'}
+            {!step ? (
+                <Typography color="text.secondary">This package has no meals to choose.</Typography>
+            ) : (
+                <Box>
+                    <Typography variant="body2" color="text.secondary">
+                        Step {Math.min(stepIndex, wizardSteps.length - 1) + 1} of {wizardSteps.length}
+                    </Typography>
+                    <Typography variant="h6" color="primary" sx={{ mt: 0.5 }}>
+                        {step.label} ({stepUsed}/{stepLimit})
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        Check a meal, then use + and − to choose how many.
+                    </Typography>
+                    {stepMeals.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary">
+                            No {step.label.toLowerCase()} options are on the menu this week.
+                        </Typography>
+                    ) : (
+                        stepMeals.map(({ meal, dayKey }) => {
+                            const qty = quantityOf(step.key, meal.name);
+                            const canIncrease = stepUsed < stepLimit;
+                            return (
+                                <Box
+                                    key={meal.name}
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        py: 0.5,
+                                        borderBottom: 1,
+                                        borderColor: 'divider',
+                                    }}
                                 >
-                                    {remainingGlobal === 0
-                                        ? `All ${limit} selected for this package`
-                                        : `${totalForSlot}/${limit} selected — ${remainingGlobal} left to assign`}
-                                </Typography>
-                            </Box>
-
-                            {slotMeals.length === 0 ? (
-                                <Typography variant="body2" color="text.secondary">
-                                    No {SLOT_LABELS[slot].toLowerCase()} options available for this day.
-                                </Typography>
-                            ) : (
-                                <Grid container spacing={2}>
-                                    {slotMeals.map((meal: any) => {
-                                        const isSelected = currentSlotSelections.some(
-                                            (m) => (m.id || m._id) === (meal.id || meal._id)
-                                        );
-                                        const disabled = !isSelected && remainingGlobal === 0;
-
-                                        return (
-                                            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={meal.id || meal._id}>
-                                                <Card
-                                                    sx={{
-                                                        height: '100%',
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        cursor: disabled ? 'not-allowed' : 'pointer',
-                                                        opacity: disabled ? 0.6 : 1,
-                                                        border: isSelected ? 2 : 1,
-                                                        borderColor: isSelected ? 'primary.main' : 'divider',
-                                                        position: 'relative',
-                                                        transition: 'all 0.2s ease-in-out',
-                                                        '&:hover': {
-                                                            transform: disabled ? 'none' : 'translateY(-2px)',
-                                                            boxShadow: disabled ? 1 : 4,
-                                                        },
-                                                    }}
-                                                    onClick={() => {
-                                                        if (!disabled || isSelected) {
-                                                            handleToggleMeal(currentDayKey, slot, meal);
-                                                        }
-                                                    }}
-                                                >
-                                                    {isSelected && (
-                                                        <Box
-                                                            sx={{
-                                                                position: 'absolute',
-                                                                top: 8,
-                                                                right: 8,
-                                                                bgcolor: 'primary.main',
-                                                                color: 'primary.contrastText',
-                                                                borderRadius: '50%',
-                                                                p: 0.5,
-                                                                display: 'flex',
-                                                                zIndex: 1,
-                                                            }}
-                                                        >
-                                                            <CheckCircleOutlineIcon fontSize="small" />
-                                                        </Box>
-                                                    )}
-                                                    <CardMedia
-                                                        component="img"
-                                                        height="140"
-                                                        image={meal.imageUrl || '/placeholder-meal.jpg'}
-                                                        alt={meal.name}
-                                                    />
-                                                    <CardContent sx={{ flexGrow: 1, p: 2 }}>
-                                                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, lineHeight: 1.2 }}>
-                                                            {meal.name}
-                                                        </Typography>
-                                                        <Typography
-                                                            variant="body2"
-                                                            color="text.secondary"
-                                                            sx={{
-                                                                display: '-webkit-box',
-                                                                WebkitLineClamp: 2,
-                                                                WebkitBoxOrient: 'vertical',
-                                                                overflow: 'hidden',
-                                                            }}
-                                                        >
-                                                            {meal.description}
-                                                        </Typography>
-                                                    </CardContent>
-                                                    <Divider />
-                                                    <CardActions sx={{ p: 1, justifyContent: 'center' }}>
-                                                        <Button
-                                                            size="small"
-                                                            variant={isSelected ? 'contained' : 'outlined'}
-                                                            color={isSelected ? 'success' : 'primary'}
-                                                            fullWidth
-                                                            disabled={disabled && !isSelected}
-                                                        >
-                                                            {isSelected ? 'Selected' : 'Select'}
-                                                        </Button>
-                                                    </CardActions>
-                                                </Card>
-                                            </Grid>
-                                        );
-                                    })}
-                                </Grid>
-                            )}
-                        </Grid>
-                    );
-                })}
-            </Grid>
+                                    <Checkbox
+                                        checked={qty > 0}
+                                        disabled={qty === 0 && !canIncrease}
+                                        onChange={(_, checked) =>
+                                            setMealQuantity(dayKey, step.key, meal, checked ? 1 : 0)
+                                        }
+                                    />
+                                    <Typography sx={{ flexGrow: 1 }}>{meal.name}</Typography>
+                                    <IconButton
+                                        aria-label={`Decrease ${meal.name}`}
+                                        disabled={qty === 0}
+                                        onClick={() => setMealQuantity(dayKey, step.key, meal, qty - 1)}
+                                    >
+                                        <RemoveIcon />
+                                    </IconButton>
+                                    <Typography sx={{ minWidth: 24, textAlign: 'center' }}>{qty}</Typography>
+                                    <IconButton
+                                        aria-label={`Increase ${meal.name}`}
+                                        disabled={!canIncrease}
+                                        onClick={() => setMealQuantity(dayKey, step.key, meal, qty + 1)}
+                                    >
+                                        <AddIcon />
+                                    </IconButton>
+                                </Box>
+                            );
+                        })
+                    )}
+                </Box>
+            )}
 
             <Box sx={{ mt: 5, pt: 3, borderTop: 1, borderColor: 'divider', display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
                 <Button variant="outlined" onClick={onCancel} size="large">
                     Cancel
                 </Button>
-                <Button
-                    variant="contained"
-                    size="large"
-                    disabled={!isSelectionComplete}
-                    onClick={() => onAddToCart(pkg, selections)}
-                >
-                    {isSelectionComplete ? 'Add Package to Cart' : 'Please Complete Selection'}
-                </Button>
+                {stepIndex > 0 && (
+                    <Button variant="outlined" size="large" onClick={() => setStepIndex((i) => i - 1)}>
+                        Previous
+                    </Button>
+                )}
+                {step && stepIndex < wizardSteps.length - 1 ? (
+                    <Button
+                        variant="contained"
+                        size="large"
+                        disabled={stepUsed !== stepLimit}
+                        onClick={() => setStepIndex((i) => i + 1)}
+                    >
+                        Next: {wizardSteps[stepIndex + 1]?.label}
+                    </Button>
+                ) : (
+                    <Button
+                        variant="contained"
+                        size="large"
+                        disabled={!isSelectionComplete}
+                        onClick={() => onAddToCart(pkg, selections)}
+                    >
+                        {isSelectionComplete ? 'Add Package to Cart' : 'Please Complete Selection'}
+                    </Button>
+                )}
             </Box>
         </Box>
     );

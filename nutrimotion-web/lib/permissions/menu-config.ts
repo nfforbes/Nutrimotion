@@ -98,6 +98,14 @@ export const CLIENT_MENU_ITEMS: MenuItem[] = [
     requiredPermissions: [Permission.MANAGE_CART],
     order: 5,
   },
+  {
+    id: 'whatsapp',
+    label: 'WhatsApp Us',
+    icon: 'WhatsApp',
+    route: '/client/whatsapp',
+    requiredPermissions: [Permission.VIEW_PROFILE],
+    order: 6,
+  },
 ];
 
 export const ADMIN_MENU_ITEMS: MenuItem[] = [
@@ -173,6 +181,14 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
         requiredPermissions: [Permission.MANAGE_TRAINING],
         order: 4,
       },
+      {
+        id: 'subscription-prices',
+        label: 'Subscription Prices',
+        icon: 'Subscriptions',
+        route: '/admin/content/subscriptions',
+        requiredPermissions: [Permission.MANAGE_RECIPES],
+        order: 5,
+      },
     ],
   },
   {
@@ -198,6 +214,14 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     route: '/admin/users',
     requiredPermissions: [Permission.MANAGE_USERS],
     order: 7,
+  },
+  {
+    id: 'contact-notifications',
+    label: 'Contact & Notifications',
+    icon: 'NotificationsActive',
+    route: '/admin/notifications',
+    requiredPermissions: [Permission.MANAGE_USERS],
+    order: 7.5,
   },
   {
     id: 'analytics',

@@ -83,10 +83,15 @@ class ApiClient {
         http.delete(absoluteUrl(path))
     }
 
+    suspend inline fun <reified T, reified B> delete(path: String, body: B): Result<T> = request {
+        http.delete(absoluteUrl(path)) { setBody(body) }
+    }
+
     suspend inline fun <reified T> request(block: suspend () -> HttpResponse): Result<T> =
         runCatching {
             val response = block()
             if (response.status == HttpStatusCode.Unauthorized) {
+                TokenStore.notifyUnauthorized()
                 throw ApiException(401, "Unauthorized")
             }
             if (!response.status.isSuccess()) {

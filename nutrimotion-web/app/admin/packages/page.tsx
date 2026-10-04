@@ -12,6 +12,8 @@ import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import AddPackageForm from '@/components/admin/AddPackageForm';
 import PackageList from '@/components/admin/PackageList';
+import PackageBrowseBar from '@/components/packages/PackageBrowseBar';
+import { PackageSort, PackageSpanFilter } from '@/lib/packages/organize';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import axios from 'axios';
@@ -38,6 +40,8 @@ export default function AdminPackagesPage() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingPackage, setEditingPackage] = useState<PackageDoc | null>(null);
   const [packages, setPackages] = useState<PackageDoc[]>([]);
+  const [packageSpan, setPackageSpan] = useState<PackageSpanFilter>('all');
+  const [packageSort, setPackageSort] = useState<PackageSort>('price-asc');
 
   const auth = useAppSelector((state) => state.auth);
 
@@ -51,6 +55,17 @@ export default function AdminPackagesPage() {
       setPackages(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to fetch packages:', error);
+    }
+  };
+
+  const handleDelete = async (pkg: PackageDoc) => {
+    if (!window.confirm(`Delete "${pkg.name}"? This cannot be undone.`)) return;
+    try {
+      await axios.delete(`/api/admin/packages/${pkg._id}`);
+      await fetchPackages();
+    } catch (error) {
+      console.error('Failed to delete package:', error);
+      window.alert('Failed to delete package. Please try again.');
     }
   };
 
@@ -85,10 +100,23 @@ export default function AdminPackagesPage() {
             }}
           />
         ) : (
-          <PackageList
-            packages={packages}
-            onEdit={(pkg) => setEditingPackage(pkg)}
-          />
+          <>
+            {packages.length > 0 && (
+              <PackageBrowseBar
+                span={packageSpan}
+                sort={packageSort}
+                onSpanChange={setPackageSpan}
+                onSortChange={setPackageSort}
+              />
+            )}
+            <PackageList
+              packages={packages}
+              span={packageSpan}
+              sort={packageSort}
+              onEdit={(pkg) => setEditingPackage(pkg)}
+              onDelete={handleDelete}
+            />
+          </>
         )}
       </Container>
     </>

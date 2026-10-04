@@ -2,6 +2,7 @@ package com.nutrimotion.cmp.session
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nutrimotion.cmp.data.auth.AuthCancelledException
 import com.nutrimotion.cmp.data.auth.AuthService
 import com.nutrimotion.cmp.data.auth.SecureTokenStorage
 import com.nutrimotion.cmp.data.auth.TokenStore
@@ -11,9 +12,13 @@ import com.nutrimotion.cmp.data.model.AuthMeResponse
 import com.nutrimotion.cmp.data.model.Permissions
 import com.nutrimotion.cmp.data.model.Roles
 import com.nutrimotion.cmp.data.repository.NutrimotionRepository
+import com.nutrimotion.cmp.push.PushTokens
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -25,7 +30,6 @@ data class SessionState(
     val user: AuthMeResponse? = null,
     val mode: AppMode = AppMode.CLIENT,
     val error: String? = null,
-    val tokenInput: String = "",
 )
 
 class SessionViewModel(
@@ -35,30 +39,31 @@ class SessionViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(SessionState())
     val state: StateFlow<SessionState> = _state.asStateFlow()
+    private var pushJob: Job? = null
 
     init {
+        viewModelScope.launch {
+            TokenStore.unauthorized.collect { onUnauthorized() }
+        }
         secureStorage.readToken()?.let { TokenStore.set(it) }
         if (!TokenStore.get().isNullOrBlank()) {
+            _state.update { it.copy(loading = true) }
             refreshMe()
         }
     }
 
-    fun onTokenInputChange(value: String) {
-        _state.update { it.copy(tokenInput = value) }
-    }
-
-    fun loginWithToken() {
-        val token = _state.value.tokenInput.trim()
-        if (token.isBlank()) {
-            _state.update { it.copy(error = "Paste an Auth0 access token to continue.") }
-            return
+    private fun onUnauthorized() {
+        pushJob?.cancel()
+        pushJob = null
+        secureStorage.clear()
+        TokenStore.clear()
+        if (_state.value.loggedIn) {
+            _state.value = SessionState(error = "Your session has expired. Please sign in again.")
         }
-        secureStorage.saveToken(token)
-        TokenStore.set(token)
-        refreshMe()
     }
 
-    fun loginWithAuth0() {
+    fun login() {
+        if (_state.value.loading) return
         viewModelScope.launch {
             _state.update { it.copy(loading = true, error = null) }
             auth.login()
@@ -68,9 +73,8 @@ class SessionViewModel(
                     refreshMe()
                 }
                 .onFailure { e ->
-                    _state.update {
-                        it.copy(loading = false, error = e.message ?: "Login failed")
-                    }
+                    val message = if (e is AuthCancelledException) null else e.message ?: "Sign-in failed"
+                    _state.update { it.copy(loading = false, error = message) }
                 }
         }
     }
@@ -98,6 +102,7 @@ class SessionViewModel(
                             error = null,
                         )
                     }
+                    startPushRegistration()
                 }
                 .onFailure { e ->
                     TokenStore.clear()
@@ -118,8 +123,21 @@ class SessionViewModel(
         _state.update { it.copy(mode = mode) }
     }
 
+    private fun startPushRegistration() {
+        if (pushJob?.isActive == true) return
+        pushJob = viewModelScope.launch {
+            PushTokens.token.filterNotNull().distinctUntilChanged().collect { token ->
+                repo.registerPushDevice(token.value, token.platform)
+            }
+        }
+        PushTokens.requestPermission()
+    }
+
     fun logout() {
         viewModelScope.launch {
+            pushJob?.cancel()
+            pushJob = null
+            PushTokens.token.value?.let { repo.unregisterPushDevice(it.value) }
             auth.logout()
             secureStorage.clear()
             TokenStore.clear()

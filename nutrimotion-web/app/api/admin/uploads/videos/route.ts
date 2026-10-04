@@ -6,19 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermissions } from '@/lib/auth/middleware';
 import { Permission } from '@/types/auth';
 import connectDB from '@/lib/db/connection';
-import mongoose from 'mongoose';
-
-const VideoAssetSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  thumbnailUrl: { type: String, required: true },
-  videoUrl: { type: String, required: true },
-  duration: { type: Number, required: true },
-  category: { type: String, enum: ['cooking', 'training'], required: true },
-  tags: [String],
-}, { timestamps: true });
-
-const VideoAsset = mongoose.models.VideoAsset || mongoose.model('VideoAsset', VideoAssetSchema);
+import { VideoAsset } from '@/lib/db/models';
 
 export async function GET(request: NextRequest) {
   const authResult = await requirePermissions(request, [Permission.MANAGE_VIDEOS]);
@@ -41,7 +29,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const body = await request.json();
     
-    const { title, description, thumbnailUrl, videoUrl, duration, category, tags } = body;
+    const { title, description, thumbnailUrl, videoUrl, duration, category, tags, isFree, freeShortUrl } = body;
     
     if (!title || !description || !thumbnailUrl || !videoUrl || duration === undefined || !category) {
       return NextResponse.json(
@@ -58,6 +46,8 @@ export async function POST(request: NextRequest) {
       duration,
       category,
       tags: tags || [],
+      isFree: isFree === true,
+      freeShortUrl: typeof freeShortUrl === 'string' ? freeShortUrl.trim() : '',
     });
     
     return NextResponse.json({

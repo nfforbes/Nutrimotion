@@ -15,10 +15,12 @@ object MealSlots {
     const val LUNCH = "lunch"
     const val SMOOTHIES = "smoothies"
     const val JUICE_SHOT = "juice_shot"
-    val ORDER = listOf(BREAKFAST, LUNCH, SMOOTHIES, JUICE_SHOT)
+    const val DINNER = "dinner"
+    val ORDER = listOf(BREAKFAST, LUNCH, DINNER, SMOOTHIES, JUICE_SHOT)
     val LABELS = mapOf(
         BREAKFAST to "Breakfast",
         LUNCH to "Lunch",
+        DINNER to "Dinner",
         SMOOTHIES to "Smoothies",
         JUICE_SHOT to "Juice Shots",
     )
@@ -95,7 +97,8 @@ data class PackageDto(
 
 @Serializable
 data class CatalogItemDto(
-    @SerialName("_id") val id: String? = null,
+    val id: String? = null,
+    @SerialName("_id") val mongoId: String? = null,
     val name: String? = null,
     val title: String? = null,
     val description: String = "",
@@ -107,6 +110,67 @@ data class CatalogItemDto(
     val duration: String? = null,
     val level: String? = null,
     val category: String? = null,
+) {
+    fun catalogId(): String = id?.takeIf { it.isNotBlank() } ?: mongoId.orEmpty()
+}
+
+@Serializable
+data class RecipeDto(
+    val id: String? = null,
+    @SerialName("_id") val mongoId: String? = null,
+    val title: String = "",
+    val description: String = "",
+    val imageUrl: String? = null,
+    val ingredients: List<String> = emptyList(),
+    val instructions: List<String> = emptyList(),
+    val prepTime: Int = 0,
+    val cookTime: Int = 0,
+    val servings: Int = 0,
+    val difficulty: String = "",
+    val tags: List<String> = emptyList(),
+    val isFree: Boolean = false,
+    val thisWeek: Boolean = false,
+)
+
+@Serializable
+data class RecipesPage(
+    val subscribed: Boolean = false,
+    val total: Int = 0,
+    val lockedCount: Int = 0,
+    val monthlyPrice: Double = 0.0,
+    val items: List<RecipeDto> = emptyList(),
+)
+
+@Serializable
+data class VideoDto(
+    val id: String? = null,
+    val title: String = "",
+    val description: String = "",
+    val thumbnailUrl: String? = null,
+    val videoUrl: String? = null,
+    val shortUrl: String? = null,
+    val access: String = "full",
+    val duration: Int = 0,
+    val category: String = "",
+    val isFree: Boolean = false,
+    val thisWeek: Boolean = false,
+)
+
+@Serializable
+data class VideosPage(
+    val subscribed: Boolean = false,
+    val total: Int = 0,
+    val lockedCount: Int = 0,
+    val monthlyPrice: Double = 0.0,
+    val items: List<VideoDto> = emptyList(),
+)
+
+@Serializable
+data class SubscriptionPlanDto(
+    val type: String = "",
+    val label: String = "",
+    val monthlyPrice: Double = 0.0,
+    val subscribed: Boolean = false,
 )
 
 @Serializable
@@ -164,7 +228,8 @@ data class DeliveryAddress(
 
 @Serializable
 data class OrderDto(
-    @SerialName("_id") val id: String? = null,
+    val id: String? = null,
+    @SerialName("_id") val mongoId: String? = null,
     val orderNumber: String = "",
     val status: String = "",
     val items: List<CartItemDto> = emptyList(),
@@ -175,7 +240,9 @@ data class OrderDto(
     val deliveryInstructions: String? = null,
     val createdAt: String? = null,
     val statusHistory: List<StatusHistoryDto> = emptyList(),
-)
+) {
+    fun orderId(): String? = id?.takeIf { it.isNotBlank() } ?: mongoId?.takeIf { it.isNotBlank() }
+}
 
 @Serializable
 data class StatusHistoryDto(
@@ -196,7 +263,7 @@ data class CouponDto(
 
 @Serializable
 data class SubscriptionDto(
-    @SerialName("_id") val id: String? = null,
+    val id: String? = null,
     val type: String = "",
     val status: String = "",
     val price: Double = 0.0,
@@ -209,8 +276,6 @@ data class SubscriptionDto(
 @Serializable
 data class CreateSubscriptionRequest(
     val type: String,
-    val billingInterval: String = "monthly",
-    val price: Double = 0.0,
 )
 
 @Serializable
@@ -271,3 +336,12 @@ data class ProfileUpdateRequest(
 
 @Serializable
 data class ApiError(val error: String? = null, val message: String? = null)
+
+@Serializable
+data class ContactSettingsDto(val whatsapp: String = "")
+
+@Serializable
+data class PushDeviceRequest(val token: String, val platform: String? = null)
+
+@Serializable
+data class OkResponse(val ok: Boolean = true)

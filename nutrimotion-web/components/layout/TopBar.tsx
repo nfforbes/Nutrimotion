@@ -5,14 +5,11 @@
 
 'use client';
 
-import { Box, Typography, Link, SvgIcon, Button } from '@mui/material';
+import { Box, Link, SvgIcon, Button } from '@mui/material';
+import { useContactWhatsApp } from '@/lib/contact/useContactWhatsApp';
+import { whatsAppLink } from '@/lib/contact/whatsappLink';
 
-/** Default digits; wa.me link uses the same digits without separators. */
-const CONTACT_PHONE_DISPLAY = '18764282339';
-
-const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || CONTACT_PHONE_DISPLAY;
-
-function WhatsAppIcon() {
+export function WhatsAppIcon() {
   return (
     <SvgIcon viewBox="0 0 24 24" sx={{ width: 32, height: 32, color: 'white' }}>
       <path
@@ -23,14 +20,8 @@ function WhatsAppIcon() {
   );
 }
 
-/** Phone number digits only for WhatsApp (E.164 without +) */
-function getWhatsAppHref(displayPhone: string): string {
-  const digits = displayPhone.replace(/\D/g, '');
-  return `https://wa.me/${digits}`;
-}
-
 export default function TopBar() {
-  const whatsappHref = getWhatsAppHref(CONTACT_PHONE);
+  const whatsappHref = whatsAppLink(useContactWhatsApp());
 
   return (
     <Box

@@ -32,6 +32,8 @@ export interface IAppSettingDoc extends Omit<mongoose.Document, '_id'> {
   fileStorageProvider?: FileStorageProvider;
   ms365?: IMs365Settings;
   googleDrive?: IGoogleDriveSettings;
+  /** WhatsApp number customers message, digits only with country code. */
+  contactWhatsApp?: string;
   updatedAt: Date;
 }
 
@@ -67,6 +69,7 @@ const AppSettingSchema = new Schema(
     },
     ms365: { type: Ms365SettingsSchema, default: () => ({}) },
     googleDrive: { type: GoogleDriveSettingsSchema, default: () => ({}) },
+    contactWhatsApp: { type: String, default: '' },
   },
   { timestamps: true }
 );

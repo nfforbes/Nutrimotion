@@ -13,6 +13,8 @@ export interface IMealPackage {
   instagramLink?: string;
   slot: MealSlot;
   scheduledDate: Date;
+  /** Week menu this meal belongs to, e.g. "Week 2 - Menu B". */
+  menuLabel?: string;
   available: boolean;
   ingredients?: string[];
   nutritionInfo?: {
@@ -38,6 +40,7 @@ const MealPackageSchema = new Schema<IMealPackage>(
       required: true,
     },
     scheduledDate: { type: Date, required: true, index: true },
+    menuLabel: { type: String },
     available: { type: Boolean, default: true },
     ingredients: [String],
     nutritionInfo: {

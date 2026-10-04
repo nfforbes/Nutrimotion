@@ -10,6 +10,11 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
+// Push needs the Firebase config; without it the app builds and runs with push disabled.
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.googleServices.get().pluginId)
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -34,11 +39,13 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.security.crypto)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.firebase.messaging)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -77,9 +84,9 @@ android {
             return fromProp ?: fromEnv ?: fallback
         }
 
-        val apiBase = propOrEnv("API_BASE_URL", "https://localhost:3600")
+        val apiBase = propOrEnv("API_BASE_URL", "https://www.nutrimotionjamaica.com")
         val auth0Domain = propOrEnv("AUTH0_DOMAIN", "n4consulting.us.auth0.com")
-        val auth0ClientId = propOrEnv("AUTH0_CLIENT_ID", "REPLACE_ANDROID_NATIVE_CLIENT_ID")
+        val auth0ClientId = propOrEnv("AUTH0_CLIENT_ID", "WkjrdWm6dXyUY5IlUjwFXDXbWOXAbhGt")
         val auth0Audience =
             propOrEnv("AUTH0_AUDIENCE", "https://n4consulting.us.auth0.com/api/v2/")
         buildConfigField("String", "API_BASE_URL", "\"$apiBase\"")
@@ -128,9 +135,6 @@ android {
             if (canSignRelease) {
                 signingConfig = signingConfigs.getByName("release")
             }
-        }
-        getByName("debug") {
-            buildConfigField("String", "API_BASE_URL", "\"https://10.0.2.2:3600\"")
         }
     }
 

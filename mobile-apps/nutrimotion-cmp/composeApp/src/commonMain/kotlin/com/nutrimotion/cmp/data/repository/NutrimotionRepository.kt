@@ -25,9 +25,11 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
 
     suspend fun getBooks(): Result<List<CatalogItemDto>> = api.get("api/books")
 
-    suspend fun getRecipes(): Result<List<CatalogItemDto>> = api.get("api/recipes")
+    suspend fun getRecipes(): Result<RecipesPage> = api.get("api/recipes")
 
-    suspend fun getVideos(): Result<List<CatalogItemDto>> = api.get("api/videos")
+    suspend fun getVideos(): Result<VideosPage> = api.get("api/videos")
+
+    suspend fun getSubscriptionPlans(): Result<List<SubscriptionPlanDto>> = api.get("api/subscriptions/plans")
 
     suspend fun getCart(): Result<CartDto> = api.get("api/cart")
 
@@ -65,4 +67,12 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
 
     suspend fun getAnalytics(days: Int = 30): Result<AnalyticsResponse> =
         api.get("api/admin/analytics", mapOf("days" to days.toString()))
+
+    suspend fun getContactSettings(): Result<ContactSettingsDto> = api.get("api/settings/contact")
+
+    suspend fun registerPushDevice(token: String, platform: String): Result<OkResponse> =
+        api.post("api/users/me/push-devices", PushDeviceRequest(token, platform))
+
+    suspend fun unregisterPushDevice(token: String): Result<OkResponse> =
+        api.delete("api/users/me/push-devices", PushDeviceRequest(token))
 }

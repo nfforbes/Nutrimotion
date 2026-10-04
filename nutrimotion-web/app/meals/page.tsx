@@ -32,7 +32,9 @@ import { MealSlot } from '@/types/catalog';
 import { MEAL_SLOT_LABELS, MEAL_SLOT_ORDER, normalizeSlotKey } from '@/lib/meals/slots';
 import axios from 'axios';
 import PackageSelection from '@/components/client/PackageSelection';
+import PackageBrowseBar from '@/components/packages/PackageBrowseBar';
 import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
+import { groupPackages, PackageSort, PackageSpanFilter } from '@/lib/packages/organize';
 
 const SLOT_LABELS = MEAL_SLOT_LABELS;
 const SLOT_ORDER = MEAL_SLOT_ORDER;
@@ -47,7 +49,7 @@ export interface PackageDoc {
   lunchCount: number;
   smoothieCount?: number;
   juiceShotCount?: number;
-  /** @deprecated legacy packages */
+  /** @deprecated legacy packages stored dinner in this field */
   dinnerCount?: number;
   cost?: number;
   daysOption: 'any' | 'specific';
@@ -79,10 +81,12 @@ export default function MealsPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<PackageDoc | null>(null);
+  const [packageSpan, setPackageSpan] = useState<PackageSpanFilter>('all');
+  const [packageSort, setPackageSort] = useState<PackageSort>('price-asc');
   const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
 
   const dispatch = useAppDispatch();
-  const { meals, isLoading } = useAppSelector((state) => state.catalog);
+  const { meals, isLoading, error: mealsError } = useAppSelector((state) => state.catalog);
   const auth = useAppSelector((state) => state.auth);
 
   useEffect(() => {
@@ -119,6 +123,7 @@ export default function MealsPage() {
         lunch: daySels[MealSlot.LUNCH]?.map((m) => m.name),
         smoothies: daySels[MealSlot.SMOOTHIES]?.map((m) => m.name),
         juice_shot: daySels[MealSlot.JUICE_SHOT]?.map((m) => m.name),
+        dinner: daySels.dinner?.map((m) => m.name),
       };
     });
 
@@ -152,8 +157,10 @@ export default function MealsPage() {
       map[key] = {};
       SLOT_ORDER.forEach((slot) => (map[key][slot] = []));
     }
-    for (const meal of meals) {
+    const mealList = Array.isArray(meals) ? meals : [];
+    for (const meal of mealList) {
       const d = new Date(meal.scheduledDate);
+      if (Number.isNaN(d.getTime())) continue;
       const key = getLocalCalendarDayKey(d);
       if (map[key]) {
         const slot = normalizeSlotKey(meal.slot);
@@ -166,6 +173,11 @@ export default function MealsPage() {
   }, [meals, weekDays]);
 
   const weekLabel = `${formatDate(weekDays[0])} – ${formatDate(weekDays[6])}`;
+
+  const packageGroups = useMemo(
+    () => groupPackages(packages, packageSpan, packageSort),
+    [packages, packageSpan, packageSort]
+  );
 
   const menuItems = getAllMenuItemsForUser(auth.permissions);
 
@@ -198,51 +210,87 @@ export default function MealsPage() {
                 No packages available at the moment.
               </Typography>
             ) : (
-              <Grid container spacing={3} sx={{ mb: 4 }}>
-                {packages.map((pkg) => (
-                  <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pkg._id}>
-                    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <CardContent sx={{ flexGrow: 1 }}>
-                        <Typography variant="h6" gutterBottom>
-                          {pkg.name}
-                        </Typography>
-                        {pkg.description && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            {pkg.description}
-                          </Typography>
-                        )}
-                        <Typography variant="body2">
-                          {pkg.breakfastCount} breakfast{pkg.breakfastCount === 1 ? '' : 's'} · {pkg.lunchCount} lunch
-                          {pkg.lunchCount === 1 ? '' : 'es'} · {(pkg.smoothieCount ?? pkg.dinnerCount ?? 0)} smoothie
-                          {(pkg.smoothieCount ?? pkg.dinnerCount ?? 0) === 1 ? '' : 's'} · {pkg.juiceShotCount ?? 0} juice shot
-                          {(pkg.juiceShotCount ?? 0) === 1 ? '' : 's'}{' '}
-                          <Typography component="span" variant="body2" color="text.secondary">
-                            (package total)
-                          </Typography>
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {pkg.daysOption === 'any'
-                            ? 'Any days'
-                            : `Days: ${pkg.specificDays.map((d) => DAY_LABELS_SHORT[d]).join(', ')}`}
-                        </Typography>
-                        <Typography variant="body2" fontWeight="medium" sx={{ mt: 1 }}>
-                          ${(pkg.cost ?? 0).toFixed(2)}
-                        </Typography>
-                      </CardContent>
-                      <CardActions>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          startIcon={<AddShoppingCartIcon />}
-                          onClick={() => setSelectedPackage(pkg)}
-                        >
-                          Select Package
-                        </Button>
-                      </CardActions>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
+              <Box sx={{ mb: 4 }}>
+                <PackageBrowseBar
+                  span={packageSpan}
+                  sort={packageSort}
+                  onSpanChange={setPackageSpan}
+                  onSortChange={setPackageSort}
+                />
+                {packageGroups.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No packages in this group.
+                  </Typography>
+                ) : (
+                  packageGroups.map((group) => (
+                    <Box key={group.span} sx={{ mb: 4 }}>
+                      <Typography variant="h5" gutterBottom>
+                        {group.label}
+                      </Typography>
+                      <Grid container spacing={3}>
+                        {group.packages.map((pkg) => (
+                          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={pkg._id}>
+                            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                              <CardContent sx={{ flexGrow: 1 }}>
+                                <Typography variant="h6" gutterBottom>
+                                  {pkg.name}
+                                </Typography>
+                                {pkg.description && (
+                                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                                    {pkg.description}
+                                  </Typography>
+                                )}
+                                <Typography variant="body2">
+                                  {[
+                                    pkg.breakfastCount > 0
+                                      ? `${pkg.breakfastCount} breakfast${pkg.breakfastCount === 1 ? '' : 's'}`
+                                      : null,
+                                    pkg.lunchCount > 0
+                                      ? `${pkg.lunchCount} lunch${pkg.lunchCount === 1 ? '' : 'es'}`
+                                      : null,
+                                    (pkg.dinnerCount ?? 0) > 0 && pkg.smoothieCount != null
+                                      ? `${pkg.dinnerCount} dinner${pkg.dinnerCount === 1 ? '' : 's'}`
+                                      : null,
+                                    (pkg.smoothieCount ?? pkg.dinnerCount ?? 0) > 0
+                                      ? `${pkg.smoothieCount ?? pkg.dinnerCount} smoothie${(pkg.smoothieCount ?? pkg.dinnerCount) === 1 ? '' : 's'}`
+                                      : null,
+                                    (pkg.juiceShotCount ?? 0) > 0
+                                      ? `${pkg.juiceShotCount} juice shot${pkg.juiceShotCount === 1 ? '' : 's'}`
+                                      : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(' · ')}{' '}
+                                  <Typography component="span" variant="body2" color="text.secondary">
+                                    (package total)
+                                  </Typography>
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                  {pkg.daysOption === 'any'
+                                    ? 'Any days'
+                                    : `Days: ${pkg.specificDays.map((d) => DAY_LABELS_SHORT[d]).join(', ')}`}
+                                </Typography>
+                                <Typography variant="body2" fontWeight="medium" sx={{ mt: 1 }}>
+                                  ${(pkg.cost ?? 0).toFixed(2)}
+                                </Typography>
+                              </CardContent>
+                              <CardActions>
+                                <Button
+                                  fullWidth
+                                  variant="contained"
+                                  startIcon={<AddShoppingCartIcon />}
+                                  onClick={() => setSelectedPackage(pkg)}
+                                >
+                                  Select Package
+                                </Button>
+                              </CardActions>
+                            </Card>
+                          </Grid>
+                        ))}
+                      </Grid>
+                    </Box>
+                  ))
+                )}
+              </Box>
             )}
 
             <Divider sx={{ mb: 4 }} />
@@ -281,6 +329,12 @@ export default function MealsPage() {
               ))}
             </Tabs>
 
+            {mealsError && (
+              <Typography color="error" sx={{ mb: 2 }}>
+                {mealsError}
+              </Typography>
+            )}
+
             {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                 <CircularProgress />
@@ -316,12 +370,14 @@ export default function MealsPage() {
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                               {slotMeals.map((meal: any) => (
                                 <Card key={meal.id || meal._id}>
-                                  <CardMedia
-                                    component="img"
-                                    height="160"
-                                    image={meal.imageUrl || '/placeholder-meal.jpg'}
-                                    alt={meal.name}
-                                  />
+                                  {meal.imageUrl ? (
+                                    <CardMedia
+                                      component="img"
+                                      height="160"
+                                      image={meal.imageUrl}
+                                      alt={meal.name}
+                                    />
+                                  ) : null}
                                   <CardContent>
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
                                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>

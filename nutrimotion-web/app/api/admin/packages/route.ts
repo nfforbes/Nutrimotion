@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       lunchCount: Number(lunchCount),
       smoothieCount: Number(smoothie),
       juiceShotCount: Number(juiceShot),
+      dinnerCount: Math.max(0, Number(body.dinnerCount) || 0),
       cost: costNum >= 0 ? costNum : 0,
       daysOption: opt,
       specificDays: opt === 'specific' ? specificDays : [],
