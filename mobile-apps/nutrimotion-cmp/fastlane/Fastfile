@@ -45,7 +45,7 @@ def import_distribution_p12!(keychain_name:, keychain_password:)
   UI.success("Imported Apple Distribution certificate from IOS_DISTRIBUTION_CERT_P12_BASE64")
 end
 
-def revoke_one_orphaned_distribution_cert!(api_key:)
+def connect_api_login!(api_key)
   require "spaceship"
 
   Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.create(
@@ -55,6 +55,26 @@ def revoke_one_orphaned_distribution_cert!(api_key:)
     duration: api_key[:duration] || 1200,
     in_house: api_key[:in_house] || false
   )
+end
+
+# The entitlements file requests aps-environment, so the App ID must have Push
+# Notifications before sigh regenerates the profile.
+def ensure_push_capability!(api_key:, bundle_id:)
+  connect_api_login!(api_key)
+  app_id = Spaceship::ConnectAPI::BundleId.find(bundle_id)
+  UI.user_error!("App ID #{bundle_id} not found in the Apple Developer portal") unless app_id
+
+  push_type = Spaceship::ConnectAPI::BundleIdCapability::Type::PUSH_NOTIFICATIONS
+  if app_id.get_capabilities.any? { |c| c.capability_type == push_type }
+    UI.success("Push Notifications already enabled for #{bundle_id}")
+  else
+    UI.important("Enabling Push Notifications for #{bundle_id}")
+    app_id.create_capability(push_type)
+  end
+end
+
+def revoke_one_orphaned_distribution_cert!(api_key:)
+  connect_api_login!(api_key)
 
   certs = Spaceship::ConnectAPI::Certificate.all.select do |c|
     type = c.certificate_type.to_s
@@ -154,6 +174,8 @@ platform :ios do
     unless distribution_identity_in_keychain?(keychain_path)
       UI.user_error!("No Apple Distribution identity available after cert setup")
     end
+
+    ensure_push_capability!(api_key: api_key, bundle_id: bundle_id)
 
     profile_uuid = sigh(
       api_key: api_key,

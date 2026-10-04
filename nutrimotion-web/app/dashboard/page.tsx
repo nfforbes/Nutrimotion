@@ -22,6 +22,7 @@ import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import LocalShippingIcon from '@mui/icons-material/LocalShipping';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppDispatch, useAppSelector } from '@/store';
@@ -73,6 +74,14 @@ const quickLinks = [
     icon: ReceiptIcon,
     href: '/recipes',
     color: BRAND_COLORS.mediumOrange, // #ff6f47
+  },
+  {
+    id: 'whatsapp',
+    title: 'WhatsApp Us',
+    description: 'Send us a message on WhatsApp',
+    icon: WhatsAppIcon,
+    href: '/client/whatsapp',
+    color: BRAND_COLORS.primary,
   },
 ];
 

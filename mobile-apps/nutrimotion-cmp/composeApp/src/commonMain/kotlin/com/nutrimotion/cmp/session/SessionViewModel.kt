@@ -12,9 +12,13 @@ import com.nutrimotion.cmp.data.model.AuthMeResponse
 import com.nutrimotion.cmp.data.model.Permissions
 import com.nutrimotion.cmp.data.model.Roles
 import com.nutrimotion.cmp.data.repository.NutrimotionRepository
+import com.nutrimotion.cmp.push.PushTokens
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,6 +39,7 @@ class SessionViewModel(
 ) : ViewModel() {
     private val _state = MutableStateFlow(SessionState())
     val state: StateFlow<SessionState> = _state.asStateFlow()
+    private var pushJob: Job? = null
 
     init {
         viewModelScope.launch {
@@ -48,6 +53,8 @@ class SessionViewModel(
     }
 
     private fun onUnauthorized() {
+        pushJob?.cancel()
+        pushJob = null
         secureStorage.clear()
         TokenStore.clear()
         if (_state.value.loggedIn) {
@@ -95,6 +102,7 @@ class SessionViewModel(
                             error = null,
                         )
                     }
+                    startPushRegistration()
                 }
                 .onFailure { e ->
                     TokenStore.clear()
@@ -115,8 +123,21 @@ class SessionViewModel(
         _state.update { it.copy(mode = mode) }
     }
 
+    private fun startPushRegistration() {
+        if (pushJob?.isActive == true) return
+        pushJob = viewModelScope.launch {
+            PushTokens.token.filterNotNull().distinctUntilChanged().collect { token ->
+                repo.registerPushDevice(token.value, token.platform)
+            }
+        }
+        PushTokens.requestPermission()
+    }
+
     fun logout() {
         viewModelScope.launch {
+            pushJob?.cancel()
+            pushJob = null
+            PushTokens.token.value?.let { repo.unregisterPushDevice(it.value) }
             auth.logout()
             secureStorage.clear()
             TokenStore.clear()

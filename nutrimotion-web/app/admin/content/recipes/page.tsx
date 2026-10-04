@@ -12,6 +12,7 @@ import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import AddRecipeForm from '@/components/admin/AddRecipeForm';
 import RecipeList from '@/components/admin/RecipeList';
+import ContentAccessManager from '@/components/admin/ContentAccessManager';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import axios from 'axios';
@@ -21,6 +22,7 @@ interface RecipeDoc {
   title: string;
   description?: string;
   imageUrl?: string;
+  isFree?: boolean;
 }
 
 export default function AdminRecipesPage() {
@@ -69,7 +71,10 @@ export default function AdminRecipesPage() {
             onCancel={() => setShowAddForm(false)}
           />
         ) : (
-          <RecipeList recipes={recipes} />
+          <>
+            <ContentAccessManager library="recipes" items={recipes} onItemsChanged={fetchRecipes} />
+            <RecipeList recipes={recipes} />
+          </>
         )}
       </Container>
     </>

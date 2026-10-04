@@ -32,13 +32,14 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { fetchRecipesRequest } from '@/store/slices/catalogSlice';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import type { Recipe } from '@/types/catalog';
+import LockedContentBanner from '@/components/content/LockedContentBanner';
 
 export default function RecipesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
-  const { recipes, isLoading, error } = useAppSelector((state) => state.catalog);
+  const { recipes, recipesAccess, isLoading, error } = useAppSelector((state) => state.catalog);
 
   useEffect(() => {
     dispatch(fetchRecipesRequest());
@@ -66,6 +67,8 @@ export default function RecipesPage() {
           </Alert>
         )}
 
+        {!isLoading && <LockedContentBanner access={recipesAccess} noun="recipe" planLabel="Recipes" />}
+
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
             <CircularProgress />
@@ -74,7 +77,9 @@ export default function RecipesPage() {
           <Card>
             <CardContent>
               <Typography variant="body1" align="center" sx={{ py: 4 }}>
-                No recipes available at the moment. Check back soon!
+                {recipesAccess && recipesAccess.lockedCount > 0
+                  ? 'Subscribe to unlock recipes.'
+                  : 'No recipes available at the moment. Check back soon!'}
               </Typography>
             </CardContent>
           </Card>
@@ -100,6 +105,8 @@ export default function RecipesPage() {
                       <Chip label={`${recipe.prepTime} min prep`} size="small" />
                       <Chip label={`${recipe.cookTime} min cook`} size="small" />
                       <Chip label={recipe.difficulty} size="small" color="primary" variant="outlined" />
+                      {recipe.thisWeek && <Chip label="This week" size="small" color="secondary" />}
+                      {recipe.isFree && <Chip label="Free" size="small" color="success" />}
                     </Box>
                   </CardContent>
                   <CardActions>

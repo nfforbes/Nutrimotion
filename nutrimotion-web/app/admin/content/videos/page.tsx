@@ -12,6 +12,7 @@ import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import AddVideoForm from '@/components/admin/AddVideoForm';
 import VideoList from '@/components/admin/VideoList';
+import ContentAccessManager from '@/components/admin/ContentAccessManager';
 import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import axios from 'axios';
@@ -24,6 +25,8 @@ interface VideoDoc {
   videoUrl?: string;
   duration?: number;
   category?: string;
+  isFree?: boolean;
+  freeShortUrl?: string;
 }
 
 export default function AdminVideosPage() {
@@ -72,7 +75,10 @@ export default function AdminVideosPage() {
             onCancel={() => setShowAddForm(false)}
           />
         ) : (
-          <VideoList videos={videos} />
+          <>
+            <ContentAccessManager library="videos" items={videos} onItemsChanged={fetchVideos} />
+            <VideoList videos={videos} />
+          </>
         )}
       </Container>
     </>

@@ -19,6 +19,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import ReceiptIcon from '@mui/icons-material/Receipt';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import SubscriptionsIcon from '@mui/icons-material/Subscriptions';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
@@ -57,6 +58,14 @@ const contentTypes = [
     icon: FitnessCenterIcon,
     href: '/admin/content/training',
     color: '#FF6F00',
+  },
+  {
+    id: 'subscriptions',
+    title: 'Subscription Prices',
+    description: 'Set the monthly price for Recipes and Videos',
+    icon: SubscriptionsIcon,
+    href: '/admin/content/subscriptions',
+    color: '#00897B',
   },
 ];
 

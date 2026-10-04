@@ -6,22 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requirePermissions } from '@/lib/auth/middleware';
 import { Permission } from '@/types/auth';
 import connectDB from '@/lib/db/connection';
-import mongoose from 'mongoose';
-
-const RecipeSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  imageUrl: { type: String, required: true },
-  ingredients: [String],
-  instructions: [String],
-  prepTime: { type: Number, required: true },
-  cookTime: { type: Number, required: true },
-  servings: { type: Number, required: true },
-  difficulty: { type: String, enum: ['easy', 'medium', 'hard'], required: true },
-  tags: [String],
-}, { timestamps: true });
-
-const Recipe = mongoose.models.Recipe || mongoose.model('Recipe', RecipeSchema);
+import { Recipe } from '@/lib/db/models';
 
 export async function GET(request: NextRequest) {
   const authResult = await requirePermissions(request, [Permission.MANAGE_RECIPES]);
@@ -44,7 +29,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const body = await request.json();
     
-    const { title, description, imageUrl, ingredients, instructions, prepTime, cookTime, servings, difficulty, tags } = body;
+    const { title, description, imageUrl, ingredients, instructions, prepTime, cookTime, servings, difficulty, tags, isFree } = body;
     
     if (!title || !description || !imageUrl || prepTime === undefined || cookTime === undefined || servings === undefined || !difficulty) {
       return NextResponse.json(
@@ -64,6 +49,7 @@ export async function POST(request: NextRequest) {
       servings,
       difficulty,
       tags: tags || [],
+      isFree: isFree === true,
     });
     
     return NextResponse.json({

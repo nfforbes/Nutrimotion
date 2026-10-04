@@ -10,6 +10,11 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
 }
 
+// Push needs the Firebase config; without it the app builds and runs with push disabled.
+if (file("google-services.json").exists()) {
+    apply(plugin = libs.plugins.googleServices.get().pluginId)
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -34,6 +39,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.androidx.security.crypto)
             implementation(libs.ktor.client.okhttp)
+            implementation(libs.firebase.messaging)
         }
         commonMain.dependencies {
             implementation(compose.runtime)

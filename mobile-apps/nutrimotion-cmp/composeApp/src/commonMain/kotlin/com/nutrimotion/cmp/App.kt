@@ -7,6 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.MenuBook
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.nutrimotion.cmp.data.model.CartItemRequest
 import com.nutrimotion.cmp.data.model.DeliveryAssignmentDto
+import com.nutrimotion.cmp.data.model.OrderDto
 import com.nutrimotion.cmp.data.model.RecipeDto
 import com.nutrimotion.cmp.data.repository.NutrimotionRepository
 import com.nutrimotion.cmp.session.AppMode
@@ -48,11 +50,14 @@ import com.nutrimotion.cmp.ui.screens.client.CartScreen
 import com.nutrimotion.cmp.ui.screens.client.CatalogScreen
 import com.nutrimotion.cmp.ui.screens.client.CheckoutScreen
 import com.nutrimotion.cmp.ui.screens.client.MealsScreen
+import com.nutrimotion.cmp.ui.screens.client.OrderDetailScreen
 import com.nutrimotion.cmp.ui.screens.client.OrdersScreen
 import com.nutrimotion.cmp.ui.screens.client.ProfileScreen
 import com.nutrimotion.cmp.ui.screens.client.RecipeDetailScreen
 import com.nutrimotion.cmp.ui.screens.client.RecipesScreen
 import com.nutrimotion.cmp.ui.screens.client.SubscriptionsScreen
+import com.nutrimotion.cmp.ui.screens.client.VideosScreen
+import com.nutrimotion.cmp.ui.screens.client.WhatsAppScreen
 import com.nutrimotion.cmp.ui.screens.client.TrackingScreen
 import com.nutrimotion.cmp.ui.screens.driver.DriverAssignmentDetailScreen
 import com.nutrimotion.cmp.ui.screens.driver.DriverAssignmentsScreen
@@ -71,6 +76,7 @@ private enum class ClientSection(
     Cart("Cart", Icons.Filled.ShoppingCart, Color(0xFFFF2D55)),
     Orders("Orders", Icons.Filled.ReceiptLong, Color(0xFF5AC8FA)),
     Subscriptions("Subscriptions", Icons.Filled.Autorenew, Color(0xFF5856D6)),
+    WhatsApp("WhatsApp", Icons.Filled.Chat, Color(0xFF25D366)),
     Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
 }
 
@@ -184,12 +190,15 @@ private fun ClientShell(
     var selectedRecipe by remember { mutableStateOf<RecipeDto?>(null) }
     var checkout by remember { mutableStateOf(false) }
     var trackingOrderId by remember { mutableStateOf<String?>(null) }
+    var selectedOrder by remember { mutableStateOf<OrderDto?>(null) }
     val open = section
     val recipe = selectedRecipe
+    val order = selectedOrder
     val showDashboard = open == null && !checkout && trackingOrderId == null
     val title = when {
         trackingOrderId != null -> "Tracking"
         checkout -> "Checkout"
+        open == ClientSection.Orders && order != null -> "Order #${order.orderNumber}"
         recipe != null -> recipe.title
         else -> open?.label ?: "Nutrimotion"
     }
@@ -203,6 +212,7 @@ private fun ClientShell(
                         when {
                             trackingOrderId != null -> trackingOrderId = null
                             checkout -> checkout = false
+                            open == ClientSection.Orders && order != null -> selectedOrder = null
                             recipe != null -> selectedRecipe = null
                             else -> section = null
                         }
@@ -221,6 +231,7 @@ private fun ClientShell(
                     items = ClientSection.entries.map { item ->
                         DashboardItem(item.label, item.icon, item.color) {
                             selectedRecipe = null
+                            selectedOrder = null
                             section = item
                         }
                     },
@@ -239,11 +250,21 @@ private fun ClientShell(
                 open == ClientSection.Training -> CatalogPage(repo, ClientSection.Training)
                 open == ClientSection.Books -> CatalogPage(repo, ClientSection.Books)
                 open == ClientSection.Recipes && recipe != null -> RecipeDetailScreen(recipe)
-                open == ClientSection.Recipes -> RecipesScreen(repo) { selectedRecipe = it }
-                open == ClientSection.Videos -> CatalogPage(repo, ClientSection.Videos)
-                open == ClientSection.Cart -> CartScreen(repo) { checkout = true }
-                open == ClientSection.Orders -> OrdersScreen(repo) { trackingOrderId = it }
+                open == ClientSection.Recipes -> RecipesScreen(
+                    repo = repo,
+                    onOpen = { selectedRecipe = it },
+                    onSubscribe = { section = ClientSection.Subscriptions },
+                )
+                open == ClientSection.Videos -> VideosScreen(repo) { section = ClientSection.Subscriptions }
+                open == ClientSection.Cart -> CartScreen(
+                    repo = repo,
+                    onContinueShopping = { section = ClientSection.Meals },
+                    onCheckout = { checkout = true },
+                )
+                open == ClientSection.Orders && order != null -> OrderDetailScreen(order) { trackingOrderId = it }
+                open == ClientSection.Orders -> OrdersScreen(repo) { selectedOrder = it }
                 open == ClientSection.Subscriptions -> SubscriptionsScreen(repo)
+                open == ClientSection.WhatsApp -> WhatsAppScreen(repo, userName)
                 open == ClientSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
             }
         }
@@ -272,17 +293,6 @@ private fun CatalogPage(repo: NutrimotionRepository, section: ClientSection) {
                     name = item.title ?: item.name.orEmpty(),
                     price = item.price,
                     imageUrl = item.coverImageUrl ?: item.imageUrl,
-                )
-            )
-        }
-        ClientSection.Videos -> CatalogScreen("videos", { repo.getVideos() }) { item ->
-            repo.addCartItem(
-                CartItemRequest(
-                    itemType = "subscription",
-                    itemId = item.catalogId(),
-                    name = item.title ?: item.name.orEmpty(),
-                    price = item.price,
-                    imageUrl = item.thumbnailUrl ?: item.imageUrl,
                 )
             )
         }

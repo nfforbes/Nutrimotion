@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import com.nutrimotion.cmp.data.auth.AndroidAuthBrowser
 import com.nutrimotion.cmp.data.auth.createSecureTokenStorage
 import com.nutrimotion.cmp.data.auth.initSecureStorage
+import com.nutrimotion.cmp.push.AndroidPush
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,6 +20,7 @@ class MainActivity : ComponentActivity() {
         AppConfig.auth0Audience = BuildConfig.AUTH0_AUDIENCE
         initSecureStorage(this)
         AndroidAuthBrowser.init(this)
+        AndroidPush.init(this)
         createSecureTokenStorage().readToken()
         handleAuthRedirect(intent)
         setContent { App() }

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891155726398",
+    "project_id": "nutrimotion-9b685",
+    "storage_bucket": "nutrimotion-9b685.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891155726398:android:ab9b9cb8b3a6527561916f",
+        "android_client_info": {
+          "package_name": "com.nutrimotion.cmp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCmJDg4yC14aSakTF40hHgVoLuCoN14loA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

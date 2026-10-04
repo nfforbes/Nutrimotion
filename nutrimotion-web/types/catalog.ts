@@ -69,6 +69,8 @@ export interface Recipe {
   servings: number;
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
+  isFree?: boolean;
+  thisWeek?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -78,12 +80,29 @@ export interface VideoAsset {
   title: string;
   description: string;
   thumbnailUrl: string;
-  videoUrl: string; // Link to cloud storage
+  /** Full video; null when only the free short is available to this user. */
+  videoUrl: string | null;
+  shortUrl?: string | null;
+  access?: 'full' | 'short';
   duration: number; // seconds
   category: 'cooking' | 'training';
   tags: string[];
+  isFree?: boolean;
+  thisWeek?: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+/** Subscription summary returned with the recipes and videos lists. */
+export interface ContentAccess {
+  subscribed: boolean;
+  total: number;
+  lockedCount: number;
+  monthlyPrice: number;
+}
+
+export interface ContentLibraryResponse<T> extends ContentAccess {
+  items: T[];
 }
 
 export interface MealSchedule {

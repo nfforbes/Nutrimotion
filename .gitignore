@@ -2,3 +2,8 @@ node_modules
 bin/
 obj/
 mobile-apps/maui/Nutrimotion/obj/
+
+# Push notification secrets
+*service-account*.json
+*firebase-adminsdk*.json
+AuthKey_*.p8
