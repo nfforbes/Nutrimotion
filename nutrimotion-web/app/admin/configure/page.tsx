@@ -74,6 +74,22 @@ export default function AdminConfigurePage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [testingGoogle, setTestingGoogle] = useState(false);
   const [googleTest, setGoogleTest] = useState<GoogleTestResult | null>(null);
+  const [redirectUri, setRedirectUri] = useState('');
+
+  useEffect(() => {
+    setRedirectUri(`${window.location.origin}/api/admin/settings/app/google/callback`);
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('google');
+    if (!status) return;
+    window.history.replaceState(null, '', window.location.pathname);
+    if (status === 'connected') {
+      setMessage({ type: 'success', text: 'Google Drive connected and the refresh token was saved. Running the test…' });
+      handleTestGoogle();
+    } else {
+      setMessage({ type: 'error', text: params.get('reason') || 'Could not connect Google Drive.' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const auth = useAppSelector((state) => state.auth);
   const menuItems = getAllMenuItemsForUser(auth.permissions);
@@ -271,6 +287,32 @@ export default function AdminConfigurePage() {
                     autoComplete={field.type === 'password' ? 'new-password' : 'off'}
                   />
                 ))}
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Get the refresh token automatically
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    1. Save the Client ID and Client Secret above. 2. In Google Cloud Console, open that OAuth client
+                    (type &quot;Web application&quot;) and add this Authorized redirect URI:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{ fontFamily: 'monospace', my: 1, wordBreak: 'break-all', userSelect: 'all' }}
+                  >
+                    {redirectUri}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                    3. Press Connect and sign in with the Google account that owns the upload folder.
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    href={`/api/admin/settings/app/google/connect${
+                      redirectUri ? `?origin=${encodeURIComponent(new URL(redirectUri).origin)}` : ''
+                    }`}
+                  >
+                    Connect Google Drive
+                  </Button>
+                </Box>
                 <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Button variant="outlined" onClick={handleTestGoogle} disabled={testingGoogle}>
                     {testingGoogle ? 'Testing…' : 'Test Google Drive connection'}
