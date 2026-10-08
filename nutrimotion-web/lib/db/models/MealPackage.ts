@@ -16,6 +16,8 @@ export interface IMealPackage {
   /** Week menu this meal belongs to, e.g. "Week 2 - Menu B". */
   menuLabel?: string;
   available: boolean;
+  /** False = only offered inside packages, not as a single cart item. */
+  soldIndividually: boolean;
   ingredients?: string[];
   nutritionInfo?: {
     calories: number;
@@ -42,6 +44,7 @@ const MealPackageSchema = new Schema<IMealPackage>(
     scheduledDate: { type: Date, required: true, index: true },
     menuLabel: { type: String },
     available: { type: Boolean, default: true },
+    soldIndividually: { type: Boolean, default: true },
     ingredients: [String],
     nutritionInfo: {
       calories: Number,

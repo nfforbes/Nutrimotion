@@ -126,6 +126,14 @@ export const ADMIN_MENU_ITEMS: MenuItem[] = [
     order: 2,
   },
   {
+    id: 'cooking-list',
+    label: 'Cooking List',
+    icon: 'SoupKitchen',
+    route: '/admin/cooking',
+    requiredPermissions: [Permission.ADMIN_DASHBOARD],
+    order: 2.5,
+  },
+  {
     id: 'packages-management',
     label: 'Packages',
     icon: 'Inventory2',

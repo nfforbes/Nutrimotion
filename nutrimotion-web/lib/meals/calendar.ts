@@ -17,6 +17,7 @@ export interface MealCalendarDoc {
   slot: string;
   scheduledDate: string;
   available?: boolean;
+  soldIndividually?: boolean;
   instagramLink?: string;
 }
 

@@ -8,15 +8,23 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.LibraryBooks
+import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,7 +53,20 @@ import com.nutrimotion.cmp.session.SessionViewModel
 import com.nutrimotion.cmp.ui.components.DashboardItem
 import com.nutrimotion.cmp.ui.components.IconDashboard
 import com.nutrimotion.cmp.ui.screens.LoginScreen
+import com.nutrimotion.cmp.data.model.AdminPermissions
+import com.nutrimotion.cmp.data.model.Permissions
+import com.nutrimotion.cmp.ui.screens.admin.AdminConfigureScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminContentScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminCouponsScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminDashboardScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminDeliveriesScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminMealsScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminNotificationsScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminOrdersScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminPackagesScreen
+import com.nutrimotion.cmp.ui.screens.admin.AdminUsersScreen
 import com.nutrimotion.cmp.ui.screens.admin.AnalyticsScreen
+import com.nutrimotion.cmp.ui.screens.admin.CookingScreen
 import com.nutrimotion.cmp.ui.screens.client.CartScreen
 import com.nutrimotion.cmp.ui.screens.client.CatalogScreen
 import com.nutrimotion.cmp.ui.screens.client.CheckoutScreen
@@ -85,9 +106,36 @@ private enum class DriverSection(val label: String, val icon: ImageVector, val c
     Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
 }
 
-private enum class AdminSection(val label: String, val icon: ImageVector, val color: Color) {
-    Analytics("Analytics", Icons.Filled.BarChart, Color(0xFF30B0C7)),
-    Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
+/** `permissions` empty = everyone in admin mode; otherwise any one of them grants the tile. */
+private enum class AdminSection(
+    val label: String,
+    val icon: ImageVector,
+    val color: Color,
+    val permissions: List<String>,
+) {
+    Dashboard("Dashboard", Icons.Filled.Dashboard, Color(0xFFEE4D24), listOf(Permissions.ADMIN_DASHBOARD)),
+    Orders("Orders", Icons.Filled.ReceiptLong, Color(0xFF5AC8FA), listOf(AdminPermissions.MANAGE_ORDERS)),
+    Deliveries("Deliveries", Icons.Filled.LocalShipping, Color(0xFFFF9500), listOf(AdminPermissions.ASSIGN_DRIVERS)),
+    Cooking("Cooking", Icons.Filled.SoupKitchen, Color(0xFFFF3B30), listOf(Permissions.ADMIN_DASHBOARD)),
+    Meals("Meals", Icons.Filled.Restaurant, Color(0xFF34C759), listOf(AdminPermissions.MANAGE_MEALS)),
+    Packages("Packages", Icons.Filled.Inventory2, Color(0xFF007AFF), listOf(AdminPermissions.MANAGE_PACKAGES)),
+    Coupons("Coupons", Icons.Filled.LocalOffer, Color(0xFFFF2D55), listOf(AdminPermissions.MANAGE_COUPONS)),
+    Users("Users", Icons.Filled.People, Color(0xFF5856D6), listOf(AdminPermissions.MANAGE_USERS)),
+    Notifications("Notify", Icons.Filled.NotificationsActive, Color(0xFF25D366), listOf(AdminPermissions.MANAGE_USERS)),
+    Content(
+        "Content",
+        Icons.Filled.LibraryBooks,
+        Color(0xFFAF52DE),
+        listOf(
+            AdminPermissions.MANAGE_RECIPES,
+            AdminPermissions.MANAGE_VIDEOS,
+            AdminPermissions.MANAGE_BOOKS,
+            AdminPermissions.MANAGE_TRAINING,
+        ),
+    ),
+    Analytics("Analytics", Icons.Filled.BarChart, Color(0xFF30B0C7), listOf(Permissions.VIEW_ANALYTICS)),
+    Configure("Configure", Icons.Filled.Settings, Color(0xFF636366), listOf(Permissions.ADMIN_DASHBOARD)),
+    Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93), emptyList()),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -130,7 +178,7 @@ private fun ModeSwitcher(sessionViewModel: SessionViewModel, current: AppMode) {
         TextButton(onClick = { sessionViewModel.switchMode(AppMode.DRIVER) }) { Text("Driver") }
     }
     if (current != AppMode.ADMIN && sessionViewModel.canViewAnalytics()) {
-        TextButton(onClick = { sessionViewModel.switchMode(AppMode.ADMIN) }) { Text("Analytics") }
+        TextButton(onClick = { sessionViewModel.switchMode(AppMode.ADMIN) }) { Text("Admin") }
     }
 }
 
@@ -142,6 +190,9 @@ private fun AdminShell(
 ) {
     var section by remember { mutableStateOf<AdminSection?>(null) }
     val open = section
+    val allowed = AdminSection.entries.filter { s ->
+        s.permissions.isEmpty() || s.permissions.any(sessionViewModel::hasPermission)
+    }
 
     Scaffold(
         topBar = {
@@ -153,27 +204,40 @@ private fun AdminShell(
         },
     ) { padding ->
         Box(modifier = Modifier.padding(padding)) {
-            if (open == null) {
-                IconDashboard(
+            when {
+                open == null -> IconDashboard(
                     title = "Nutrimotion",
                     subtitle = "Admin",
-                    items = AdminSection.entries.map { item ->
+                    items = allowed.map { item ->
                         DashboardItem(item.label, item.icon, item.color) { section = item }
                     },
                     headerActions = { ModeSwitcher(sessionViewModel, AppMode.ADMIN) },
                 )
-            } else when (open) {
-                AdminSection.Analytics -> {
-                    if (sessionViewModel.canViewAnalytics()) {
-                        AnalyticsScreen(repo)
-                    } else {
-                        Column(modifier = Modifier.padding(24.dp)) {
-                            Text("You do not have view:analytics permission.")
-                            TextButton(onClick = sessionViewModel::logout) { Text("Log out") }
-                        }
-                    }
+                open !in allowed -> Column(modifier = Modifier.padding(24.dp)) {
+                    Text("You do not have permission to open ${open.label}.")
+                    TextButton(onClick = sessionViewModel::logout) { Text("Log out") }
                 }
-                AdminSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
+                else -> when (open) {
+                    AdminSection.Dashboard -> AdminDashboardScreen(repo)
+                    AdminSection.Orders -> AdminOrdersScreen(repo)
+                    AdminSection.Deliveries -> AdminDeliveriesScreen(
+                        repo = repo,
+                        canUpdate = sessionViewModel.hasPermission(AdminPermissions.UPDATE_DELIVERY_STATUS),
+                    )
+                    AdminSection.Cooking -> CookingScreen(
+                        repo = repo,
+                        canEditDays = sessionViewModel.hasPermission(Permissions.MANAGE_MEALS),
+                    )
+                    AdminSection.Meals -> AdminMealsScreen(repo)
+                    AdminSection.Packages -> AdminPackagesScreen(repo)
+                    AdminSection.Coupons -> AdminCouponsScreen(repo)
+                    AdminSection.Users -> AdminUsersScreen(repo)
+                    AdminSection.Notifications -> AdminNotificationsScreen(repo)
+                    AdminSection.Content -> AdminContentScreen(repo, sessionViewModel::hasPermission)
+                    AdminSection.Analytics -> AnalyticsScreen(repo)
+                    AdminSection.Configure -> AdminConfigureScreen(repo)
+                    AdminSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
+                }
             }
         }
     }

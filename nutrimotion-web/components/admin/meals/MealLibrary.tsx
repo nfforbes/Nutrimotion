@@ -7,11 +7,13 @@ import {
   Card,
   CardContent,
   Chip,
+  FormControlLabel,
   IconButton,
   List,
   ListItem,
   ListItemText,
   MenuItem,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -27,6 +29,7 @@ interface LibraryMeal {
   slot: string;
   price: number;
   description: string;
+  soldIndividually: boolean;
 }
 
 interface LibraryMenu {
@@ -54,7 +57,9 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
     slot: MealSlot.LUNCH,
     name: '',
     price: String(MENU_PRICES[MealSlot.LUNCH]),
+    soldIndividually: true,
   });
+  const [togglingKey, setTogglingKey] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,6 +108,7 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
         menuLabel: form.menuLabel.trim(),
         weekStart: form.weekStart,
         price: form.price === '' ? undefined : Number(form.price),
+        soldIndividually: form.soldIndividually,
       });
       setForm((prev) => ({ ...prev, name: '' }));
       setShowAdd(false);
@@ -132,6 +138,33 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
       await load();
     } catch {
       setError('Failed to remove meal.');
+    }
+  };
+
+  const handleToggleSold = async (menu: LibraryMenu, meal: LibraryMeal, soldIndividually: boolean) => {
+    const key = `${menu.label}|${menu.weekStart}|${meal.slot}|${meal.name}`;
+    setTogglingKey(key);
+    setError(null);
+    setMenus((prev) =>
+      prev.map((m) =>
+        m === menu
+          ? { ...m, meals: m.meals.map((x) => (x === meal ? { ...x, soldIndividually } : x)) }
+          : m
+      )
+    );
+    try {
+      await axios.patch('/api/admin/meals/library', {
+        name: meal.name,
+        slot: meal.slot,
+        menuLabel: menu.label,
+        weekStart: menu.weekStart,
+        soldIndividually,
+      });
+    } catch {
+      setError(`Failed to update "${meal.name}".`);
+      await load();
+    } finally {
+      setTogglingKey(null);
     }
   };
 
@@ -210,6 +243,16 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}
             />
+            <FormControlLabel
+              sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}
+              control={
+                <Switch
+                  checked={form.soldIndividually}
+                  onChange={(e) => setForm({ ...form, soldIndividually: e.target.checked })}
+                />
+              }
+              label="Sell individually (off = packages only)"
+            />
             <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>
               <Button variant="contained" onClick={handleAdd} disabled={saving}>
                 {saving ? 'Saving…' : 'Save meal'}
@@ -243,9 +286,21 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
                 >
                   <ListItemText
                     primary={meal.name}
-                    secondary={`$${meal.price.toFixed(2)}`}
+                    secondary={`$${meal.price.toFixed(2)}${meal.soldIndividually ? '' : ' · Packages only'}`}
                   />
                   <Chip size="small" label={SLOT_LABELS[meal.slot] || meal.slot} sx={{ mr: 1 }} />
+                  <FormControlLabel
+                    sx={{ mr: 4 }}
+                    control={
+                      <Switch
+                        size="small"
+                        checked={meal.soldIndividually}
+                        disabled={togglingKey === `${menu.label}|${menu.weekStart}|${meal.slot}|${meal.name}`}
+                        onChange={(e) => handleToggleSold(menu, meal, e.target.checked)}
+                      />
+                    }
+                    label={<Typography variant="caption">Sell individually</Typography>}
+                  />
                 </ListItem>
               ))}
             </List>

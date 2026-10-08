@@ -27,6 +27,17 @@ export async function PATCH(
     const { id } = await params;
     const body = await request.json();
 
+    if (Object.keys(body ?? {}).length === 1 && typeof body.active === 'boolean') {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return NextResponse.json({ error: 'Invalid package ID' }, { status: 400 });
+      }
+      const doc = await Package.findByIdAndUpdate(id, { $set: { active: body.active } }, { new: true });
+      if (!doc) {
+        return NextResponse.json({ error: 'Package not found' }, { status: 404 });
+      }
+      return NextResponse.json(doc);
+    }
+
     const {
       name,
       description,

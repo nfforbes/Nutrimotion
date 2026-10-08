@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
-import { Cart, User, Order, DiscountCode } from '@/lib/db/models';
+import { Cart, User, Order, DiscountCode, MealPackage } from '@/lib/db/models';
 import { OrderStatus } from '@/types/commerce';
 import { getAppliedCodesFromCart, recalculateCartDiscounts } from '@/lib/discount/cartDiscounts';
 
@@ -34,6 +34,26 @@ export async function POST(request: NextRequest) {
         { error: 'Cart is empty' },
         { status: 400 }
       );
+    }
+
+    const mealItems = cart.items.filter((item) => item.itemType === 'meal');
+    if (mealItems.length > 0) {
+      const blocked = await MealPackage.find({
+        _id: { $in: mealItems.map((item) => item.itemId) },
+        $or: [{ soldIndividually: false }, { available: false }],
+      })
+        .select('_id')
+        .lean();
+      if (blocked.length > 0) {
+        const blockedIds = new Set(blocked.map((m) => String(m._id)));
+        const names = mealItems.filter((item) => blockedIds.has(String(item.itemId))).map((item) => item.name);
+        return NextResponse.json(
+          {
+            error: `${names.join(', ')} can't be bought on its own anymore. Remove it from your cart to check out.`,
+          },
+          { status: 400 }
+        );
+      }
     }
 
     try {

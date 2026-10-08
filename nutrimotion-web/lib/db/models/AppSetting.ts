@@ -34,6 +34,8 @@ export interface IAppSettingDoc extends Omit<mongoose.Document, '_id'> {
   googleDrive?: IGoogleDriveSettings;
   /** WhatsApp number customers message, digits only with country code. */
   contactWhatsApp?: string;
+  /** Weekdays the kitchen cooks, 0 = Sunday … 6 = Saturday. */
+  cookDays?: number[];
   updatedAt: Date;
 }
 
@@ -70,6 +72,7 @@ const AppSettingSchema = new Schema(
     ms365: { type: Ms365SettingsSchema, default: () => ({}) },
     googleDrive: { type: GoogleDriveSettingsSchema, default: () => ({}) },
     contactWhatsApp: { type: String, default: '' },
+    cookDays: { type: [Number], default: [] },
   },
   { timestamps: true }
 );

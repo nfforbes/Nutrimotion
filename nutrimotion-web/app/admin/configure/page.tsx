@@ -43,6 +43,11 @@ type GoogleKey = (typeof GOOGLE_FIELDS)[number]['key'];
 
 type FileProvider = 'microsoft365' | 'google_drive';
 
+interface GoogleTestResult {
+  ok: boolean;
+  steps: { label: string; ok: boolean; detail: string }[];
+}
+
 const EMPTY_MS365: Record<Ms365Key, string> = {
   MS365_CLIENT_ID: '',
   MS365_CLIENT_SECRET: '',
@@ -67,6 +72,8 @@ export default function AdminConfigurePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [testingGoogle, setTestingGoogle] = useState(false);
+  const [googleTest, setGoogleTest] = useState<GoogleTestResult | null>(null);
 
   const auth = useAppSelector((state) => state.auth);
   const menuItems = getAllMenuItemsForUser(auth.permissions);
@@ -113,6 +120,20 @@ export default function AdminConfigurePage() {
   const handleGoogleChange = (key: GoogleKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setGoogleDrive((prev) => ({ ...prev, [key]: e.target.value }));
     setMessage(null);
+  };
+
+  const handleTestGoogle = async () => {
+    setTestingGoogle(true);
+    setGoogleTest(null);
+    try {
+      const { data } = await axios.post<GoogleTestResult>('/api/admin/settings/app/test-google', { googleDrive });
+      setGoogleTest(data);
+    } catch (e) {
+      const text = (axios.isAxiosError(e) && e.response?.data?.error) || 'Could not run the test.';
+      setGoogleTest({ ok: false, steps: [{ label: 'Test', ok: false, detail: text }] });
+    } finally {
+      setTestingGoogle(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -250,6 +271,26 @@ export default function AdminConfigurePage() {
                     autoComplete={field.type === 'password' ? 'new-password' : 'off'}
                   />
                 ))}
+                <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                  <Button variant="outlined" onClick={handleTestGoogle} disabled={testingGoogle}>
+                    {testingGoogle ? 'Testing…' : 'Test Google Drive connection'}
+                  </Button>
+                  <Typography variant="caption" color="text.secondary">
+                    Uses the values above; blank secret fields use the saved ones.
+                  </Typography>
+                </Box>
+                {googleTest && (
+                  <Alert severity={googleTest.ok ? 'success' : 'error'} sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      {googleTest.ok ? 'Google Drive is working.' : 'Google Drive test failed.'}
+                    </Typography>
+                    {googleTest.steps.map((step) => (
+                      <Typography key={step.label} variant="body2">
+                        {step.ok ? '✓' : '✗'} <strong>{step.label}:</strong> {step.detail}
+                      </Typography>
+                    ))}
+                  </Alert>
+                )}
               </CardContent>
             </Card>
 
