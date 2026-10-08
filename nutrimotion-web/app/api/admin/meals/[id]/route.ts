@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { name, description, imageUrl, price, instagramLink, slot, scheduledDate, ingredients, nutritionInfo, available } = body;
+    const { name, description, imageUrl, price, instagramLink, slot, scheduledDate, ingredients, nutritionInfo, available, soldIndividually } = body;
 
     const missing: string[] = [];
     if (!name || typeof name !== 'string' || !name.trim()) missing.push('name');
@@ -59,6 +59,9 @@ export async function PATCH(
 
     if (typeof available === 'boolean') {
       update.available = available;
+    }
+    if (typeof soldIndividually === 'boolean') {
+      update.soldIndividually = soldIndividually;
     }
     if (ingredients !== undefined) {
       update.ingredients = ingredients;

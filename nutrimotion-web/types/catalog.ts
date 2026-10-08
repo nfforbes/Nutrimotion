@@ -19,6 +19,8 @@ export interface MealPackage {
   slot: MealSlot;
   scheduledDate: Date;
   available: boolean;
+  /** False = only offered inside packages. Missing means true. */
+  soldIndividually?: boolean;
   ingredients?: string[];
   nutritionInfo?: {
     calories: number;

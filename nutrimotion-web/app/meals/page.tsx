@@ -383,9 +383,11 @@ export default function MealsPage() {
                                       <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
                                         {meal.name}
                                       </Typography>
-                                      <Typography variant="subtitle1" color="primary">
-                                        ${meal.price}
-                                      </Typography>
+                                      {meal.soldIndividually !== false && (
+                                        <Typography variant="subtitle1" color="primary">
+                                          ${meal.price}
+                                        </Typography>
+                                      )}
                                     </Box>
                                     <Typography variant="body2" color="text.secondary">
                                       {meal.description}
@@ -397,15 +399,24 @@ export default function MealsPage() {
                                     )}
                                   </CardContent>
                                   <CardActions>
-                                    <Button
-                                      fullWidth
-                                      variant="contained"
-                                      size="small"
-                                      startIcon={<AddShoppingCartIcon />}
-                                      onClick={() => handleAddToCart(meal)}
-                                    >
-                                      Add to Cart
-                                    </Button>
+                                    {meal.soldIndividually === false ? (
+                                      <Chip
+                                        label="Packages only"
+                                        size="small"
+                                        variant="outlined"
+                                        sx={{ width: '100%' }}
+                                      />
+                                    ) : (
+                                      <Button
+                                        fullWidth
+                                        variant="contained"
+                                        size="small"
+                                        startIcon={<AddShoppingCartIcon />}
+                                        onClick={() => handleAddToCart(meal)}
+                                      >
+                                        Add to Cart
+                                      </Button>
+                                    )}
                                   </CardActions>
                                 </Card>
                               ))}

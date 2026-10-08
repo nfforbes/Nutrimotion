@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
-import { Cart, User } from '@/lib/db/models';
+import { Cart, MealPackage, User } from '@/lib/db/models';
 import mongoose from 'mongoose';
 import { cartToResponse, refreshDiscountsIfNeeded } from '@/lib/discount/cartDiscounts';
 
@@ -25,6 +25,21 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    if (itemType === 'meal') {
+      const meal = mongoose.Types.ObjectId.isValid(itemId)
+        ? await MealPackage.findById(itemId).select('available soldIndividually').lean()
+        : null;
+      if (!meal || meal.available === false) {
+        return NextResponse.json({ error: 'This meal is no longer available.' }, { status: 400 });
+      }
+      if (meal.soldIndividually === false) {
+        return NextResponse.json(
+          { error: `${name} is only available as part of a package.` },
+          { status: 400 }
+        );
+      }
     }
 
     const user = await User.findOne({ auth0Sub: session.user.sub });

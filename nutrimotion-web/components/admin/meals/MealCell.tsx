@@ -70,6 +70,7 @@ export default function MealCell({
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   ${meal.price}
+                  {meal.soldIndividually === false ? ' · Packages only' : ''}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', flexShrink: 0 }}>

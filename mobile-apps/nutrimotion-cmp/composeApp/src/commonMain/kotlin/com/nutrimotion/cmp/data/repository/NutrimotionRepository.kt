@@ -2,6 +2,7 @@ package com.nutrimotion.cmp.data.repository
 
 import com.nutrimotion.cmp.data.model.*
 import com.nutrimotion.cmp.data.network.ApiClient
+import kotlinx.serialization.json.JsonElement
 
 class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun getMe(): Result<AuthMeResponse> = api.get("api/auth/me")
@@ -67,6 +68,85 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
 
     suspend fun getAnalytics(days: Int = 30): Result<AnalyticsResponse> =
         api.get("api/admin/analytics", mapOf("days" to days.toString()))
+
+    suspend fun getCooking(): Result<CookingResponse> = api.get("api/admin/cooking")
+
+    suspend fun saveCookDays(days: List<Int>): Result<CookingResponse> =
+        api.put("api/admin/cooking", CookDaysRequest(days))
+
+    suspend fun getAdminDashboard(): Result<AdminDashboardDto> = api.get("api/admin/dashboard")
+
+    suspend fun getAdminOrders(status: String? = null): Result<List<AdminOrderDto>> =
+        api.get("api/admin/orders", status?.let { mapOf("status" to it) } ?: emptyMap())
+
+    suspend fun updateOrderStatus(orderId: String, body: OrderStatusRequest): Result<JsonElement> =
+        api.patch("api/admin/orders/$orderId/status", body)
+
+    suspend fun assignDriver(orderId: String, driverId: String): Result<JsonElement> =
+        api.post("api/admin/orders/$orderId/assign", AssignDriverRequest(driverId))
+
+    suspend fun getAdminUsers(role: String? = null): Result<List<AdminUserDto>> =
+        api.get("api/admin/users", role?.let { mapOf("role" to it) } ?: emptyMap())
+
+    suspend fun updateUserRoles(userId: String, roles: List<String>): Result<AdminUserDto> =
+        api.put("api/admin/users/$userId/roles", RolesRequest(roles))
+
+    suspend fun getAssignments(): Result<List<AdminAssignmentDto>> = api.get("api/admin/assignments")
+
+    suspend fun getAdminNotifications(): Result<AdminNotificationsDto> = api.get("api/admin/notifications")
+
+    suspend fun sendPush(body: SendPushRequest): Result<SendPushResult> =
+        api.post("api/admin/notifications", body)
+
+    suspend fun getAdminContact(): Result<ContactSettingsDto> = api.get("api/admin/contact")
+
+    suspend fun saveAdminContact(whatsapp: String): Result<ContactSettingsDto> =
+        api.patch("api/admin/contact", ContactSettingsDto(whatsapp))
+
+    suspend fun getMealLibrary(): Result<MealLibraryResponse> = api.get("api/admin/meals/library")
+
+    suspend fun patchLibraryMeal(body: LibraryMealPatch): Result<JsonElement> =
+        api.patch("api/admin/meals/library", body)
+
+    suspend fun getAdminPackages(): Result<List<AdminPackageDto>> = api.get("api/admin/packages")
+
+    suspend fun setPackageActive(id: String, active: Boolean): Result<JsonElement> =
+        api.patch("api/admin/packages/$id", ActiveRequest(active))
+
+    suspend fun getAdminCoupons(): Result<List<AdminCouponDto>> = api.get("api/admin/coupons")
+
+    suspend fun setCouponActive(id: String, active: Boolean): Result<JsonElement> =
+        api.patch("api/admin/coupons/$id", ActiveRequest(active))
+
+    suspend fun getCouponClients(): Result<List<ClientRef>> = api.get("api/admin/coupons/clients")
+
+    suspend fun sendCoupon(id: String, userIds: List<String>): Result<SendCouponResult> =
+        api.post("api/admin/coupons/$id/send", SendCouponRequest(userIds))
+
+    suspend fun getAdminBooks(): Result<List<AdminBookDto>> = api.get("api/admin/uploads/books")
+
+    suspend fun getAdminTraining(): Result<List<AdminTrainingDto>> = api.get("api/admin/uploads/training")
+
+    suspend fun getAdminRecipes(): Result<List<AdminRecipeDto>> = api.get("api/admin/uploads/recipes")
+
+    suspend fun getAdminVideos(): Result<List<AdminVideoDto>> = api.get("api/admin/uploads/videos")
+
+    suspend fun setContentFree(library: String, id: String, isFree: Boolean): Result<JsonElement> =
+        api.patch("api/admin/uploads/$library/$id", FreeRequest(isFree))
+
+    suspend fun getContentAccess(library: String): Result<ContentAccessDto> =
+        api.get("api/admin/content-access", mapOf("library" to library))
+
+    suspend fun setContentPrice(library: String, monthlyPrice: Double): Result<ContentAccessDto> =
+        api.patch("api/admin/content-access", ContentPriceRequest(library, monthlyPrice))
+
+    suspend fun getAppSettings(): Result<AppSettingsDto> = api.get("api/admin/settings/app")
+
+    suspend fun saveAppSettings(body: AppSettingsDto): Result<AppSettingsDto> =
+        api.put("api/admin/settings/app", body)
+
+    suspend fun testGoogleDrive(): Result<DriveTestResult> =
+        api.post("api/admin/settings/app/test-google", emptyMap<String, String>())
 
     suspend fun getContactSettings(): Result<ContactSettingsDto> = api.get("api/settings/contact")
 

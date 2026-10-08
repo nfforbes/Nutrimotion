@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     await connectDB();
     const body = await request.json();
 
-    const { name, description, imageUrl, price, instagramLink, slot, scheduledDate, ingredients, nutritionInfo } = body;
+    const { name, description, imageUrl, price, instagramLink, slot, scheduledDate, ingredients, nutritionInfo, soldIndividually } = body;
 
     const missing: string[] = [];
     if (!name || typeof name !== 'string' || !name.trim()) missing.push('name');
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
       slot: slot.trim(),
       scheduledDate: new Date(scheduledDate),
       available: true,
+      soldIndividually: soldIndividually !== false,
       ingredients,
       nutritionInfo,
     });

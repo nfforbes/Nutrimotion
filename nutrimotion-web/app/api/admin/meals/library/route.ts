@@ -26,7 +26,17 @@ export async function GET(request: NextRequest) {
       {
         label: string;
         weekStart: string;
-        meals: Map<string, { name: string; slot: string; price: number; description: string }>;
+        meals: Map<
+          string,
+          {
+            name: string;
+            slot: string;
+            price: number;
+            description: string;
+            soldIndividually: boolean;
+            available: boolean;
+          }
+        >;
       }
     >();
 
@@ -42,13 +52,22 @@ export async function GET(request: NextRequest) {
         groups.set(groupKey, group);
       }
       const itemKey = `${meal.slot}|${meal.name}`;
-      if (!group.meals.has(itemKey)) {
+      const sold = meal.soldIndividually !== false;
+      const available = meal.available !== false;
+      const existing = group.meals.get(itemKey);
+      if (!existing) {
         group.meals.set(itemKey, {
           name: meal.name,
           slot: meal.slot,
           price: meal.price,
           description: meal.description,
+          soldIndividually: sold,
+          available,
         });
+      } else {
+        // Each flag reads as on only when every day of the week has it on.
+        if (!sold) existing.soldIndividually = false;
+        if (!available) existing.available = false;
       }
     }
 
@@ -110,6 +129,7 @@ export async function POST(request: NextRequest) {
         menuLabel,
         scheduledDate,
         available: true,
+        soldIndividually: body.soldIndividually !== false,
       });
     }
     await MealPackage.insertMany(docs);
@@ -120,6 +140,52 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** Every day of one library meal: same name and slot within its menu (or week, for unnamed menus). */
+function libraryMealFilter(body: Record<string, unknown>): Record<string, unknown> | null {
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const slot = typeof body.slot === 'string' ? body.slot.trim() : '';
+  const menuLabel = typeof body.menuLabel === 'string' ? body.menuLabel.trim() : '';
+  const weekStartRaw = typeof body.weekStart === 'string' ? body.weekStart.trim() : '';
+  if (!name || !slot) return null;
+
+  const filter: Record<string, unknown> = { name, slot };
+  if (menuLabel && !menuLabel.startsWith('Week of ')) {
+    filter.menuLabel = menuLabel;
+  } else if (weekStartRaw) {
+    const start = weekStartSundayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
+    const end = addUtcDays(start, 7);
+    filter.scheduledDate = { $gte: start, $lt: end };
+  }
+  return filter;
+}
+
+/** PATCH { name, slot, menuLabel, weekStart, soldIndividually?, available? } — applies to every day of that meal. */
+export async function PATCH(request: NextRequest) {
+  const authResult = await requirePermissions(request, [Permission.MANAGE_MEALS]);
+  if (authResult instanceof NextResponse) return authResult;
+
+  try {
+    await connectDB();
+    const body = await request.json();
+    const filter = libraryMealFilter(body);
+    if (!filter) {
+      return NextResponse.json({ error: 'Name and slot are required' }, { status: 400 });
+    }
+    const update: Record<string, boolean> = {};
+    if (typeof body.soldIndividually === 'boolean') update.soldIndividually = body.soldIndividually;
+    if (typeof body.available === 'boolean') update.available = body.available;
+    if (Object.keys(update).length === 0) {
+      return NextResponse.json({ error: 'Send soldIndividually or available as true or false' }, { status: 400 });
+    }
+
+    const result = await MealPackage.updateMany(filter, { $set: update });
+    return NextResponse.json({ ok: true, updated: result.modifiedCount });
+  } catch (error) {
+    console.error('Meal library update error:', error);
+    return NextResponse.json({ error: 'Failed to update meal' }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   const authResult = await requirePermissions(request, [Permission.MANAGE_MEALS]);
   if (authResult instanceof NextResponse) return authResult;
@@ -127,22 +193,9 @@ export async function DELETE(request: NextRequest) {
   try {
     await connectDB();
     const body = await request.json();
-    const name = typeof body.name === 'string' ? body.name.trim() : '';
-    const slot = typeof body.slot === 'string' ? body.slot.trim() : '';
-    const menuLabel = typeof body.menuLabel === 'string' ? body.menuLabel.trim() : '';
-    const weekStartRaw = typeof body.weekStart === 'string' ? body.weekStart.trim() : '';
-
-    if (!name || !slot) {
+    const filter = libraryMealFilter(body);
+    if (!filter) {
       return NextResponse.json({ error: 'Name and slot are required' }, { status: 400 });
-    }
-
-    const filter: Record<string, unknown> = { name, slot };
-    if (menuLabel && !menuLabel.startsWith('Week of ')) {
-      filter.menuLabel = menuLabel;
-    } else if (weekStartRaw) {
-      const start = weekStartSundayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
-      const end = addUtcDays(start, 7);
-      filter.scheduledDate = { $gte: start, $lt: end };
     }
 
     const result = await MealPackage.deleteMany(filter);

@@ -184,6 +184,7 @@ export default function AdminMealsPage() {
           instagramLink: meal.instagramLink?.trim() || undefined,
           slot: meal.slot,
           scheduledDate: copyTargetDate.trim(),
+          soldIndividually: meal.soldIndividually !== false,
         });
       }
       setCopyDialogOpen(false);
@@ -238,6 +239,7 @@ export default function AdminMealsPage() {
           instagramLink: meal.instagramLink?.trim() || undefined,
           slot: meal.slot,
           scheduledDate: newDayKey,
+          soldIndividually: meal.soldIndividually !== false,
         });
       }
       setCopyWeekDialogOpen(false);

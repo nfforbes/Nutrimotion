@@ -26,9 +26,10 @@ export async function GET(request: NextRequest) {
       
       return {
         id: assignment._id.toString(),
-        orderId: assignment.orderId.toString(),
+        orderId: String(order?._id ?? assignment.orderId),
         orderNumber: order?.orderNumber,
-        driverId: assignment.driverId.toString(),
+        deliveryAddress: order?.deliveryAddress,
+        driverId: String(driver?._id ?? assignment.driverId),
         driverName: driver?.name,
         status: assignment.status,
         assignedAt: assignment.assignedAt,

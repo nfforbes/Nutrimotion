@@ -14,6 +14,8 @@ import {
   Button,
   Box,
   MenuItem,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { MealSlot } from '@/types/catalog';
@@ -27,6 +29,7 @@ const initialFormData = {
   instagramLink: '',
   slot: MealSlot.BREAKFAST,
   scheduledDate: new Date().toISOString().split('T')[0],
+  soldIndividually: true,
 };
 
 function formatScheduledDate(value: string | Date | undefined): string {
@@ -44,6 +47,7 @@ export interface MealFormInitial {
   slot: string;
   scheduledDate: string | Date;
   instagramLink?: string;
+  soldIndividually?: boolean;
 }
 
 export interface AddMealFormProps {
@@ -78,7 +82,7 @@ export default function AddMealForm({
   const [formData, setFormData] = useState(() => createBlankForm(defaultDate, defaultSlot));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [existingMeals, setExistingMeals] = useState<Array<{ _id: string; name: string; description?: string; imageUrl?: string; price: number; slot: string; scheduledDate: string | Date; instagramLink?: string }>>([]);
+  const [existingMeals, setExistingMeals] = useState<MealFormInitial[]>([]);
   const [copyFromId, setCopyFromId] = useState<string>('');
 
   const isEdit = Boolean(initialMeal?._id);
@@ -93,6 +97,7 @@ export default function AddMealForm({
         instagramLink: initialMeal.instagramLink ?? '',
         slot: (initialMeal.slot as MealSlot) ?? MealSlot.BREAKFAST,
         scheduledDate: formatScheduledDate(initialMeal.scheduledDate),
+        soldIndividually: initialMeal.soldIndividually !== false,
       });
       setCopyFromId('');
       setError(null);
@@ -128,6 +133,7 @@ export default function AddMealForm({
       instagramLink: meal.instagramLink ?? '',
       slot: (meal.slot as MealSlot) ?? MealSlot.BREAKFAST,
       scheduledDate: formatScheduledDate(meal.scheduledDate),
+      soldIndividually: meal.soldIndividually !== false,
     });
   };
 
@@ -155,6 +161,7 @@ export default function AddMealForm({
         instagramLink: formData.instagramLink?.trim() || undefined,
         slot: formData.slot,
         scheduledDate: formData.scheduledDate,
+        soldIndividually: formData.soldIndividually,
       };
       if (isEdit && initialMeal?._id) {
         await axios.patch(`/api/admin/meals/${initialMeal._id}`, payload);
@@ -288,6 +295,17 @@ export default function AddMealForm({
             label="Instagram Link (Optional)"
             value={formData.instagramLink}
             onChange={(e) => setFormData({ ...formData, instagramLink: e.target.value })}
+          />
+
+          <FormControlLabel
+            sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}
+            control={
+              <Switch
+                checked={formData.soldIndividually}
+                onChange={(e) => setFormData({ ...formData, soldIndividually: e.target.checked })}
+              />
+            }
+            label="Sell individually (off = packages only)"
           />
 
           <Box sx={{ gridColumn: { xs: '1', md: '1 / -1' } }}>

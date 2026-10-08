@@ -4,6 +4,8 @@ import kotlinx.serialization.Serializable
 
 object Permissions {
     const val VIEW_ANALYTICS = "view:analytics"
+    const val ADMIN_DASHBOARD = "admin:dashboard"
+    const val MANAGE_MEALS = "manage:meals"
 }
 
 @Serializable
