@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import {
+  Avatar,
   Card,
   CardContent,
   Typography,
@@ -18,8 +19,11 @@ import {
   Switch,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 import { MealSlot } from '@/types/catalog';
 import axios from 'axios';
+import MealPhotoDialog from '@/components/admin/meals/MealPhotoDialog';
 
 const initialFormData = {
   name: '',
@@ -84,6 +88,7 @@ export default function AddMealForm({
   const [error, setError] = useState<string | null>(null);
   const [existingMeals, setExistingMeals] = useState<MealFormInitial[]>([]);
   const [copyFromId, setCopyFromId] = useState<string>('');
+  const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
 
   const isEdit = Boolean(initialMeal?._id);
 
@@ -167,6 +172,9 @@ export default function AddMealForm({
         await axios.patch(`/api/admin/meals/${initialMeal._id}`, payload);
       } else {
         await axios.post('/api/admin/meals', payload);
+      }
+      if ((imageUrl || '') !== (initialMeal?.imageUrl?.trim() || '')) {
+        await axios.put('/api/admin/meals/photo', { name, imageUrl: imageUrl || '' });
       }
       setFormData(createBlankForm(defaultDate, defaultSlot));
       setCopyFromId('');
@@ -275,12 +283,40 @@ export default function AddMealForm({
             required
           />
 
-          <TextField
-            fullWidth
-            label="Image URL"
-            value={formData.imageUrl}
-            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-          />
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+            <Avatar
+              variant="rounded"
+              src={formData.imageUrl || undefined}
+              alt={formData.name}
+              sx={{ width: 56, height: 56, bgcolor: 'grey.200', color: 'grey.500' }}
+            >
+              <RestaurantIcon />
+            </Avatar>
+            <Box sx={{ flex: 1 }}>
+              <TextField
+                fullWidth
+                label="Image URL"
+                value={formData.imageUrl}
+                onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                helperText="Used for every day this meal is on the menu"
+              />
+              <Button
+                size="small"
+                startIcon={<PhotoCameraIcon />}
+                onClick={() => setPhotoDialogOpen(true)}
+                sx={{ mt: 0.5 }}
+              >
+                {formData.imageUrl ? 'Replace photo' : 'Upload photo or screenshot'}
+              </Button>
+              <MealPhotoDialog
+                open={photoDialogOpen}
+                mealName={formData.name}
+                currentUrl={formData.imageUrl || undefined}
+                onClose={() => setPhotoDialogOpen(false)}
+                onUploaded={(imageUrl) => setFormData((prev) => ({ ...prev, imageUrl }))}
+              />
+            </Box>
+          </Box>
           <TextField
             fullWidth
             label="Price"

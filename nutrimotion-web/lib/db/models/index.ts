@@ -28,7 +28,7 @@ export type { IDiscountCode } from './DiscountCode';
 export type { ICouponDelivery } from './CouponDelivery';
 export type { IDeliveryAssignment } from './DeliveryAssignment';
 export type { IDeliveryTracking } from './DeliveryTracking';
-export type { IAppSettingDoc, IMs365Settings, IGoogleDriveSettings, FileStorageProvider } from './AppSetting';
+export type { IAppSettingDoc } from './AppSetting';
 export type { IRecipe } from './Recipe';
 export type { IVideoAsset } from './VideoAsset';
 export type { ISubscription, SubscriptionType } from './Subscription';

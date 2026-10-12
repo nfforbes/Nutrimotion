@@ -1,6 +1,7 @@
 package com.nutrimotion.cmp
 
 import androidx.compose.foundation.layout.Box
+import com.nutrimotion.cmp.ui.components.InstallImageLoader
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -17,7 +18,6 @@ import androidx.compose.material.icons.filled.LocalShipping
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.ReceiptLong
@@ -55,7 +55,6 @@ import com.nutrimotion.cmp.ui.components.IconDashboard
 import com.nutrimotion.cmp.ui.screens.LoginScreen
 import com.nutrimotion.cmp.data.model.AdminPermissions
 import com.nutrimotion.cmp.data.model.Permissions
-import com.nutrimotion.cmp.ui.screens.admin.AdminConfigureScreen
 import com.nutrimotion.cmp.ui.screens.admin.AdminContentScreen
 import com.nutrimotion.cmp.ui.screens.admin.AdminCouponsScreen
 import com.nutrimotion.cmp.ui.screens.admin.AdminDashboardScreen
@@ -134,13 +133,13 @@ private enum class AdminSection(
         ),
     ),
     Analytics("Analytics", Icons.Filled.BarChart, Color(0xFF30B0C7), listOf(Permissions.VIEW_ANALYTICS)),
-    Configure("Configure", Icons.Filled.Settings, Color(0xFF636366), listOf(Permissions.ADMIN_DASHBOARD)),
     Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93), emptyList()),
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun App(sessionViewModel: SessionViewModel = viewModel { SessionViewModel() }) {
+    InstallImageLoader()
     val session by sessionViewModel.state.collectAsState()
     val repo = remember { NutrimotionRepository() }
 
@@ -235,7 +234,6 @@ private fun AdminShell(
                     AdminSection.Notifications -> AdminNotificationsScreen(repo)
                     AdminSection.Content -> AdminContentScreen(repo, sessionViewModel::hasPermission)
                     AdminSection.Analytics -> AnalyticsScreen(repo)
-                    AdminSection.Configure -> AdminConfigureScreen(repo)
                     AdminSection.Profile -> ProfileScreen(repo, sessionViewModel::logout)
                 }
             }
