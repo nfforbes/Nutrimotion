@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  Avatar,
   Box,
+  CircularProgress,
   Button,
   Card,
   CardContent,
@@ -15,14 +17,19 @@ import {
   MenuItem,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import HideImageIcon from '@mui/icons-material/HideImage';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 import axios from 'axios';
 import { MealSlot } from '@/types/catalog';
 import { MENU_PRICES, WEEK_MENUS } from '@/lib/meals/weeklyMenus';
+import MealPhotoDialog from './MealPhotoDialog';
 
 interface LibraryMeal {
   name: string;
@@ -30,6 +37,7 @@ interface LibraryMeal {
   price: number;
   description: string;
   soldIndividually: boolean;
+  imageUrl?: string;
 }
 
 interface LibraryMenu {
@@ -60,6 +68,8 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
     soldIndividually: true,
   });
   const [togglingKey, setTogglingKey] = useState<string | null>(null);
+  const [photoMeal, setPhotoMeal] = useState<LibraryMeal | null>(null);
+  const [photoBusy, setPhotoBusy] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -168,6 +178,31 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
     }
   };
 
+  const setPhotoInState = (name: string, imageUrl: string | undefined) =>
+    setMenus((prev) =>
+      prev.map((m) => ({ ...m, meals: m.meals.map((x) => (x.name === name ? { ...x, imageUrl } : x)) }))
+    );
+
+  const savePhoto = async (name: string, imageUrl: string) => {
+    await axios.put('/api/admin/meals/photo', { name, imageUrl });
+    setPhotoInState(name, imageUrl);
+    setPhotoMeal((prev) => (prev && prev.name === name ? { ...prev, imageUrl } : prev));
+  };
+
+  const handleRemovePhoto = async (name: string) => {
+    if (!window.confirm(`Remove the photo from "${name}"?`)) return;
+    setPhotoBusy(name);
+    setError(null);
+    try {
+      await axios.put('/api/admin/meals/photo', { name, imageUrl: '' });
+      setPhotoInState(name, undefined);
+    } catch {
+      setError(`Failed to remove the photo from "${name}".`);
+    } finally {
+      setPhotoBusy(null);
+    }
+  };
+
   const menuChoices = Array.from(new Set([...WEEK_MENUS.map((menu) => menu.label), ...menus.map((menu) => menu.label)]));
 
   return (
@@ -185,8 +220,16 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
         Meals
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Add or remove a meal here. Each meal is offered every day of its week.
+        Add or remove a meal here. Each meal is offered every day of its week. Use the camera button to add a
+        photo — it shows on the website and in the app for every day that meal is on the menu.
       </Typography>
+      <MealPhotoDialog
+        open={photoMeal !== null}
+        mealName={photoMeal?.name ?? ''}
+        currentUrl={photoMeal?.imageUrl}
+        onClose={() => setPhotoMeal(null)}
+        onUploaded={(url) => (photoMeal ? savePhoto(photoMeal.name, url) : undefined)}
+      />
 
       {error && (
         <Typography color="error" sx={{ mb: 2 }}>
@@ -284,6 +327,34 @@ export default function MealLibrary({ onBack }: { onBack: () => void }) {
                   }
                   sx={{ borderBottom: 1, borderColor: 'divider' }}
                 >
+                  <Avatar
+                    variant="rounded"
+                    src={meal.imageUrl}
+                    alt={meal.name}
+                    sx={{ width: 56, height: 56, mr: 1.5, bgcolor: 'grey.200', color: 'grey.500' }}
+                  >
+                    <RestaurantIcon />
+                  </Avatar>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', mr: 1 }}>
+                    {photoBusy === meal.name ? (
+                      <CircularProgress size={22} sx={{ m: 1 }} />
+                    ) : (
+                      <>
+                        <Tooltip title={meal.imageUrl ? 'Replace photo' : 'Upload photo'}>
+                          <IconButton size="small" onClick={() => setPhotoMeal(meal)}>
+                            <PhotoCameraIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        {meal.imageUrl && (
+                          <Tooltip title="Remove photo">
+                            <IconButton size="small" onClick={() => handleRemovePhoto(meal.name)}>
+                              <HideImageIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </>
+                    )}
+                  </Box>
                   <ListItemText
                     primary={meal.name}
                     secondary={`$${meal.price.toFixed(2)}${meal.soldIndividually ? '' : ' · Packages only'}`}

@@ -20,6 +20,7 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.content.ByteArrayContent
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
@@ -50,6 +51,27 @@ class ApiClient {
             contentType(ContentType.Application.Json)
             TokenStore.get()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
         }
+    }
+
+    /** No auth header or default content type: for presigned storage URLs outside our API. */
+    private val plainHttp: HttpClient by lazy {
+        createPlatformEngineClient().config {
+            expectSuccess = false
+            install(HttpTimeout) {
+                requestTimeoutMillis = 120_000
+                connectTimeoutMillis = 15_000
+            }
+        }
+    }
+
+    /** PUTs raw bytes to a presigned URL and returns the response body text. */
+    suspend fun putBytes(url: String, bytes: ByteArray, contentType: String): Result<String> = runCatching {
+        val response = plainHttp.put(url) {
+            setBody(ByteArrayContent(bytes, ContentType.parse(contentType)))
+        }
+        val text = response.bodyAsText()
+        if (!response.status.isSuccess()) throw ApiException(response.status.value, text)
+        text
     }
 
     fun absoluteUrl(path: String): String {

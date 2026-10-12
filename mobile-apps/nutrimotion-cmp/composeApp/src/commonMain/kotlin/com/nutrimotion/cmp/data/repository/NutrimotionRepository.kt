@@ -2,6 +2,7 @@ package com.nutrimotion.cmp.data.repository
 
 import com.nutrimotion.cmp.data.model.*
 import com.nutrimotion.cmp.data.network.ApiClient
+import com.nutrimotion.cmp.data.network.ApiJson
 import kotlinx.serialization.json.JsonElement
 
 class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
@@ -140,13 +141,20 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun setContentPrice(library: String, monthlyPrice: Double): Result<ContentAccessDto> =
         api.patch("api/admin/content-access", ContentPriceRequest(library, monthlyPrice))
 
-    suspend fun getAppSettings(): Result<AppSettingsDto> = api.get("api/admin/settings/app")
+    /** Uploads a prepared photo (≤ 5 MB, JPG/PNG/WebP) and sets it on every day of the meal. Returns the URL. */
+    suspend fun uploadMealPhoto(mealName: String, bytes: ByteArray, contentType: String): Result<String> = runCatching {
+        val target = api.post<MealPhotoUploadUrlResponse, MealPhotoUploadUrlRequest>(
+            "api/admin/meals/photo/upload-url",
+            MealPhotoUploadUrlRequest(mealName, contentType),
+        ).getOrThrow()
+        val stored = api.putBytes(target.uploadUrl, bytes, contentType).getOrThrow()
+        val url = ApiJson.instance.decodeFromString<BlobPutResponse>(stored).url
+        api.put<JsonElement, MealPhotoRequest>("api/admin/meals/photo", MealPhotoRequest(mealName, url)).getOrThrow()
+        url
+    }
 
-    suspend fun saveAppSettings(body: AppSettingsDto): Result<AppSettingsDto> =
-        api.put("api/admin/settings/app", body)
-
-    suspend fun testGoogleDrive(): Result<DriveTestResult> =
-        api.post("api/admin/settings/app/test-google", emptyMap<String, String>())
+    suspend fun removeMealPhoto(mealName: String): Result<JsonElement> =
+        api.put("api/admin/meals/photo", MealPhotoRequest(mealName, ""))
 
     suspend fun getContactSettings(): Result<ContactSettingsDto> = api.get("api/settings/contact")
 

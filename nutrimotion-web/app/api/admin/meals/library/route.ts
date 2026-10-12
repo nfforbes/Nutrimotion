@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
             description: string;
             soldIndividually: boolean;
             available: boolean;
+            imageUrl?: string;
           }
         >;
       }
@@ -63,11 +64,13 @@ export async function GET(request: NextRequest) {
           description: meal.description,
           soldIndividually: sold,
           available,
+          imageUrl: meal.imageUrl || undefined,
         });
       } else {
         // Each flag reads as on only when every day of the week has it on.
         if (!sold) existing.soldIndividually = false;
         if (!available) existing.available = false;
+        if (!existing.imageUrl && meal.imageUrl) existing.imageUrl = meal.imageUrl;
       }
     }
 
@@ -117,6 +120,9 @@ export async function POST(request: NextRequest) {
     }
 
     const weekStart = weekStartSundayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
+    const withPhoto = await MealPackage.findOne({ name, imageUrl: { $nin: [null, ''] } })
+      .select('imageUrl')
+      .lean();
     const docs = [];
     for (let day = 0; day < 7; day++) {
       const scheduledDate = addUtcDays(weekStart, day);
@@ -130,6 +136,7 @@ export async function POST(request: NextRequest) {
         scheduledDate,
         available: true,
         soldIndividually: body.soldIndividually !== false,
+        ...(withPhoto?.imageUrl ? { imageUrl: withPhoto.imageUrl } : {}),
       });
     }
     await MealPackage.insertMany(docs);

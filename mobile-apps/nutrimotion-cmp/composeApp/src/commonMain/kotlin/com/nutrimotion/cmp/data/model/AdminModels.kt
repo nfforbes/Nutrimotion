@@ -163,6 +163,7 @@ data class LibraryMeal(
     val description: String = "",
     val soldIndividually: Boolean = true,
     val available: Boolean = true,
+    val imageUrl: String? = null,
 )
 
 @Serializable
@@ -277,14 +278,13 @@ data class ContentAccessDto(
 data class ContentPriceRequest(val library: String, val monthlyPrice: Double)
 
 @Serializable
-data class DriveTestStep(val label: String = "", val ok: Boolean = false, val detail: String = "")
+data class MealPhotoUploadUrlRequest(val name: String, val contentType: String)
 
 @Serializable
-data class DriveTestResult(val ok: Boolean = false, val steps: List<DriveTestStep> = emptyList())
+data class MealPhotoUploadUrlResponse(val uploadUrl: String = "", val maxBytes: Long = 0)
 
 @Serializable
-data class AppSettingsDto(
-    val fileStorageProvider: String = "microsoft365",
-    val ms365: Map<String, String> = emptyMap(),
-    val googleDrive: Map<String, String> = emptyMap(),
-)
+data class BlobPutResponse(val url: String = "")
+
+@Serializable
+data class MealPhotoRequest(val name: String, val imageUrl: String)
