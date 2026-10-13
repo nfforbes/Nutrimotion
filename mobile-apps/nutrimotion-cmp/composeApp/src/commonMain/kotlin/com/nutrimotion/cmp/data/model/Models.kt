@@ -78,6 +78,18 @@ data class MealDto(
     val instagramLink: String? = null,
 )
 
+/** A Monday–Sunday order week; day keys are YYYY-MM-DD. */
+@Serializable
+data class OrderWeekDto(
+    val weekStart: String = "",
+    val weekEnd: String = "",
+    val days: List<String> = emptyList(),
+    val cutoff: String = "",
+    val closesOn: String = "",
+    val label: String = "",
+    val clientCutoffPassed: Boolean = false,
+)
+
 @Serializable
 data class PackageDto(
     @SerialName("_id") val id: String? = null,

@@ -8,6 +8,7 @@ import connectDB from '@/lib/db/connection';
 import { Cart, MealPackage, User } from '@/lib/db/models';
 import mongoose from 'mongoose';
 import { cartToResponse, refreshDiscountsIfNeeded } from '@/lib/discount/cartDiscounts';
+import { clientWeekError } from '@/lib/orders/orderWeek';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -27,9 +28,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    let mealDate = scheduledDate;
     if (itemType === 'meal') {
       const meal = mongoose.Types.ObjectId.isValid(itemId)
-        ? await MealPackage.findById(itemId).select('available soldIndividually').lean()
+        ? await MealPackage.findById(itemId).select('available soldIndividually scheduledDate').lean()
         : null;
       if (!meal || meal.available === false) {
         return NextResponse.json({ error: 'This meal is no longer available.' }, { status: 400 });
@@ -40,6 +42,12 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+      mealDate = meal.scheduledDate;
+    }
+
+    const weekError = clientWeekError({ itemType, name, scheduledDate: mealDate, packageDetails });
+    if (weekError) {
+      return NextResponse.json({ error: weekError }, { status: 400 });
     }
 
     const user = await User.findOne({ auth0Sub: session.user.sub });
@@ -78,7 +86,7 @@ export async function POST(request: NextRequest) {
         imageUrl,
         packageDetails,
         mealSlot,
-        scheduledDate: scheduledDate ? new Date(scheduledDate) : undefined,
+        scheduledDate: mealDate ? new Date(mealDate) : undefined,
       } as any);
     }
 

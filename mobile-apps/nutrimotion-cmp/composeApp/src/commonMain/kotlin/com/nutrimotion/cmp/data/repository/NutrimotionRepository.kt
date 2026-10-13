@@ -23,6 +23,8 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
 
     suspend fun getPackages(): Result<List<PackageDto>> = api.get("api/packages")
 
+    suspend fun getOrderWeek(): Result<OrderWeekDto> = api.get("api/orders/week")
+
     suspend fun getTraining(): Result<List<CatalogItemDto>> = api.get("api/training")
 
     suspend fun getBooks(): Result<List<CatalogItemDto>> = api.get("api/books")
@@ -80,6 +82,10 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun getAdminOrders(status: String? = null): Result<List<AdminOrderDto>> =
         api.get("api/admin/orders", status?.let { mapOf("status" to it) } ?: emptyMap())
 
+    suspend fun getAdminOrderOptions(): Result<AdminOrderOptionsDto> = api.get("api/admin/orders/options")
+
+    suspend fun createAdminOrder(body: AdminOrderRequest): Result<JsonElement> = api.post("api/admin/orders", body)
+
     suspend fun updateOrderStatus(orderId: String, body: OrderStatusRequest): Result<JsonElement> =
         api.patch("api/admin/orders/$orderId/status", body)
 
@@ -104,10 +110,34 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun saveAdminContact(whatsapp: String): Result<ContactSettingsDto> =
         api.patch("api/admin/contact", ContactSettingsDto(whatsapp))
 
-    suspend fun getMealLibrary(): Result<MealLibraryResponse> = api.get("api/admin/meals/library")
+    suspend fun getMealCatalog(): Result<List<CatalogMealDto>> = api.get("api/admin/meals/catalog")
 
-    suspend fun patchLibraryMeal(body: LibraryMealPatch): Result<JsonElement> =
-        api.patch("api/admin/meals/library", body)
+    /** Creates the meal when `id` is null, otherwise edits it. */
+    suspend fun saveCatalogMeal(id: String?, body: CatalogMealRequest): Result<CatalogMealDto> =
+        if (id == null) api.post("api/admin/meals/catalog", body) else api.patch("api/admin/meals/catalog/$id", body)
+
+    suspend fun deleteCatalogMeal(id: String): Result<JsonElement> = api.delete("api/admin/meals/catalog/$id")
+
+    /** Weeks from `from` to `to` (Mondays); with no `from`, the current week. */
+    suspend fun getWeekPlans(from: String? = null, to: String? = null): Result<List<WeekPlanDto>> =
+        api.get(
+            "api/admin/meals/weeks",
+            buildMap {
+                from?.let { put("from", it) }
+                to?.let { put("to", it) }
+            },
+        )
+
+    suspend fun placeMeal(body: PlaceMealRequest): Result<PlaceMealResult> = api.post("api/admin/meals/weeks/place", body)
+
+    suspend fun removeWeekMeal(body: WeekMealRequest): Result<JsonElement> =
+        api.delete("api/admin/meals/weeks/place", body)
+
+    suspend fun setWeekMealFlags(body: WeekMealFlagsRequest): Result<JsonElement> =
+        api.patch("api/admin/meals/weeks/place", body)
+
+    suspend fun copyWeek(from: String, to: String): Result<CopyWeekResult> =
+        api.post("api/admin/meals/weeks/copy", CopyWeekRequest(from, to))
 
     suspend fun getAdminPackages(): Result<List<AdminPackageDto>> = api.get("api/admin/packages")
 
@@ -141,15 +171,24 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun setContentPrice(library: String, monthlyPrice: Double): Result<ContentAccessDto> =
         api.patch("api/admin/content-access", ContentPriceRequest(library, monthlyPrice))
 
-    /** Uploads a prepared photo (≤ 5 MB, JPG/PNG/WebP) and sets it on every day of the meal. Returns the URL. */
-    suspend fun uploadMealPhoto(mealName: String, bytes: ByteArray, contentType: String): Result<String> = runCatching {
+    /** Uploads a prepared photo (≤ 5 MB, JPG/PNG/WebP) to storage without attaching it to a meal. Returns the URL. */
+    suspend fun storeMealPhoto(mealName: String, bytes: ByteArray, contentType: String): Result<String> = runCatching {
         val target = api.post<MealPhotoUploadUrlResponse, MealPhotoUploadUrlRequest>(
             "api/admin/meals/photo/upload-url",
             MealPhotoUploadUrlRequest(mealName, contentType),
         ).getOrThrow()
         val stored = api.putBytes(target.uploadUrl, bytes, contentType).getOrThrow()
-        val url = ApiJson.instance.decodeFromString<BlobPutResponse>(stored).url
-        api.put<JsonElement, MealPhotoRequest>("api/admin/meals/photo", MealPhotoRequest(mealName, url)).getOrThrow()
+        ApiJson.instance.decodeFromString<BlobPutResponse>(stored).url
+    }
+
+    /** Sets a stored photo on the saved meal and every day of it. */
+    suspend fun setMealPhoto(mealName: String, url: String): Result<JsonElement> =
+        api.put("api/admin/meals/photo", MealPhotoRequest(mealName, url))
+
+    /** Uploads a prepared photo and sets it on every day of the meal. Returns the URL. */
+    suspend fun uploadMealPhoto(mealName: String, bytes: ByteArray, contentType: String): Result<String> = runCatching {
+        val url = storeMealPhoto(mealName, bytes, contentType).getOrThrow()
+        setMealPhoto(mealName, url).getOrThrow()
         url
     }
 

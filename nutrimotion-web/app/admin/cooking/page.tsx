@@ -29,6 +29,15 @@ import { useAppSelector } from '@/store';
 import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** Weekday numbers (0 = Sunday) in the Monday–Sunday order of a meal week. */
+const MONDAY_FIRST = [1, 2, 3, 4, 5, 6, 0];
+
+interface CookSlot {
+  slot: string;
+  label: string;
+  total: number;
+  items: { name: string; count: number }[];
+}
 
 interface CookPlan {
   cookDate: string;
@@ -36,8 +45,8 @@ interface CookPlan {
   coversTo: string;
   totalMeals: number;
   orderCount: number;
-  slots: { slot: string; label: string; total: number; items: { name: string; count: number }[] }[];
-  days: { date: string; total: number }[];
+  slots: CookSlot[];
+  days: { date: string; total: number; slots: CookSlot[] }[];
 }
 
 interface CookingState {
@@ -75,45 +84,88 @@ function PlanCard({ plan, isToday }: { plan: CookPlan; isToday: boolean }) {
           For meals eaten {range} · {plan.totalMeals} meal{plan.totalMeals === 1 ? '' : 's'} from{' '}
           {plan.orderCount} order{plan.orderCount === 1 ? '' : 's'}
         </Typography>
-        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mt: 1 }}>
-          {plan.days.map((d) => (
-            <Chip key={d.date} size="small" variant="outlined" label={`${formatDay(d.date)}: ${d.total}`} />
-          ))}
-        </Box>
-
         {plan.slots.length === 0 ? (
           <Typography color="text.secondary" sx={{ mt: 2 }}>
             No meals ordered for these days yet.
           </Typography>
         ) : (
-          plan.slots.map((slot) => (
-            <Box key={slot.slot} sx={{ mt: 2 }}>
-              <Divider sx={{ mb: 1 }} />
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {slot.label}
-                </Typography>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {slot.total}
-                </Typography>
-              </Box>
-              <Table size="small">
-                <TableBody>
-                  {slot.items.map((item) => (
-                    <TableRow key={item.name}>
-                      <TableCell sx={{ pl: 0 }}>{item.name}</TableCell>
-                      <TableCell align="right" sx={{ pr: 0, fontWeight: 600, width: 64 }}>
-                        × {item.count}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+          <Typography variant="overline" color="text.secondary" display="block" sx={{ mt: 2 }}>
+            Total to cook
+          </Typography>
+        )}
+        {plan.slots.map((slot) => (
+          <Box key={slot.slot} sx={{ mt: 2 }}>
+            <Divider sx={{ mb: 1 }} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {slot.label}
+              </Typography>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {slot.total}
+              </Typography>
             </Box>
-          ))
+            <Table size="small">
+              <TableBody>
+                {slot.items.map((item) => (
+                  <TableRow key={item.name}>
+                    <TableCell sx={{ pl: 0 }}>{item.name}</TableCell>
+                    <TableCell align="right" sx={{ pr: 0, fontWeight: 600, width: 64 }}>
+                      × {item.count}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Box>
+        ))}
+
+        {plan.totalMeals > 0 && (
+          <>
+            <Divider sx={{ mt: 2 }} />
+            <Typography variant="overline" color="text.secondary" display="block" sx={{ mt: 1 }}>
+              Day by day
+            </Typography>
+            {plan.days.map((day) => (
+              <DayBreakdown key={day.date} day={day} />
+            ))}
+          </>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function DayBreakdown({ day }: { day: CookPlan['days'][number] }) {
+  return (
+    <Box sx={{ mt: 1.5, breakInside: 'avoid' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', bgcolor: 'grey.100', px: 1, py: 0.5, borderRadius: 1 }}>
+        <Typography variant="subtitle2">{formatDay(day.date)}</Typography>
+        <Typography variant="subtitle2">
+          {day.total} meal{day.total === 1 ? '' : 's'}
+        </Typography>
+      </Box>
+      {day.slots.length === 0 ? (
+        <Typography variant="body2" color="text.secondary" sx={{ px: 1, pt: 0.5 }}>
+          Nothing ordered.
+        </Typography>
+      ) : (
+        day.slots.map((slot) => (
+          <Box key={slot.slot} sx={{ px: 1, pt: 0.75 }}>
+            <Typography variant="body2" fontWeight={600}>
+              {slot.label} ({slot.total})
+            </Typography>
+            {slot.items.map((item) => (
+              <Box key={item.name} sx={{ display: 'flex', justifyContent: 'space-between', pl: 1.5 }}>
+                <Typography variant="body2">{item.name}</Typography>
+                <Typography variant="body2" fontWeight={600}>
+                  × {item.count}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        ))
+      )}
+    </Box>
   );
 }
 
@@ -194,9 +246,9 @@ export default function AdminCookingPage() {
               color="primary"
               sx={{ flexWrap: 'wrap' }}
             >
-              {WEEKDAYS.map((label, i) => (
-                <ToggleButton key={label} value={i} sx={{ px: 2 }}>
-                  {label}
+              {MONDAY_FIRST.map((i) => (
+                <ToggleButton key={i} value={i} sx={{ px: 2 }}>
+                  {WEEKDAYS[i]}
                 </ToggleButton>
               ))}
             </ToggleButtonGroup>

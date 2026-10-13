@@ -8,6 +8,7 @@ import connectDB from '@/lib/db/connection';
 import { Cart, User, Order, DiscountCode, MealPackage } from '@/lib/db/models';
 import { OrderStatus } from '@/types/commerce';
 import { getAppliedCodesFromCart, recalculateCartDiscounts } from '@/lib/discount/cartDiscounts';
+import { clientOrderingWeek, clientWeekError } from '@/lib/orders/orderWeek';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -35,6 +36,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    for (const item of cart.items) {
+      const weekError = clientWeekError(item);
+      if (weekError) {
+        return NextResponse.json({ error: `${weekError} Remove it from your cart to check out.` }, { status: 400 });
+      }
+    }
+    const hasMeals = cart.items.some((item) => item.itemType === 'meal' || item.itemType === 'package');
 
     const mealItems = cart.items.filter((item) => item.itemType === 'meal');
     if (mealItems.length > 0) {
@@ -93,6 +102,7 @@ export async function POST(request: NextRequest) {
       status: OrderStatus.PURCHASED,
       deliveryAddress: deliveryAddress || user.address,
       deliveryInstructions,
+      weekStart: hasMeals ? clientOrderingWeek().weekStart : undefined,
       statusHistory: [
         {
           status: OrderStatus.PURCHASED,

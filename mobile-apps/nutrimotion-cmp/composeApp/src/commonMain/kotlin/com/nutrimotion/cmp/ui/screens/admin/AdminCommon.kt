@@ -72,6 +72,25 @@ private fun civilFromDays(z0: Long): Triple<Int, Int, Int> {
     return Triple(y, m, d)
 }
 
+/** "2026-10-12" moved by [days] days, e.g. shiftDayKey("2026-10-12", 7) == "2026-10-19". */
+fun shiftDayKey(key: String, days: Int): String {
+    val parts = key.take(10).split("-").mapNotNull { it.toIntOrNull() }
+    if (parts.size != 3) return key
+    val (y, m, d) = civilFromDays(daysFromCivil(parts[0], parts[1], parts[2]) + days)
+    return "$y-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}"
+}
+
+/** The Monday of the Monday–Sunday week containing [key]. */
+fun mondayOf(key: String): String {
+    val parts = key.take(10).split("-").mapNotNull { it.toIntOrNull() }
+    if (parts.size != 3) return key
+    val weekday = (daysFromCivil(parts[0], parts[1], parts[2]) + 4).mod(7L).toInt()
+    return shiftDayKey(key, -((weekday + 6) % 7))
+}
+
+/** "2026-10-12" → "Oct 12". */
+fun shortDay(key: String): String = formatDateTime(key, withTime = false).substringBefore(",")
+
 /** "2026-10-08T18:30:00.000Z" → "Oct 8, 1:30 PM" in Jamaica time. Date-only strings → "Oct 8, 2026". */
 fun formatDateTime(iso: String?, withTime: Boolean = true): String {
     if (iso.isNullOrBlank() || iso.length < 10) return ""

@@ -11,12 +11,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.nutrimotion.cmp.data.model.CookDayTotal
 import com.nutrimotion.cmp.data.model.CookPlanDto
 import com.nutrimotion.cmp.data.model.CookingResponse
 import com.nutrimotion.cmp.data.repository.NutrimotionRepository
@@ -36,6 +37,8 @@ import com.nutrimotion.cmp.ui.components.LoadingBox
 import kotlinx.coroutines.launch
 
 private val WEEKDAYS = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+/** Weekday numbers (0 = Sunday) in the Monday–Sunday order of a meal week. */
+private val MONDAY_FIRST = listOf(1, 2, 3, 4, 5, 6, 0)
 private val MONTHS = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -80,7 +83,8 @@ fun CookingScreen(repo: NutrimotionRepository, canEditDays: Boolean) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    WEEKDAYS.forEachIndexed { i, label ->
+                    MONDAY_FIRST.forEach { i ->
+                        val label = WEEKDAYS[i]
                         FilterChip(
                             selected = i in selected,
                             enabled = canEditDays && !saving,
@@ -151,18 +155,74 @@ private fun PlanCard(plan: CookPlanDto, isToday: Boolean) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                plan.days.forEach { d ->
-                    AssistChip(onClick = {}, label = { Text("${formatDay(d.date)}: ${d.total}") })
-                }
-            }
             if (plan.slots.isEmpty()) {
                 Text("No meals ordered for these days yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                SectionLabel("Total to cook")
             }
             plan.slots.forEach { slot ->
                 HorizontalDivider()
                 CountRow(slot.label, slot.total, bold = true)
                 slot.items.forEach { item -> CountRow(item.name, item.count, bold = false) }
+            }
+            if (plan.totalMeals > 0) {
+                HorizontalDivider()
+                SectionLabel("Day by day")
+                plan.days.forEach { day -> DayBreakdown(day) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionLabel(text: String) {
+    Text(
+        text.uppercase(),
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(top = 6.dp),
+    )
+}
+
+@Composable
+private fun DayBreakdown(day: CookDayTotal) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = MaterialTheme.shapes.small,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(formatDay(day.date), fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text("${day.total} meal${if (day.total == 1) "" else "s"}", fontWeight = FontWeight.SemiBold)
+            }
+        }
+        if (day.slots.isEmpty()) {
+            Text(
+                "Nothing ordered.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+        }
+        day.slots.forEach { slot ->
+            Text(
+                "${slot.label} (${slot.total})",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp),
+            )
+            slot.items.forEach { item ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Text(item.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text("× ${item.count}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+                }
             }
         }
     }

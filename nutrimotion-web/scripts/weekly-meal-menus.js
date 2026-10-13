@@ -74,12 +74,11 @@ const DEFAULT_PRICES = {
   [SLOT.SMOOTHIES]: 8,
 };
 
-/** Sunday 00:00 UTC for the week containing `anchor` (week starts Sunday). */
-function getWeekStartSundayUtc(anchor) {
+/** Monday 00:00 UTC for the Monday–Sunday week containing `anchor`. */
+function getWeekStartMondayUtc(anchor) {
   const d = new Date(anchor);
   d.setUTCHours(0, 0, 0, 0);
-  const day = d.getUTCDay();
-  d.setUTCDate(d.getUTCDate() - day);
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
   return d;
 }
 
@@ -141,7 +140,7 @@ function getAllMealsFromMenus(weekStarts) {
 module.exports = {
   WEEK_MENUS,
   SLOT,
-  getWeekStartSundayUtc,
+  getWeekStartMondayUtc,
   buildScheduledMeals,
   getAllMealsFromMenus,
 };

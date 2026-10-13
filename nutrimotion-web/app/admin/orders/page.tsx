@@ -36,6 +36,9 @@ import { getAllMenuItemsForUser } from '@/lib/permissions/menu-config';
 import { OrderStatus } from '@/types/commerce';
 import axios from 'axios';
 import { format } from 'date-fns';
+import AddIcon from '@mui/icons-material/Add';
+import AddOrderDialog from '@/components/admin/orders/AddOrderDialog';
+import { orderWeek } from '@/lib/orders/orderWeek';
 
 const statusColors: Record<OrderStatus, 'default' | 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'> = {
   [OrderStatus.PENDING]: 'default',
@@ -56,6 +59,7 @@ export default function AdminOrdersPage() {
   const [statusNote, setStatusNote] = useState('');
   const [driverId, setDriverId] = useState('');
   const [drivers, setDrivers] = useState<any[]>([]);
+  const [addOpen, setAddOpen] = useState(false);
 
   const auth = useAppSelector((state) => state.auth);
 
@@ -125,9 +129,12 @@ export default function AdminOrdersPage() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} menuItems={menuItems} />
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Orders Management
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+          <Typography variant="h4">Orders Management</Typography>
+          <Button variant="contained" startIcon={<AddIcon />} onClick={() => setAddOpen(true)}>
+            Add order
+          </Button>
+        </Box>
 
         <Card>
           <CardContent>
@@ -137,6 +144,7 @@ export default function AdminOrdersPage() {
                   <TableRow>
                     <TableCell>Order #</TableCell>
                     <TableCell>Customer</TableCell>
+                    <TableCell>Week</TableCell>
                     <TableCell>Total</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell>Date</TableCell>
@@ -149,7 +157,11 @@ export default function AdminOrdersPage() {
                       <TableCell>{order.orderNumber}</TableCell>
                       <TableCell>
                         {order.userId?.name || 'Unknown'}
+                        {order.placedBy && (
+                          <Chip label="Added by admin" size="small" variant="outlined" sx={{ ml: 1 }} />
+                        )}
                       </TableCell>
+                      <TableCell>{order.weekStart ? orderWeek(order.weekStart).label : '—'}</TableCell>
                       <TableCell>${order.total.toFixed(2)}</TableCell>
                       <TableCell>
                         <Chip
@@ -196,6 +208,8 @@ export default function AdminOrdersPage() {
           </CardContent>
         </Card>
       </Container>
+
+      <AddOrderDialog open={addOpen} onClose={() => setAddOpen(false)} onCreated={fetchOrders} />
 
       <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)}>
         <DialogTitle>Update Order Status</DialogTitle>

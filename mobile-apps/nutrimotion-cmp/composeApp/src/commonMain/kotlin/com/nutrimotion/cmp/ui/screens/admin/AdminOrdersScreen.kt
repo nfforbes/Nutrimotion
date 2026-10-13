@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -47,8 +48,20 @@ import kotlinx.coroutines.launch
 fun AdminOrdersScreen(repo: NutrimotionRepository) {
     var filter by remember { mutableStateOf<String?>(null) }
     var selectedId by remember { mutableStateOf<String?>(null) }
+    var adding by remember { mutableStateOf(false) }
 
     AdminLoader(load = { repo.getAdminOrders() }) { orders, reload ->
+        if (adding) {
+            AdminAddOrderScreen(
+                repo,
+                onBack = { adding = false },
+                onCreated = {
+                    adding = false
+                    reload()
+                },
+            )
+            return@AdminLoader
+        }
         val selected = orders.firstOrNull { it.id == selectedId }
         if (selected != null) {
             OrderDetail(repo, selected, onBack = { selectedId = null }, onChanged = reload)
@@ -56,6 +69,10 @@ fun AdminOrdersScreen(repo: NutrimotionRepository) {
         }
         val shown = orders.filter { filter == null || it.status == filter }
         Column(modifier = Modifier.fillMaxSize()) {
+            Button(
+                onClick = { adding = true },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            ) { Text("Add order for a client") }
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -88,8 +105,10 @@ fun AdminOrdersScreen(repo: NutrimotionRepository) {
                             MutedText(
                                 listOfNotNull(
                                     OrderStatuses.label(order.status),
+                                    order.weekStart?.let { "Week of ${formatDateTime(it, withTime = false).substringBefore(",")}" },
                                     formatDateTime(order.createdAt),
                                     order.assignedDriverId?.name?.let { "Driver: $it" },
+                                    order.placedBy?.let { "Added by admin" },
                                 ).joinToString(" · "),
                             )
                         }
@@ -140,6 +159,8 @@ private fun OrderDetail(
         TextButton(onClick = onBack) { Text("← All orders") }
         Text("Order #${order.orderNumber}", style = MaterialTheme.typography.headlineSmall)
         MutedText("${OrderStatuses.label(order.status)} · ${formatDateTime(order.createdAt)}")
+        order.weekStart?.let { MutedText("For the week of ${formatDateTime(it, withTime = false)}") }
+        order.placedBy?.let { MutedText("Added by $it") }
 
         AdminCard("Customer") {
             Text(order.userId?.name ?: "Unknown customer")

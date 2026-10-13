@@ -4,7 +4,7 @@ import { Permission } from '@/types/auth';
 import connectDB from '@/lib/db/connection';
 import { MealPackage } from '@/lib/db/models';
 import { MealSlot } from '@/types/catalog';
-import { MENU_PRICES, weekStartSundayUtc } from '@/lib/meals/weeklyMenus';
+import { MENU_PRICES, weekStartMondayUtc } from '@/lib/meals/weeklyMenus';
 
 const SLOTS = new Set(Object.values(MealSlot));
 
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
 
     for (const meal of meals) {
       const scheduled = new Date(meal.scheduledDate);
-      const start = weekStartSundayUtc(scheduled);
+      const start = weekStartMondayUtc(scheduled);
       const weekStart = start.toISOString().slice(0, 10);
       const label = meal.menuLabel?.trim() || `Week of ${weekStart}`;
       const groupKey = `${label}|${weekStart}`;
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Price must be zero or more' }, { status: 400 });
     }
 
-    const weekStart = weekStartSundayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
+    const weekStart = weekStartMondayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
     const withPhoto = await MealPackage.findOne({ name, imageUrl: { $nin: [null, ''] } })
       .select('imageUrl')
       .lean();
@@ -159,7 +159,7 @@ function libraryMealFilter(body: Record<string, unknown>): Record<string, unknow
   if (menuLabel && !menuLabel.startsWith('Week of ')) {
     filter.menuLabel = menuLabel;
   } else if (weekStartRaw) {
-    const start = weekStartSundayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
+    const start = weekStartMondayUtc(new Date(`${weekStartRaw}T00:00:00.000Z`));
     const end = addUtcDays(start, 7);
     filter.scheduledDate = { $gte: start, $lt: end };
   }

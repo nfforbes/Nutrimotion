@@ -36,7 +36,14 @@ export interface CookPlan {
   totalMeals: number;
   orderCount: number;
   slots: CookSlot[];
-  days: { date: string; total: number }[];
+  /** Every day the cook day covers, with what is eaten that day. */
+  days: CookDay[];
+}
+
+export interface CookDay {
+  date: string;
+  total: number;
+  slots: CookSlot[];
 }
 
 export interface CookingResponse {
@@ -151,12 +158,14 @@ interface OrderLike {
 export function buildCookPlan(orders: OrderLike[], cookDate: string, coversTo: string): CookPlan {
   const inRange = (key: string | null): key is string => !!key && key >= cookDate && key <= coversTo;
   const counts: Counts = new Map();
-  const perDay = new Map<string, number>();
+  const perDay = new Map<string, Counts>();
   let orderCount = 0;
 
   const count = (day: string, slot: string, name: string, qty: number) => {
     add(counts, slot, name, qty);
-    perDay.set(day, (perDay.get(day) ?? 0) + qty);
+    const dayCounts = perDay.get(day) ?? new Map();
+    add(dayCounts, slot, name, qty);
+    perDay.set(day, dayCounts);
   };
 
   for (const order of orders) {
@@ -183,9 +192,10 @@ export function buildCookPlan(orders: OrderLike[], cookDate: string, coversTo: s
     if (contributed) orderCount++;
   }
 
-  const days: { date: string; total: number }[] = [];
+  const days: CookDay[] = [];
   for (let day = cookDate; day <= coversTo; day = addDays(day, 1)) {
-    days.push({ date: day, total: perDay.get(day) ?? 0 });
+    const daySlots = toSlots(perDay.get(day) ?? new Map());
+    days.push({ date: day, total: daySlots.reduce((sum, s) => sum + s.total, 0), slots: daySlots });
   }
   const slots = toSlots(counts);
 

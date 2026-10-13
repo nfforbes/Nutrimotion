@@ -4,6 +4,7 @@
 
 export { User } from './User';
 export { MealPackage } from './MealPackage';
+export { MealCatalog } from './MealCatalog';
 export { Package } from './Package';
 export { Cart } from './Cart';
 export { Order } from './Order';
@@ -21,6 +22,7 @@ export { PushNotificationLog } from './PushNotificationLog';
 
 export type { IUser } from './User';
 export type { IMealPackage } from './MealPackage';
+export type { IMealCatalog } from './MealCatalog';
 export type { IPackage } from './Package';
 export type { ICart, ICartItem } from './Cart';
 export type { IOrder, IOrderItem, IOrderStatusHistory } from './Order';

@@ -9,3 +9,9 @@ export function getLocalCalendarDayKey(d: Date): string {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 }
+
+/** Local-noon Date for a YYYY-MM-DD key, so local date helpers return that same day. */
+export function dayKeyToLocalDate(key: string): Date {
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d, 12);
+}

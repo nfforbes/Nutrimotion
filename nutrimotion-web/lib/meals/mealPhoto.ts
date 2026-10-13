@@ -4,7 +4,7 @@
 
 import { del, issueSignedToken, presignUrl } from '@vercel/blob';
 import connectDB from '@/lib/db/connection';
-import { MealPackage } from '@/lib/db/models';
+import { MealCatalog, MealPackage } from '@/lib/db/models';
 
 export const MEAL_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 export const MEAL_PHOTO_TYPES: Record<string, string> = {
@@ -33,21 +33,25 @@ export function slugifyMealName(value: string): string {
   );
 }
 
-/** Sets (or clears, when imageUrl is empty) the photo on every day of a meal and deletes photos no meal uses. */
+/**
+ * Sets (or clears, when imageUrl is empty) the photo on the saved meal and every day of it,
+ * then deletes photos nothing uses any more.
+ */
 export async function setMealPhoto(name: string, imageUrl: string): Promise<number> {
   await connectDB();
-  const previous: string[] = (await MealPackage.distinct('imageUrl', { name })).filter(
-    (url: unknown): url is string => typeof url === 'string' && url !== '' && url !== imageUrl
-  );
+  const previous: string[] = [
+    ...(await MealPackage.distinct('imageUrl', { name })),
+    ...(await MealCatalog.distinct('imageUrl', { name })),
+  ].filter((url: unknown): url is string => typeof url === 'string' && url !== '' && url !== imageUrl);
 
-  const result = await MealPackage.updateMany(
-    { name },
-    imageUrl ? { $set: { imageUrl } } : { $unset: { imageUrl: 1 } }
-  );
+  const update = imageUrl ? { $set: { imageUrl } } : { $unset: { imageUrl: 1 } };
+  const result = await MealPackage.updateMany({ name }, update);
+  await MealCatalog.updateOne({ name }, update);
 
   const orphaned: string[] = [];
-  for (const url of previous) {
-    if (isOurBlob(url) && !(await MealPackage.exists({ imageUrl: url }))) orphaned.push(url);
+  for (const url of new Set(previous)) {
+    const inUse = (await MealPackage.exists({ imageUrl: url })) || (await MealCatalog.exists({ imageUrl: url }));
+    if (isOurBlob(url) && !inUse) orphaned.push(url);
   }
   if (orphaned.length > 0) {
     await del(orphaned).catch((error) => console.error('Meal photo cleanup failed:', error));

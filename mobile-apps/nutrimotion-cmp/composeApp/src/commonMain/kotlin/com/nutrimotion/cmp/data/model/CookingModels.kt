@@ -38,6 +38,7 @@ data class CookItemCount(
 data class CookDayTotal(
     val date: String = "",
     val total: Int = 0,
+    val slots: List<CookSlotDto> = emptyList(),
 )
 
 @Serializable

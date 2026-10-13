@@ -20,8 +20,6 @@ import {
   Alert,
 } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppDispatch, useAppSelector } from '@/store';
@@ -33,8 +31,9 @@ import { MEAL_SLOT_LABELS, MEAL_SLOT_ORDER, normalizeSlotKey } from '@/lib/meals
 import axios from 'axios';
 import PackageSelection from '@/components/client/PackageSelection';
 import PackageBrowseBar from '@/components/packages/PackageBrowseBar';
-import { getLocalCalendarDayKey } from '@/lib/calendarDayKey';
+import { dayKeyToLocalDate, getLocalCalendarDayKey } from '@/lib/calendarDayKey';
 import { groupPackages, PackageSort, PackageSpanFilter } from '@/lib/packages/organize';
+import { clientOrderingWeek, dayKeyOfDate } from '@/lib/orders/orderWeek';
 
 const SLOT_LABELS = MEAL_SLOT_LABELS;
 const SLOT_ORDER = MEAL_SLOT_ORDER;
@@ -56,21 +55,6 @@ export interface PackageDoc {
   specificDays: number[];
 }
 
-function getWeekStart(d: Date): Date {
-  const date = new Date(d);
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() - date.getDay());
-  return date;
-}
-
-function getWeekDays(weekStart: Date): Date[] {
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(weekStart);
-    d.setDate(d.getDate() + i);
-    return d;
-  });
-}
-
 function formatDate(d: Date): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
@@ -78,7 +62,6 @@ function formatDate(d: Date): string {
 export default function MealsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [packages, setPackages] = useState<PackageDoc[]>([]);
-  const [weekOffset, setWeekOffset] = useState(0);
   const [activeTab, setActiveTab] = useState(0);
   const [selectedPackage, setSelectedPackage] = useState<PackageDoc | null>(null);
   const [packageSpan, setPackageSpan] = useState<PackageSpanFilter>('all');
@@ -141,28 +124,19 @@ export default function MealsPage() {
     setSnackbarMessage(`Package ${pkg.name} added to cart`);
   };
 
-  const weekStart = useMemo(() => {
-    const now = new Date();
-    const ws = getWeekStart(now);
-    ws.setDate(ws.getDate() + weekOffset * 7);
-    return ws;
-  }, [weekOffset]);
-
-  const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
+  const orderWeek = useMemo(() => clientOrderingWeek(), []);
+  const weekDays = useMemo(() => orderWeek.days.map(dayKeyToLocalDate), [orderWeek]);
 
   const mealsByDaySlot = useMemo(() => {
     const map: Record<string, Record<string, any[]>> = {};
-    for (const day of weekDays) {
-      const key = getLocalCalendarDayKey(day);
+    for (const key of orderWeek.days) {
       map[key] = {};
       SLOT_ORDER.forEach((slot) => (map[key][slot] = []));
     }
     const mealList = Array.isArray(meals) ? meals : [];
     for (const meal of mealList) {
-      const d = new Date(meal.scheduledDate);
-      if (Number.isNaN(d.getTime())) continue;
-      const key = getLocalCalendarDayKey(d);
-      if (map[key]) {
+      const key = dayKeyOfDate(meal.scheduledDate);
+      if (key && map[key]) {
         const slot = normalizeSlotKey(meal.slot);
         if (map[key][slot]) {
           map[key][slot].push(meal);
@@ -170,9 +144,9 @@ export default function MealsPage() {
       }
     }
     return map;
-  }, [meals, weekDays]);
+  }, [meals, orderWeek]);
 
-  const weekLabel = `${formatDate(weekDays[0])} – ${formatDate(weekDays[6])}`;
+  const closesOn = orderWeek.closesOn;
 
   const packageGroups = useMemo(
     () => groupPackages(packages, packageSpan, packageSort),
@@ -187,6 +161,10 @@ export default function MealsPage() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} menuItems={menuItems} />
 
       <Container maxWidth="lg" sx={{ mt: { xs: 12, md: 6 }, mb: 4 }}>
+        <Alert severity="info" sx={{ mb: 3 }}>
+          You are ordering for the week of <strong>{orderWeek.label}</strong>. Orders for this week close{' '}
+          {closesOn} at midnight; after that, orders are for the following week.
+        </Alert>
         {selectedPackage ? (
           <PackageSelection
             pkg={selectedPackage}
@@ -303,18 +281,6 @@ export default function MealsPage() {
               Browse meals by day — breakfast, lunch, smoothies, and juice shots
             </Typography>
 
-            {/* Week navigation */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, mb: 2 }}>
-              <Button size="small" startIcon={<ChevronLeftIcon />} onClick={() => setWeekOffset((o) => o - 1)}>
-                Previous
-              </Button>
-              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                {weekLabel}
-              </Typography>
-              <Button size="small" endIcon={<ChevronRightIcon />} onClick={() => setWeekOffset((o) => o + 1)}>
-                Next
-              </Button>
-            </Box>
 
             {/* Day tabs */}
             <Tabs

@@ -74,10 +74,11 @@ export const WEEK_MENUS: WeekMenu[] = [
   },
 ];
 
-export function weekStartSundayUtc(anchor: Date): Date {
+/** Monday 00:00 UTC of the Monday–Sunday menu week containing `anchor`. */
+export function weekStartMondayUtc(anchor: Date): Date {
   const d = new Date(anchor);
   d.setUTCHours(0, 0, 0, 0);
-  d.setUTCDate(d.getUTCDate() - d.getUTCDay());
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
   return d;
 }
 
@@ -118,7 +119,7 @@ function slotMeals(menu: WeekMenu, slot: MealSlot, names: string[], weekStart: D
 }
 
 export function buildMenuMeals(week1Start: Date): ScheduledMenuMeal[] {
-  const start = weekStartSundayUtc(week1Start);
+  const start = weekStartMondayUtc(week1Start);
   const meals: ScheduledMenuMeal[] = [];
   WEEK_MENUS.forEach((menu, index) => {
     const weekStart = addUtcDays(start, index * 7);

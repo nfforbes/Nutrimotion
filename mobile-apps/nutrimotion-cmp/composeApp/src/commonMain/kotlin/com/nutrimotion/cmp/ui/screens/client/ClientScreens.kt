@@ -46,6 +46,7 @@ import com.nutrimotion.cmp.data.model.DeliveryAddress
 import com.nutrimotion.cmp.data.model.MealDto
 import com.nutrimotion.cmp.data.model.MealSlots
 import com.nutrimotion.cmp.data.model.OrderDto
+import com.nutrimotion.cmp.data.model.OrderWeekDto
 import com.nutrimotion.cmp.data.model.PackageDto
 import com.nutrimotion.cmp.data.model.ProfileUpdateRequest
 import com.nutrimotion.cmp.data.model.RecipeDto
@@ -64,6 +65,7 @@ import com.nutrimotion.cmp.ui.components.EmptyBox
 import com.nutrimotion.cmp.ui.components.ErrorBox
 import com.nutrimotion.cmp.ui.components.LoadingBox
 import com.nutrimotion.cmp.ui.components.MealThumbnail
+import com.nutrimotion.cmp.ui.components.PackageMealPicker
 import com.nutrimotion.cmp.ui.components.PrimaryButton
 import com.nutrimotion.cmp.ui.components.SecondaryButton
 import com.nutrimotion.cmp.ui.components.SimpleListScreen
@@ -124,11 +126,12 @@ fun ClientHomeScreen(repo: NutrimotionRepository, userName: String?) {
 fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
     var packages by remember { mutableStateOf<List<PackageDto>>(emptyList()) }
     var meals by remember { mutableStateOf<List<MealDto>>(emptyList()) }
+    var week by remember { mutableStateOf<OrderWeekDto?>(null) }
     var selected by remember { mutableStateOf<PackageDto?>(null) }
-    var selections by remember { mutableStateOf<Map<String, Map<String, List<String>>>>(emptyMap()) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
     var message by remember { mutableStateOf<String?>(null) }
+    var adding by remember { mutableStateOf(false) }
     var packageSpan by remember { mutableStateOf<PackageSpan?>(null) }
     var packageSort by remember { mutableStateOf(PackageSort.PriceAsc) }
     val scope = rememberCoroutineScope()
@@ -137,9 +140,12 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
         loading = true
         val p = repo.getPackages()
         val m = repo.getMeals()
+        val w = repo.getOrderWeek()
         packages = p.getOrDefault(emptyList())
-        meals = m.getOrDefault(emptyList())
-        error = p.exceptionOrNull()?.message ?: m.exceptionOrNull()?.message
+        week = w.getOrNull()
+        val days = week?.days.orEmpty()
+        meals = m.getOrDefault(emptyList()).filter { it.scheduledDate.take(10) in days }
+        error = p.exceptionOrNull()?.message ?: m.exceptionOrNull()?.message ?: w.exceptionOrNull()?.message
         loading = false
     }
 
@@ -152,6 +158,7 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
                 .padding(16.dp),
         ) {
             Text("Meal packages", style = MaterialTheme.typography.headlineSmall)
+            week?.let { OrderWeekBanner(it) }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -197,9 +204,9 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
+                                    .clickable(enabled = week != null) {
                                         selected = pkg
-                                        selections = PackageSelectionLogic.emptySelections(weekDayKeys(meals))
+                                        message = null
                                     }
                                     .padding(vertical = 8.dp),
                             ) {
@@ -217,114 +224,24 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
         }
     } else {
         val pkg = selected!!
-        val steps = PackageSelectionLogic.wizardSlots(pkg)
-        var stepIndex by remember(pkg.id) { mutableStateOf(0) }
-        val slot = steps.getOrNull(stepIndex.coerceIn(0, (steps.size - 1).coerceAtLeast(0)))
+        val currentWeek = week ?: return
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
-            TextButton(onClick = { selected = null }) { Text("Back") }
-            Text(pkg.name, style = MaterialTheme.typography.headlineSmall)
-            if (steps.isEmpty() || slot == null) {
-                Text("This package has no meals to choose.")
-            } else {
-                val limit = PackageSelectionLogic.slotLimit(pkg, slot)
-                val used = PackageSelectionLogic.countAcrossDays(selections, slot)
-                val stepMeals = meals
-                    .filter {
-                        it.slot == slot ||
-                            (slot == MealSlots.DINNER && (it.slot == "lunch" || it.slot == "dinner"))
-                    }
-                    .distinctBy { it.name }
-                Text(
-                    "Step ${stepIndex + 1} of ${steps.size}",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    "${MealSlots.LABELS[slot]} ($used / $limit)",
-                    style = MaterialTheme.typography.titleMedium,
-                )
-                Text("Check a meal, then use + and − to choose how many.")
-                Spacer(modifier = Modifier.height(8.dp))
-                stepMeals.forEach { meal ->
-                    val mealId = meal.id ?: return@forEach
-                    val day = meal.scheduledDate.take(10).ifBlank { weekDayKeys(meals).first() }
-                    val qty = PackageSelectionLogic.quantityOf(selections, slot, mealId)
-                    val canIncrease = PackageSelectionLogic.canAdd(pkg, selections, slot)
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(
-                            checked = qty > 0,
-                            onCheckedChange = { checked ->
-                                selections = PackageSelectionLogic.withQuantity(
-                                    selections,
-                                    day,
-                                    slot,
-                                    mealId,
-                                    if (checked) 1 else 0,
-                                    limit,
-                                )
-                            },
-                            enabled = qty > 0 || canIncrease,
-                        )
-                        MealThumbnail(meal.imageUrl, contentDescription = meal.name)
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(meal.name, modifier = Modifier.weight(1f))
-                        IconButton(
-                            onClick = {
-                                selections = PackageSelectionLogic.withQuantity(
-                                    selections, day, slot, mealId, qty - 1, limit,
-                                )
-                            },
-                            enabled = qty > 0,
-                        ) {
-                            Icon(Icons.Filled.Remove, contentDescription = "Decrease")
-                        }
-                        Text("$qty", style = MaterialTheme.typography.titleMedium)
-                        IconButton(
-                            onClick = {
-                                selections = PackageSelectionLogic.withQuantity(
-                                    selections, day, slot, mealId, qty + 1, limit,
-                                )
-                            },
-                            enabled = canIncrease,
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = "Increase")
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                if (stepIndex > 0) {
-                    TextButton(onClick = { stepIndex -= 1 }) { Text("Previous") }
-                }
-                if (stepIndex < steps.lastIndex) {
-                    PrimaryButton(
-                        text = "Next: ${MealSlots.LABELS[steps[stepIndex + 1]]}",
-                        enabled = used == limit,
-                        onClick = { stepIndex += 1 },
-                    )
-                }
-            }
-            message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
-            if (steps.isNotEmpty() && stepIndex == steps.lastIndex) {
-            val complete = steps.all { step ->
-                PackageSelectionLogic.countAcrossDays(selections, step) ==
-                    PackageSelectionLogic.slotLimit(pkg, step)
-            }
-            PrimaryButton(
-                text = "Add package to cart",
-                enabled = complete,
-                onClick = {
+            OrderWeekBanner(currentWeek)
+            PackageMealPicker(
+                pkg = pkg,
+                meals = meals,
+                dayKeys = currentWeek.days,
+                confirmLabel = if (adding) "Adding…" else "Add package to cart",
+                busy = adding,
+                onBack = { selected = null },
+                onConfirm = { details ->
                     scope.launch {
-                        val nameById = meals.mapNotNull { meal -> meal.id?.let { it to meal.name } }.toMap()
-                        val details = selections.mapValues { (_, slots) ->
-                            slots.mapValues { (_, ids) -> ids.map { nameById[it] ?: it } }
-                        }
+                        adding = true
                         val result = repo.addCartItem(
                             CartItemRequest(
                                 itemType = "package",
@@ -336,6 +253,7 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
                                 packageDetails = details,
                             ),
                         )
+                        adding = false
                         message = result.fold(
                             onSuccess = {
                                 onAddedToCart()
@@ -346,14 +264,23 @@ fun MealsScreen(repo: NutrimotionRepository, onAddedToCart: () -> Unit) {
                     }
                 },
             )
-            }
+            message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
         }
     }
 }
 
-private fun weekDayKeys(meals: List<MealDto>): List<String> {
-    val fromMeals = meals.map { it.scheduledDate.take(10) }.filter { it.length == 10 }.distinct().sorted()
-    return fromMeals.ifEmpty { listOf("today") }
+@Composable
+private fun OrderWeekBanner(week: OrderWeekDto) {
+    Card(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Text("Ordering for ${week.label}", style = MaterialTheme.typography.titleSmall)
+            Text(
+                "Orders for this week close ${week.closesOn} at midnight. After that, orders are for the following week.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
 }
 
 @Composable

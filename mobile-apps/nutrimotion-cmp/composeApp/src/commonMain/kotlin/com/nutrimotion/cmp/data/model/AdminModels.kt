@@ -75,6 +75,44 @@ data class AdminOrderDto(
     val deliveryInstructions: String? = null,
     val createdAt: String? = null,
     val statusHistory: List<StatusHistoryDto> = emptyList(),
+    val weekStart: String? = null,
+    val placedBy: String? = null,
+)
+
+@Serializable
+data class AdminClientDto(
+    @SerialName("_id") val id: String = "",
+    val name: String = "",
+    val email: String = "",
+    val phone: String = "",
+    val address: AdminAddress? = null,
+)
+
+@Serializable
+data class AdminOrderOptionsDto(
+    val clientWeek: OrderWeekDto = OrderWeekDto(),
+    val weeks: List<OrderWeekDto> = emptyList(),
+    val clients: List<AdminClientDto> = emptyList(),
+    val packages: List<PackageDto> = emptyList(),
+    val meals: List<MealDto> = emptyList(),
+)
+
+@Serializable
+data class AdminOrderItemRequest(
+    val itemType: String,
+    val itemId: String,
+    val quantity: Int = 1,
+    val packageDetails: Map<String, Map<String, List<String>>>? = null,
+)
+
+@Serializable
+data class AdminOrderRequest(
+    val userId: String,
+    val weekStart: String,
+    val items: List<AdminOrderItemRequest>,
+    val deliveryAddress: AdminAddress? = null,
+    val deliveryInstructions: String? = null,
+    val note: String? = null,
 )
 
 @Serializable
@@ -155,36 +193,73 @@ data class SendPushResult(
     val errors: List<String> = emptyList(),
 )
 
+/** A saved meal the admin places into weeks. */
 @Serializable
-data class LibraryMeal(
+data class CatalogMealDto(
+    @SerialName("_id") val id: String = "",
     val name: String = "",
-    val slot: String = "",
-    val price: Double = 0.0,
     val description: String = "",
-    val soldIndividually: Boolean = true,
-    val available: Boolean = true,
+    val price: Double = 0.0,
+    val slot: String = MealSlots.LUNCH,
     val imageUrl: String? = null,
+    val soldIndividually: Boolean = true,
+    val instagramLink: String? = null,
 )
 
 @Serializable
-data class MealMenu(
-    val label: String = "",
-    val weekStart: String = "",
-    val meals: List<LibraryMeal> = emptyList(),
-)
-
-@Serializable
-data class MealLibraryResponse(val menus: List<MealMenu> = emptyList())
-
-@Serializable
-data class LibraryMealPatch(
+data class CatalogMealRequest(
     val name: String,
+    val description: String,
+    val price: Double,
     val slot: String,
-    val menuLabel: String,
-    val weekStart: String,
-    val soldIndividually: Boolean? = null,
-    val available: Boolean? = null,
+    val soldIndividually: Boolean,
+    val instagramLink: String = "",
 )
+
+/** A meal served in a week's slot; `days` is how many of the 7 days have it. */
+@Serializable
+data class PlacedMealDto(
+    val name: String = "",
+    val price: Double = 0.0,
+    val imageUrl: String? = null,
+    val available: Boolean = true,
+    val soldIndividually: Boolean = true,
+    val days: Int = 7,
+)
+
+@Serializable
+data class WeekPlanDto(
+    val weekStart: String = "",
+    val weekEnd: String = "",
+    val slots: Map<String, List<PlacedMealDto>> = emptyMap(),
+)
+
+@Serializable
+data class WeekSlotRef(val weekStart: String, val slot: String)
+
+@Serializable
+data class PlaceMealRequest(val weekStart: String, val slot: String, val name: String, val from: WeekSlotRef? = null)
+
+@Serializable
+data class PlaceMealResult(val added: Int = 0)
+
+@Serializable
+data class WeekMealRequest(val weekStart: String, val slot: String, val name: String)
+
+@Serializable
+data class WeekMealFlagsRequest(
+    val weekStart: String,
+    val slot: String,
+    val name: String,
+    val available: Boolean? = null,
+    val soldIndividually: Boolean? = null,
+)
+
+@Serializable
+data class CopyWeekRequest(val from: String, val to: String)
+
+@Serializable
+data class CopyWeekResult(val meals: Int = 0, val added: Int = 0)
 
 @Serializable
 data class AdminPackageDto(

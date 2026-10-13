@@ -42,6 +42,10 @@ export interface IOrder extends Document {
   deliveryInstructions?: string;
   assignedDriverId?: mongoose.Types.ObjectId;
   statusHistory: IOrderStatusHistory[];
+  /** Monday (YYYY-MM-DD) of the Monday–Sunday week the meals are for. */
+  weekStart?: string;
+  /** Email of the admin who added the order for the client. */
+  placedBy?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -96,6 +100,8 @@ const OrderSchema = new Schema<IOrder>(
     deliveryInstructions: { type: String },
     assignedDriverId: { type: Schema.Types.ObjectId, ref: 'User' },
     statusHistory: [OrderStatusHistorySchema],
+    weekStart: { type: String, index: true },
+    placedBy: { type: String },
   },
   {
     timestamps: true,

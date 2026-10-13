@@ -10,7 +10,7 @@
 const mongoose = require('mongoose');
 const {
   WEEK_MENUS,
-  getWeekStartSundayUtc,
+  getWeekStartMondayUtc,
   buildScheduledMeals,
 } = require('./weekly-meal-menus');
 
@@ -59,8 +59,8 @@ async function main() {
   const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nutrimotion';
 
   const week1Start = startArg
-    ? getWeekStartSundayUtc(startArg)
-    : getWeekStartSundayUtc(new Date());
+    ? getWeekStartMondayUtc(startArg)
+    : getWeekStartMondayUtc(new Date());
 
   const weekStarts = WEEK_MENUS.map((_, i) => {
     const d = new Date(week1Start);
