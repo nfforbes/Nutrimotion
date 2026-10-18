@@ -5,7 +5,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
-import { User } from '@/lib/db/models';
+import { User, type IUser } from '@/lib/db/models';
+
+function profileJson(user: IUser & { _id: { toString(): string } }) {
+  return {
+    id: user._id.toString(),
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    address: user.address,
+    roles: user.roles,
+    marketingPushOptIn: user.marketingPushOptIn === true,
+  };
+}
 
 export async function GET(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -24,14 +36,7 @@ export async function GET(request: NextRequest) {
       );
     }
     
-    return NextResponse.json({
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
-      roles: user.roles,
-    });
+    return NextResponse.json(profileJson(user));
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to fetch profile' },
@@ -60,19 +65,15 @@ export async function PATCH(request: NextRequest) {
     
     // Update user profile
     if (body.name) user.name = body.name;
-    if (body.phone !== undefined) user.phone = body.phone;
+    if (typeof body.phone === 'string') user.phone = body.phone;
     if (body.address) user.address = body.address;
+    if (typeof body.marketingPushOptIn === 'boolean') {
+      user.marketingPushOptIn = body.marketingPushOptIn;
+    }
     
     await user.save();
     
-    return NextResponse.json({
-      id: user._id.toString(),
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      address: user.address,
-      roles: user.roles,
-    });
+    return NextResponse.json(profileJson(user));
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to update profile' },

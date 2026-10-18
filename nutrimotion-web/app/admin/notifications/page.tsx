@@ -55,6 +55,7 @@ interface HistoryRow {
 interface NotificationsState {
   configured: { android: boolean; ios: boolean };
   totalDevices: number;
+  optedInDevices: number;
   recipients: Recipient[];
   history: HistoryRow[];
 }
@@ -208,9 +209,14 @@ function SendCard({ state, onSent }: { state: NotificationsState | null; onSent:
           <FormControlLabel
             value="all"
             control={<Radio />}
-            label={`Everyone${state ? ` (${state.totalDevices} phone${state.totalDevices === 1 ? '' : 's'})` : ''}`}
+            label={`Everyone who opted in${state ? ` (${state.optedInDevices} phone${state.optedInDevices === 1 ? '' : 's'})` : ''}`}
           />
         </RadioGroup>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+          {target === 'all'
+            ? 'Promotions and news only go to customers who turned on promotional notifications in the app.'
+            : 'Use one-customer messages for updates about their orders or account, not promotions.'}
+        </Typography>
 
         {target === 'user' && (
           <Autocomplete

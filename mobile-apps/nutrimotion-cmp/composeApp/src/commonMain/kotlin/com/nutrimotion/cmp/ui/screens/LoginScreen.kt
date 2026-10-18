@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.nutrimotion.cmp.session.SessionState
+import com.nutrimotion.cmp.ui.components.LegalLinks
 import com.nutrimotion.cmp.ui.theme.NutrimotionOrange
 import nutrimotioncmp.composeapp.generated.resources.Res
 import nutrimotioncmp.composeapp.generated.resources.login_background
@@ -116,6 +117,8 @@ fun LoginScreen(
                     Text("Sign in", style = MaterialTheme.typography.titleMedium)
                 }
             }
+            Spacer(Modifier.height(4.dp))
+            LegalLinks(color = Color.White.copy(alpha = 0.85f))
         }
     }
 }

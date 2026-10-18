@@ -28,6 +28,8 @@ targets:
     dependencies:
       - sdk: AuthenticationServices.framework
       - sdk: UserNotifications.framework
+      - sdk: MapKit.framework
+      - sdk: CoreLocation.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(BUNDLE_ID)

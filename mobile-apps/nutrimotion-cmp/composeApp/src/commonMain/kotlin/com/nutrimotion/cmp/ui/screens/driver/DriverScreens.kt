@@ -28,6 +28,8 @@ import com.nutrimotion.cmp.ui.components.LoadingBox
 import com.nutrimotion.cmp.ui.components.PrimaryButton
 import com.nutrimotion.cmp.ui.components.SecondaryButton
 import com.nutrimotion.cmp.ui.components.SimpleListScreen
+import com.nutrimotion.cmp.ui.location.LocationResult
+import com.nutrimotion.cmp.ui.location.rememberLocationRequester
 import com.nutrimotion.cmp.ui.map.MapMarker
 import com.nutrimotion.cmp.ui.map.TrackingMapView
 import kotlinx.coroutines.delay
@@ -84,9 +86,30 @@ fun DriverAssignmentDetailScreen(
 ) {
     var current by remember { mutableStateOf(assignment) }
     var message by remember { mutableStateOf<String?>(null) }
-    var lat by remember { mutableStateOf(18.1096) }
-    var lng by remember { mutableStateOf(-77.2975) }
+    var position by remember { mutableStateOf<LocationResult.Fix?>(null) }
+    var locating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val requestLocation = rememberLocationRequester { result ->
+        when (result) {
+            is LocationResult.Fix -> {
+                position = result
+                scope.launch {
+                    repo.postLocation(result.lat, result.lng, current.id)
+                        .onSuccess { message = "Location shared with the customer" }
+                        .onFailure { message = it.message }
+                    locating = false
+                }
+            }
+            LocationResult.Denied -> {
+                locating = false
+                message = "Location access is off. Turn it on for Nutrimotion in Settings to share your location."
+            }
+            LocationResult.Unavailable -> {
+                locating = false
+                message = "Couldn't get your location. Make sure location services are on and try again."
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -126,27 +149,29 @@ fun DriverAssignmentDetailScreen(
         }
 
         Spacer(modifier = Modifier.height(12.dp))
+        Text("Your location", style = MaterialTheme.typography.titleSmall)
         Text(
-            "Share location (demo coords - wire GPS on device)",
-            style = MaterialTheme.typography.titleSmall,
+            "Share your location so the customer can follow the delivery.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
+        Spacer(modifier = Modifier.height(6.dp))
+        val here = position
         TrackingMapView(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp),
-            markers = listOf(MapMarker(lat, lng, "You")),
-            centerLat = lat,
-            centerLng = lng,
+                .height(200.dp),
+            markers = listOfNotNull(here?.let { MapMarker(it.lat, it.lng, "You") }),
+            centerLat = here?.lat,
+            centerLng = here?.lng,
         )
         SecondaryButton(
-            text = "Post location",
+            text = if (locating) "Getting location…" else "Share location",
             onClick = {
-                scope.launch {
-                    lat += 0.001
-                    lng += 0.001
-                    repo.postLocation(lat, lng, current.id)
-                        .onSuccess { message = "Location posted" }
-                        .onFailure { message = it.message }
+                if (!locating) {
+                    locating = true
+                    message = null
+                    requestLocation()
                 }
             },
         )

@@ -8,25 +8,20 @@ import {
   CardActions,
   Typography,
   IconButton,
+  Tooltip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-
-interface TrainingDoc {
-  _id: string;
-  name: string;
-  description?: string;
-  imageUrl?: string;
-  price: number;
-  duration?: string;
-  level?: string;
-}
+import type { TrainingDoc } from '@/components/admin/AddTrainingForm';
 
 export interface TrainingListProps {
   packages: TrainingDoc[];
+  onEdit: (pkg: TrainingDoc) => void;
+  onDelete: (pkg: TrainingDoc) => void;
+  deletingId?: string | null;
 }
 
-export default function TrainingList({ packages }: TrainingListProps) {
+export default function TrainingList({ packages, onEdit, onDelete, deletingId }: TrainingListProps) {
   if (packages.length === 0) {
     return (
       <Typography color="text.secondary">
@@ -45,25 +40,43 @@ export default function TrainingList({ packages }: TrainingListProps) {
               height="200"
               image={pkg.imageUrl || '/placeholder-training.jpg'}
               alt={pkg.name}
+              sx={{ objectFit: 'cover', bgcolor: 'grey.100' }}
             />
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 {pkg.name}
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {pkg.description}
+              {pkg.description && (
+                <Typography variant="body2" color="text.secondary">
+                  {pkg.description}
+                </Typography>
+              )}
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                {[pkg.level, pkg.duration].filter(Boolean).join(' · ')}
               </Typography>
               <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
                 ${pkg.price}
               </Typography>
             </CardContent>
             <CardActions>
-              <IconButton size="small">
-                <EditIcon />
-              </IconButton>
-              <IconButton size="small" color="error">
-                <DeleteIcon />
-              </IconButton>
+              <Tooltip title="Edit">
+                <IconButton size="small" onClick={() => onEdit(pkg)} aria-label={`Edit ${pkg.name}`}>
+                  <EditIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Delete">
+                <span>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => onDelete(pkg)}
+                    disabled={deletingId === pkg._id}
+                    aria-label={`Delete ${pkg.name}`}
+                  >
+                    <DeleteIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
             </CardActions>
           </Card>
         </Grid>

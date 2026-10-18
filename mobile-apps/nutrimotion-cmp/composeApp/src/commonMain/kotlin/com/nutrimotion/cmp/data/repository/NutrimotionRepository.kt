@@ -13,6 +13,8 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun updateProfile(body: ProfileUpdateRequest): Result<UserProfile> =
         api.patch("api/users/me/profile", body)
 
+    suspend fun deleteAccount(): Result<JsonElement> = api.delete("api/users/me")
+
     suspend fun getMeals(date: String? = null, slot: String? = null): Result<List<MealDto>> {
         val params = buildMap {
             date?.let { put("date", it) }

@@ -87,15 +87,17 @@ private enum class ClientSection(
     val label: String,
     val icon: ImageVector,
     val color: Color,
+    /** Only sells digital goods, so it's hidden where [canSellDigitalGoods] is false. */
+    val digitalSales: Boolean = false,
 ) {
     Meals("Meals", Icons.Filled.Restaurant, Color(0xFFEE4D24)),
     Training("Training", Icons.Filled.FitnessCenter, Color(0xFF34C759)),
-    Books("Books", Icons.Filled.MenuBook, Color(0xFF007AFF)),
+    Books("Books", Icons.Filled.MenuBook, Color(0xFF007AFF), digitalSales = true),
     Recipes("Recipes", Icons.Filled.RestaurantMenu, Color(0xFFFF9500)),
     Videos("Videos", Icons.Filled.PlayCircle, Color(0xFFAF52DE)),
     Cart("Cart", Icons.Filled.ShoppingCart, Color(0xFFFF2D55)),
     Orders("Orders", Icons.Filled.ReceiptLong, Color(0xFF5AC8FA)),
-    Subscriptions("Subscriptions", Icons.Filled.Autorenew, Color(0xFF5856D6)),
+    Subscriptions("Subscriptions", Icons.Filled.Autorenew, Color(0xFF5856D6), digitalSales = true),
     WhatsApp("WhatsApp", Icons.Filled.Chat, Color(0xFF25D366)),
     Profile("Profile", Icons.Filled.Person, Color(0xFF8E8E93)),
 }
@@ -257,6 +259,8 @@ private fun ClientShell(
     val recipe = selectedRecipe
     val order = selectedOrder
     val showDashboard = open == null && !checkout && trackingOrderId == null
+    val subscribeAction: (() -> Unit)? =
+        if (canSellDigitalGoods) ({ section = ClientSection.Subscriptions }) else null
     val title = when {
         trackingOrderId != null -> "Tracking"
         checkout -> "Checkout"
@@ -290,7 +294,7 @@ private fun ClientShell(
                 showDashboard -> IconDashboard(
                     title = "Nutrimotion",
                     subtitle = userName?.let { "Hello, $it" } ?: "Hello",
-                    items = ClientSection.entries.map { item ->
+                    items = ClientSection.entries.filter { canSellDigitalGoods || !it.digitalSales }.map { item ->
                         DashboardItem(item.label, item.icon, item.color) {
                             selectedRecipe = null
                             selectedOrder = null
@@ -315,9 +319,9 @@ private fun ClientShell(
                 open == ClientSection.Recipes -> RecipesScreen(
                     repo = repo,
                     onOpen = { selectedRecipe = it },
-                    onSubscribe = { section = ClientSection.Subscriptions },
+                    onSubscribe = subscribeAction,
                 )
-                open == ClientSection.Videos -> VideosScreen(repo) { section = ClientSection.Subscriptions }
+                open == ClientSection.Videos -> VideosScreen(repo, subscribeAction)
                 open == ClientSection.Cart -> CartScreen(
                     repo = repo,
                     onContinueShopping = { section = ClientSection.Meals },

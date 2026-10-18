@@ -22,6 +22,9 @@ interface MealPhotoDialogProps {
   onClose: () => void;
   /** Called after the image is in storage; save the URL against the meal here. */
   onUploaded: (url: string) => Promise<void> | void;
+  /** Defaults to meal photo upload; pass a different uploader for training, etc. */
+  upload?: (file: File, name: string) => Promise<MealPhotoUploadResult>;
+  title?: string;
 }
 
 function imageFromClipboard(event: ClipboardEvent): File | null {
@@ -33,7 +36,15 @@ function imageFromClipboard(event: ClipboardEvent): File | null {
   return null;
 }
 
-export default function MealPhotoDialog({ open, mealName, currentUrl, onClose, onUploaded }: MealPhotoDialogProps) {
+export default function MealPhotoDialog({
+  open,
+  mealName,
+  currentUrl,
+  onClose,
+  onUploaded,
+  upload = uploadMealPhoto,
+  title,
+}: MealPhotoDialogProps) {
   const [busy, setBusy] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +67,7 @@ export default function MealPhotoDialog({ open, mealName, currentUrl, onClose, o
     setError(null);
     setDone(null);
     try {
-      const result = await uploadMealPhoto(file, mealName || 'meal');
+      const result = await upload(file, mealName || 'photo');
       await onUploaded(result.url);
       setDone(result);
     } catch (err) {
@@ -89,7 +100,7 @@ export default function MealPhotoDialog({ open, mealName, currentUrl, onClose, o
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Photo for {mealName || 'this meal'}</DialogTitle>
+      <DialogTitle>{title || `Photo for ${mealName || 'this meal'}`}</DialogTitle>
       <DialogContent>
         <Box
           onDragOver={(e) => {

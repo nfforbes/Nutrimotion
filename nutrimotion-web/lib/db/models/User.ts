@@ -16,6 +16,8 @@ export interface IUser {
   };
   roles: UserRole[];
   deviceFingerprints?: string[];
+  /** Consent to promotional push notifications. Order updates don't need it. */
+  marketingPushOptIn?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +39,7 @@ const UserSchema = new Schema<IUser>(
       required: true,
     },
     deviceFingerprints: [String],
+    marketingPushOptIn: { type: Boolean, default: false },
   },
   {
     timestamps: true,

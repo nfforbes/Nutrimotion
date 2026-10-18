@@ -1,14 +1,17 @@
 package com.nutrimotion.cmp.ui.map
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -18,21 +21,33 @@ actual fun TrackingMapView(
     centerLat: Double?,
     centerLng: Double?,
 ) {
-    Box(
+    val uriHandler = LocalUriHandler.current
+    val lat = centerLat ?: markers.firstOrNull()?.lat
+    val lng = centerLng ?: markers.firstOrNull()?.lng
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .padding(12.dp),
-        contentAlignment = Alignment.Center,
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val summary = buildString {
-            append("Map preview\n")
-            if (centerLat != null && centerLng != null) {
-                append("Center: %.4f, %.4f\n".format(centerLat, centerLng))
-            }
-            markers.forEach { append("${it.label.ifBlank { "pin" }}: ${it.lat}, ${it.lng}\n") }
-            if (markers.isEmpty()) append("No location points yet")
+        if (lat == null || lng == null) {
+            Text("No location yet", style = MaterialTheme.typography.bodyMedium)
+            return@Column
         }
-        Text(summary, style = MaterialTheme.typography.bodyMedium)
+        markers.forEach {
+            Text(
+                "${it.label.ifBlank { "Location" }}: ${"%.5f".format(it.lat)}, ${"%.5f".format(it.lng)}",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
+        TextButton(
+            onClick = {
+                runCatching { uriHandler.openUri("https://www.google.com/maps/search/?api=1&query=$lat,$lng") }
+            },
+        ) {
+            Text("Open in Maps")
+        }
     }
 }

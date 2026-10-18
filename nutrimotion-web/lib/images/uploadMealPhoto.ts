@@ -1,5 +1,5 @@
 /**
- * Browser-only: uploads a meal photo straight to Vercel Blob and returns the public URL.
+ * Browser-only: uploads a catalog photo straight to Vercel Blob and returns the public URL.
  * Images up to 5 MB are uploaded untouched; larger ones (or formats the store doesn't accept)
  * are re-encoded as JPEG and scaled down until they fit.
  */
@@ -19,6 +19,11 @@ export interface MealPhotoUploadResult {
   reduced: boolean;
   originalBytes: number;
   finalBytes: number;
+}
+
+export interface CatalogPhotoUploadOptions {
+  folder: string;
+  handleUploadUrl: string;
 }
 
 async function encodeJpeg(bitmap: ImageBitmap, maxEdge: number, quality: number): Promise<Blob> {
@@ -72,11 +77,15 @@ function slugify(value: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
-      .slice(0, 60) || 'meal'
+      .slice(0, 60) || 'photo'
   );
 }
 
-export async function uploadMealPhoto(file: Blob, mealName: string): Promise<MealPhotoUploadResult> {
+export async function uploadCatalogPhoto(
+  file: Blob,
+  name: string,
+  options: CatalogPhotoUploadOptions
+): Promise<MealPhotoUploadResult> {
   if (!file.type.startsWith('image/')) throw new Error('Please choose an image file.');
 
   const passThroughExt = PASS_THROUGH[file.type];
@@ -84,13 +93,28 @@ export async function uploadMealPhoto(file: Blob, mealName: string): Promise<Mea
   const body = keepOriginal ? file : await reduceToLimit(file);
   const contentType = keepOriginal ? file.type : 'image/jpeg';
   const ext = keepOriginal ? passThroughExt : 'jpg';
+  const folder = options.folder.replace(/^\/+|\/+$/g, '');
 
-  const result = await upload(`meals/${slugify(mealName)}.${ext}`, body, {
+  const result = await upload(`${folder}/${slugify(name)}.${ext}`, body, {
     access: 'public',
     contentType,
-    handleUploadUrl: '/api/admin/uploads/meal-photo',
+    handleUploadUrl: options.handleUploadUrl,
   });
   return { url: result.url, reduced: !keepOriginal, originalBytes: file.size, finalBytes: body.size };
+}
+
+export async function uploadMealPhoto(file: Blob, mealName: string): Promise<MealPhotoUploadResult> {
+  return uploadCatalogPhoto(file, mealName, {
+    folder: 'meals',
+    handleUploadUrl: '/api/admin/uploads/meal-photo',
+  });
+}
+
+export async function uploadTrainingPhoto(file: Blob, packageName: string): Promise<MealPhotoUploadResult> {
+  return uploadCatalogPhoto(file, packageName, {
+    folder: 'training',
+    handleUploadUrl: '/api/admin/uploads/training-photo',
+  });
 }
 
 export function formatBytes(bytes: number): string {

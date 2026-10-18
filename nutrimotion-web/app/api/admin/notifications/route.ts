@@ -1,6 +1,6 @@
 /**
  * Admin push notifications.
- * GET  → { configured, totalDevices, recipients, history }
+ * GET  → { configured, totalDevices, optedInDevices, recipients, history }
  * POST { target: 'user' | 'all', userId?, title, message } → { devices, reached, failed, removed }
  */
 
@@ -20,12 +20,14 @@ export async function GET(request: NextRequest) {
 
   try {
     await connectDB();
-    const [byUser, history] = await Promise.all([
+    const [byUser, history, optedInIds] = await Promise.all([
       PushDevice.aggregate<{ _id: Types.ObjectId; devices: number; platforms: string[] }>([
         { $group: { _id: '$userId', devices: { $sum: 1 }, platforms: { $addToSet: '$platform' } } },
       ]),
       PushNotificationLog.find({}).sort({ createdAt: -1 }).limit(50).lean(),
+      User.find({ marketingPushOptIn: true }).select('_id').lean(),
     ]);
+    const optedIn = new Set(optedInIds.map((u) => String(u._id)));
 
     const users = await User.find({ _id: { $in: byUser.map((u) => u._id) } })
       .select('name email')
@@ -51,6 +53,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       configured: pushConfiguration(),
       totalDevices: byUser.reduce((sum, row) => sum + row.devices, 0),
+      optedInDevices: byUser
+        .filter((row) => optedIn.has(String(row._id)))
+        .reduce((sum, row) => sum + row.devices, 0),
       recipients,
       history: history.map((h) => ({
         id: String(h._id),
@@ -106,7 +111,13 @@ export async function POST(request: NextRequest) {
       userLabel = user.name || user.email;
     }
 
-    const devices = await PushDevice.find(userId ? { userId } : {})
+    // Broadcasts are promotional, so they only reach customers who opted in (App Store 4.5.4).
+    let deviceFilter: Record<string, unknown> = { userId };
+    if (!userId) {
+      const optedIn = await User.find({ marketingPushOptIn: true }).select('_id').lean();
+      deviceFilter = { userId: { $in: optedIn.map((u) => u._id) } };
+    }
+    const devices = await PushDevice.find(deviceFilter)
       .select('token platform')
       .lean();
     if (devices.length === 0) {
@@ -115,7 +126,7 @@ export async function POST(request: NextRequest) {
           error:
             target === 'user'
               ? 'This customer has not enabled notifications in the app yet.'
-              : 'No phones have enabled notifications yet.',
+              : 'No customers have turned on promotional notifications yet.',
         },
         { status: 400 }
       );

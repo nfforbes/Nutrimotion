@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
@@ -63,6 +64,7 @@ import com.nutrimotion.cmp.domain.PackageSort
 import com.nutrimotion.cmp.domain.PackageSpan
 import com.nutrimotion.cmp.ui.components.EmptyBox
 import com.nutrimotion.cmp.ui.components.ErrorBox
+import com.nutrimotion.cmp.ui.components.LegalLinks
 import com.nutrimotion.cmp.ui.components.LoadingBox
 import com.nutrimotion.cmp.ui.components.MealThumbnail
 import com.nutrimotion.cmp.ui.components.PackageMealPicker
@@ -71,6 +73,7 @@ import com.nutrimotion.cmp.ui.components.SecondaryButton
 import com.nutrimotion.cmp.ui.components.SimpleListScreen
 import com.nutrimotion.cmp.ui.map.MapMarker
 import com.nutrimotion.cmp.ui.map.TrackingMapView
+import com.nutrimotion.cmp.ui.screens.admin.SwitchRow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -690,9 +693,9 @@ private fun LockedContentNotice(
     noun: String,
     planLabel: String,
     monthlyPrice: Double,
-    onSubscribe: () -> Unit,
+    onSubscribe: (() -> Unit)?,
 ) {
-    if (subscribed || lockedCount <= 0) return
+    if (subscribed || lockedCount <= 0 || onSubscribe == null) return
     val plural = if (lockedCount == 1) noun else "${noun}s"
     val price = if (monthlyPrice > 0) " for $${formatMoney(monthlyPrice)}/month" else ""
     Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -727,7 +730,8 @@ private fun apiMessage(error: Throwable): String {
 fun RecipesScreen(
     repo: NutrimotionRepository,
     onOpen: (RecipeDto) -> Unit,
-    onSubscribe: () -> Unit,
+    /** Null where subscriptions can't be sold in the app; no subscribe prompts are shown. */
+    onSubscribe: (() -> Unit)?,
 ) {
     var page by remember { mutableStateOf<RecipesPage?>(null) }
     var loading by remember { mutableStateOf(true) }
@@ -749,7 +753,7 @@ fun RecipesScreen(
         page?.let {
             LockedContentNotice(it.lockedCount, it.subscribed, "recipe", "Recipes", it.monthlyPrice, onSubscribe)
         }
-        val empty = if ((page?.lockedCount ?: 0) > 0) "Subscribe to unlock recipes" else "No recipes yet"
+        val empty = if ((page?.lockedCount ?: 0) > 0 && onSubscribe != null) "Subscribe to unlock recipes" else "No recipes yet"
         SimpleListScreen(items, loading, error, empty, onRetry = {}) { recipe ->
         Column {
             Text(recipe.title, style = MaterialTheme.typography.titleMedium)
@@ -779,7 +783,7 @@ fun RecipesScreen(
 }
 
 @Composable
-fun VideosScreen(repo: NutrimotionRepository, onSubscribe: () -> Unit) {
+fun VideosScreen(repo: NutrimotionRepository, onSubscribe: (() -> Unit)?) {
     var page by remember { mutableStateOf<VideosPage?>(null) }
     var loading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -801,7 +805,7 @@ fun VideosScreen(repo: NutrimotionRepository, onSubscribe: () -> Unit) {
         page?.let {
             LockedContentNotice(it.lockedCount, it.subscribed, "video", "Videos", it.monthlyPrice, onSubscribe)
         }
-        val empty = if ((page?.lockedCount ?: 0) > 0) "Subscribe to unlock videos" else "No videos yet"
+        val empty = if ((page?.lockedCount ?: 0) > 0 && onSubscribe != null) "Subscribe to unlock videos" else "No videos yet"
         SimpleListScreen(items, loading, error, empty, onRetry = {}) { video ->
             Column {
                 Text(video.title, style = MaterialTheme.typography.titleMedium)
@@ -1038,7 +1042,11 @@ fun ProfileScreen(repo: NutrimotionRepository, onLogout: () -> Unit) {
     var phone by remember { mutableStateOf("") }
     var street by remember { mutableStateOf("") }
     var parish by remember { mutableStateOf("") }
+    var promoOptIn by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf<String?>(null) }
+    var confirmDelete by remember { mutableStateOf(false) }
+    var deleting by remember { mutableStateOf(false) }
+    var deleteError by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -1048,7 +1056,53 @@ fun ProfileScreen(repo: NutrimotionRepository, onLogout: () -> Unit) {
             phone = it.phone.orEmpty()
             street = it.address?.street.orEmpty()
             parish = it.address?.parish.orEmpty()
+            promoOptIn = it.marketingPushOptIn
         }
+    }
+
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { if (!deleting) confirmDelete = false },
+            title = { Text("Delete your account?") },
+            text = {
+                Column {
+                    Text(
+                        "This permanently deletes your account, profile, cart, subscriptions and saved " +
+                            "notification settings. Orders already on the way will still be delivered. " +
+                            "This can't be undone.",
+                    )
+                    deleteError?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !deleting,
+                    onClick = {
+                        deleting = true
+                        deleteError = null
+                        scope.launch {
+                            repo.deleteAccount()
+                                .onSuccess {
+                                    confirmDelete = false
+                                    onLogout()
+                                }
+                                .onFailure { deleteError = it.message ?: "Could not delete your account." }
+                            deleting = false
+                        }
+                    },
+                ) {
+                    Text(
+                        if (deleting) "Deleting…" else "Delete account",
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(enabled = !deleting, onClick = { confirmDelete = false }) { Text("Cancel") }
+            },
+        )
     }
 
     Column(
@@ -1098,6 +1152,39 @@ fun ProfileScreen(repo: NutrimotionRepository, onLogout: () -> Unit) {
             },
         )
         Spacer(modifier = Modifier.height(16.dp))
+        Text("Notifications", style = MaterialTheme.typography.titleMedium)
+        SwitchRow(
+            label = "Promotions and news",
+            checked = promoOptIn,
+            enabled = profile != null,
+        ) { checked ->
+            val previous = promoOptIn
+            promoOptIn = checked
+            scope.launch {
+                repo.updateProfile(ProfileUpdateRequest(marketingPushOptIn = checked))
+                    .onFailure {
+                        promoOptIn = previous
+                        message = it.message
+                    }
+            }
+        }
+        Text(
+            "Get offers and news from Nutrimotion. Order and delivery updates are sent either way. " +
+                "You can turn this off at any time.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         SecondaryButton(text = "Log out", onClick = onLogout)
+        TextButton(
+            onClick = {
+                deleteError = null
+                confirmDelete = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text("Delete account", color = MaterialTheme.colorScheme.error)
+        }
+        LegalLinks(modifier = Modifier.fillMaxWidth())
     }
 }

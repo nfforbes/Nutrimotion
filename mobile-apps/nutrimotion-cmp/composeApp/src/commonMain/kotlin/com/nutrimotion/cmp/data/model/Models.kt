@@ -53,6 +53,7 @@ data class UserProfile(
     val phone: String? = null,
     val address: ProfileAddress? = null,
     val roles: List<String> = emptyList(),
+    val marketingPushOptIn: Boolean = false,
 )
 
 @Serializable
@@ -344,6 +345,7 @@ data class ProfileUpdateRequest(
     val name: String? = null,
     val phone: String? = null,
     val address: DeliveryAddress? = null,
+    val marketingPushOptIn: Boolean? = null,
 )
 
 @Serializable
