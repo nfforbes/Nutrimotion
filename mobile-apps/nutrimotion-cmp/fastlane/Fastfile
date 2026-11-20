@@ -289,16 +289,6 @@ platform :android do
 
   desc "Upload the default store listing (text and graphics) without a new app bundle"
   lane :listing do
-    json_key = ENV.fetch("PLAY_STORE_JSON_KEY_PATH")
-    upload_to_play_store(
-      package_name: PACKAGE_NAME,
-      json_key: json_key,
-      skip_upload_apk: true,
-      skip_upload_aab: true,
-      skip_upload_metadata: false,
-      skip_upload_images: false,
-      skip_upload_screenshots: false,
-      skip_upload_changelogs: true
-    )
+    sh("ruby", File.expand_path("upload_listing.rb", __dir__))
   end
 end

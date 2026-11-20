@@ -36,4 +36,4 @@ jobs:
       - name: Upload listing
         env:
           FASTLANE_SKIP_UPDATE_CHECK: "1"
-        run: bundle exec fastlane android listing
+        run: bundle exec ruby fastlane/upload_listing.rb
