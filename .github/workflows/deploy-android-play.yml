@@ -141,3 +141,38 @@ jobs:
           path: mobile-apps/nutrimotion-cmp/composeApp/build/outputs/bundle/release/*.aab
           if-no-files-found: ignore
           retention-days: 14
+
+  upload-listing:
+    name: Upload default store listing
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile-apps/nutrimotion-cmp
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+          working-directory: mobile-apps/nutrimotion-cmp
+
+      - name: Write Play API JSON
+        env:
+          PLAY_STORE_JSON_KEY: ${{ secrets.PLAY_STORE_JSON_KEY }}
+        run: |
+          if [ -z "$PLAY_STORE_JSON_KEY" ]; then
+            echo "::error::Missing secret PLAY_STORE_JSON_KEY."
+            exit 1
+          fi
+          JSON_KEY_PATH="${RUNNER_TEMP}/play-store.json"
+          printf '%s\n' "$PLAY_STORE_JSON_KEY" > "$JSON_KEY_PATH"
+          echo "PLAY_STORE_JSON_KEY_PATH=$JSON_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Upload listing
+        env:
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+        run: bundle exec fastlane android listing
