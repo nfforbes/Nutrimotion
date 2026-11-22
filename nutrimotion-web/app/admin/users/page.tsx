@@ -23,9 +23,15 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  TextField,
+  Alert,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import PeopleIcon from '@mui/icons-material/People';
 import EditIcon from '@mui/icons-material/Edit';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
@@ -41,6 +47,18 @@ interface UserDoc {
   createdAt: string;
 }
 
+const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
+  { value: UserRole.CLIENT, label: 'Client' },
+  { value: UserRole.DRIVER, label: 'Driver' },
+  { value: UserRole.ADMINISTRATOR, label: 'Admin' },
+];
+
+function errorText(error: unknown, fallback: string): string {
+  return axios.isAxiosError(error) && error.response?.data?.error
+    ? String(error.response.data.error)
+    : fallback;
+}
+
 export default function AdminUsersPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [users, setUsers] = useState<UserDoc[]>([]);
@@ -48,6 +66,12 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<UserDoc | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<UserRole[]>([]);
   const [saving, setSaving] = useState(false);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRoles, setInviteRoles] = useState<UserRole[]>([UserRole.CLIENT]);
+  const [inviting, setInviting] = useState(false);
+  const [feedback, setFeedback] = useState<{ ok: boolean; text: string } | null>(null);
 
   const auth = useAppSelector((state) => state.auth);
 
@@ -61,12 +85,14 @@ export default function AdminUsersPage() {
       setUsers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setFeedback({ ok: false, text: 'Could not load users.' });
     }
   };
 
   const handleUpdateRoles = async () => {
     if (!selectedUser) return;
     setSaving(true);
+    setFeedback(null);
     try {
       await axios.put(`/api/admin/users/${selectedUser._id}/roles`, {
         roles: selectedRoles,
@@ -76,9 +102,52 @@ export default function AdminUsersPage() {
       setSelectedRoles([]);
       fetchUsers();
     } catch (error) {
-      console.error('Failed to update roles:', error);
+      setFeedback({ ok: false, text: errorText(error, 'Could not update roles.') });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const toggleInviteRole = (role: UserRole) => {
+    setInviteRoles((prev) => {
+      if (prev.includes(role)) {
+        const next = prev.filter((r) => r !== role);
+        return next.length === 0 ? prev : next;
+      }
+      return [...prev, role];
+    });
+  };
+
+  const handleInvite = async () => {
+    setInviting(true);
+    setFeedback(null);
+    try {
+      const res = await axios.post<{
+        email: string;
+        emailSent?: boolean;
+        warning?: string;
+      }>('/api/admin/users/invite', {
+        email: inviteEmail.trim(),
+        name: inviteName.trim() || undefined,
+        roles: inviteRoles,
+      });
+      setInviteOpen(false);
+      setInviteEmail('');
+      setInviteName('');
+      setInviteRoles([UserRole.CLIENT]);
+      setFeedback({
+        ok: true,
+        text:
+          res.data.warning ||
+          (res.data.emailSent === false
+            ? `Account created for ${res.data.email}, but the invite email could not be sent.`
+            : `Invite sent to ${res.data.email}. They’ll get an email to set their password.`),
+      });
+      fetchUsers();
+    } catch (error) {
+      setFeedback({ ok: false, text: errorText(error, 'Could not invite that user.') });
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -90,10 +159,28 @@ export default function AdminUsersPage() {
       <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} menuItems={menuItems} />
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-          <PeopleIcon fontSize="large" color="primary" />
-          <Typography variant="h4">User Management</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <PeopleIcon fontSize="large" color="primary" />
+            <Typography variant="h4">User Management</Typography>
+          </Box>
+          <Button
+            variant="contained"
+            startIcon={<PersonAddIcon />}
+            onClick={() => {
+              setFeedback(null);
+              setInviteOpen(true);
+            }}
+          >
+            Invite user
+          </Button>
         </Box>
+
+        {feedback && (
+          <Alert severity={feedback.ok ? 'success' : 'error'} sx={{ mb: 2 }} onClose={() => setFeedback(null)}>
+            {feedback.text}
+          </Alert>
+        )}
 
         <Card>
           <CardContent>
@@ -157,6 +244,61 @@ export default function AdminUsersPage() {
         </Card>
       </Container>
 
+      <Dialog open={inviteOpen} onClose={() => !inviting && setInviteOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Invite user by email</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, mt: 1 }}>
+            We’ll create their account and Auth0 will email them a link to set a password.
+          </Typography>
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            value={inviteEmail}
+            onChange={(e) => setInviteEmail(e.target.value)}
+            required
+            autoFocus
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            fullWidth
+            label="Name (optional)"
+            value={inviteName}
+            onChange={(e) => setInviteName(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+            Roles
+          </Typography>
+          <FormGroup row>
+            {ROLE_OPTIONS.map(({ value, label }) => (
+              <FormControlLabel
+                key={value}
+                control={
+                  <Checkbox
+                    checked={inviteRoles.includes(value)}
+                    onChange={() => toggleInviteRole(value)}
+                  />
+                }
+                label={label}
+              />
+            ))}
+          </FormGroup>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setInviteOpen(false)} disabled={inviting}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleInvite}
+            variant="contained"
+            disabled={inviting || !inviteEmail.trim() || inviteRoles.length === 0}
+          >
+            {inviting ? 'Sending…' : 'Send invite'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={roleDialogOpen} onClose={() => setRoleDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Edit User Roles</DialogTitle>
         <DialogContent>
@@ -190,7 +332,7 @@ export default function AdminUsersPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setRoleDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdateRoles} variant="contained" disabled={saving}>
+          <Button onClick={handleUpdateRoles} variant="contained" disabled={saving || selectedRoles.length === 0}>
             {saving ? 'Updating…' : 'Update Roles'}
           </Button>
         </DialogActions>

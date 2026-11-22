@@ -17,6 +17,8 @@ import {
   Grid,
 } from '@mui/material';
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import axios from 'axios';
 import AppBar from '@/components/layout/AppBar';
 import Sidebar from '@/components/layout/Sidebar';
 import { useAppSelector } from '@/store';
@@ -29,16 +31,33 @@ interface Book {
   description?: string;
   coverImageUrl?: string;
   price: number;
+  /** External store link (e.g. Amazon). When set, the book is bought there, not in the cart. */
+  buyUrl?: string;
+}
+
+function buyButtonLabel(url: string): string {
+  try {
+    return new URL(url).hostname.includes('amazon') || new URL(url).hostname === 'a.co'
+      ? 'Buy on Amazon'
+      : 'Buy now';
+  } catch {
+    return 'Buy now';
+  }
 }
 
 export default function BooksPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [books, setBooks] = useState<Book[]>([]);
   const auth = useAppSelector((state) => state.auth);
 
   const menuItems = getAllMenuItemsForUser(auth.permissions);
 
-  // Mock books - replace with API call
-  const books: Book[] = [];
+  useEffect(() => {
+    axios
+      .get<Book[]>('/api/books')
+      .then((response) => setBooks(Array.isArray(response.data) ? response.data : []))
+      .catch((error) => console.error('Failed to load books:', error));
+  }, []);
 
   return (
     <>
@@ -83,18 +102,33 @@ export default function BooksPage() {
                     <Typography variant="body2" color="text.secondary">
                       {book.description}
                     </Typography>
-                    <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
-                      ${book.price}
-                    </Typography>
+                    {!book.buyUrl && (
+                      <Typography variant="h6" color="primary" sx={{ mt: 2 }}>
+                        ${book.price}
+                      </Typography>
+                    )}
                   </CardContent>
                   <CardActions>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<AddShoppingCartIcon />}
-                    >
-                      Add to Cart
-                    </Button>
+                    {book.buyUrl ? (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        href={book.buyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        endIcon={<OpenInNewIcon />}
+                      >
+                        {buyButtonLabel(book.buyUrl)}
+                      </Button>
+                    ) : (
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        startIcon={<AddShoppingCartIcon />}
+                      >
+                        Add to Cart
+                      </Button>
+                    )}
                   </CardActions>
                 </Card>
               </Grid>

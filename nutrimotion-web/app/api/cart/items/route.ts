@@ -9,6 +9,7 @@ import { Cart, MealPackage, User } from '@/lib/db/models';
 import mongoose from 'mongoose';
 import { cartToResponse, refreshDiscountsIfNeeded } from '@/lib/discount/cartDiscounts';
 import { clientWeekError } from '@/lib/orders/orderWeek';
+import { DIGITAL_ITEM_TYPES, isMobileAppRequest } from '@/lib/commerce/mobileApp';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -26,6 +27,10 @@ export async function POST(request: NextRequest) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+
+    if (isMobileAppRequest(request) && DIGITAL_ITEM_TYPES.has(itemType)) {
+      return NextResponse.json({ error: "Books and subscriptions can't be bought in the app." }, { status: 400 });
     }
 
     let mealDate = scheduledDate;

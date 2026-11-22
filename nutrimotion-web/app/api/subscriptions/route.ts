@@ -7,6 +7,7 @@ import { requireAuth } from '@/lib/auth/middleware';
 import connectDB from '@/lib/db/connection';
 import { Subscription, User } from '@/lib/db/models';
 import { getAccessSetting } from '@/lib/content/access';
+import { isMobileAppRequest } from '@/lib/commerce/mobileApp';
 
 function toResponse(sub: InstanceType<typeof Subscription>) {
   return {
@@ -47,6 +48,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
+  if (isMobileAppRequest(request)) {
+    return NextResponse.json(
+      { error: 'Not available', message: "Subscriptions can't be bought in the app." },
+      { status: 400 }
+    );
+  }
 
   try {
     await connectDB();

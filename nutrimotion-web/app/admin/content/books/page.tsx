@@ -6,6 +6,7 @@ import {
   Typography,
   Button,
   Box,
+  Dialog,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import AppBar from '@/components/layout/AppBar';
@@ -23,12 +24,14 @@ interface BookDoc {
   description?: string;
   coverImageUrl?: string;
   price: number;
+  buyUrl?: string;
   isbn?: string;
 }
 
 export default function AdminBooksPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editing, setEditing] = useState<BookDoc | null>(null);
   const [books, setBooks] = useState<BookDoc[]>([]);
 
   const auth = useAppSelector((state) => state.auth);
@@ -72,9 +75,23 @@ export default function AdminBooksPage() {
             onCancel={() => setShowAddForm(false)}
           />
         ) : (
-          <BookList books={books} />
+          <BookList books={books} onEdit={setEditing} />
         )}
       </Container>
+
+      <Dialog open={editing !== null} onClose={() => setEditing(null)} fullWidth maxWidth="md">
+        {editing && (
+          <AddBookForm
+            key={editing._id}
+            book={editing}
+            onSuccess={() => {
+              setEditing(null);
+              fetchBooks();
+            }}
+            onCancel={() => setEditing(null)}
+          />
+        )}
+      </Dialog>
     </>
   );
 }

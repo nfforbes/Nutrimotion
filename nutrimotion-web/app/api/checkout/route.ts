@@ -9,6 +9,7 @@ import { Cart, User, Order, DiscountCode, MealPackage } from '@/lib/db/models';
 import { OrderStatus } from '@/types/commerce';
 import { getAppliedCodesFromCart, recalculateCartDiscounts } from '@/lib/discount/cartDiscounts';
 import { clientOrderingWeek, clientWeekError } from '@/lib/orders/orderWeek';
+import { DIGITAL_ITEM_TYPES, isMobileAppRequest, MOBILE_DIGITAL_ERROR } from '@/lib/commerce/mobileApp';
 
 export async function POST(request: NextRequest) {
   const authResult = await requireAuth(request);
@@ -35,6 +36,10 @@ export async function POST(request: NextRequest) {
         { error: 'Cart is empty' },
         { status: 400 }
       );
+    }
+
+    if (isMobileAppRequest(request) && cart.items.some((item) => DIGITAL_ITEM_TYPES.has(item.itemType))) {
+      return NextResponse.json({ error: MOBILE_DIGITAL_ERROR }, { status: 400 });
     }
 
     for (const item of cart.items) {

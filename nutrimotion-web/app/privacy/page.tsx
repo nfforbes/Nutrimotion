@@ -107,8 +107,8 @@ export default async function PrivacyPage() {
 
         <Section title="Deleting Your Account">
           <Typography variant="body1" paragraph>
-            In the mobile app, open Profile and tap &quot;Delete account&quot;. You can also ask us to delete your
-            account using the contact details below.
+            In the app or on the website, open Profile and choose &quot;Delete account&quot; / &quot;Delete my
+            account&quot;. You can also ask us to delete your account using the contact details below.
           </Typography>
         </Section>
 

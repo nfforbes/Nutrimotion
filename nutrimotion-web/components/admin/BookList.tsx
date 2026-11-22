@@ -19,14 +19,16 @@ interface BookDoc {
   description?: string;
   coverImageUrl?: string;
   price: number;
+  buyUrl?: string;
   isbn?: string;
 }
 
 export interface BookListProps {
   books: BookDoc[];
+  onEdit: (book: BookDoc) => void;
 }
 
-export default function BookList({ books }: BookListProps) {
+export default function BookList({ books, onEdit }: BookListProps) {
   if (books.length === 0) {
     return (
       <Typography color="text.secondary">
@@ -53,12 +55,18 @@ export default function BookList({ books }: BookListProps) {
               <Typography variant="body2" color="text.secondary">
                 by {book.author}
               </Typography>
-              <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
-                ${book.price}
-              </Typography>
+              {book.buyUrl ? (
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }} noWrap>
+                  Sold at: {book.buyUrl}
+                </Typography>
+              ) : (
+                <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
+                  ${book.price}
+                </Typography>
+              )}
             </CardContent>
             <CardActions>
-              <IconButton size="small">
+              <IconButton size="small" aria-label={`Edit ${book.title}`} onClick={() => onEdit(book)}>
                 <EditIcon />
               </IconButton>
               <IconButton size="small" color="error">

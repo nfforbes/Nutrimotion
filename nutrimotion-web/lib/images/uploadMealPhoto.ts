@@ -117,6 +117,13 @@ export async function uploadTrainingPhoto(file: Blob, packageName: string): Prom
   });
 }
 
+export async function uploadBookPhoto(file: Blob, bookTitle: string): Promise<MealPhotoUploadResult> {
+  return uploadCatalogPhoto(file, bookTitle, {
+    folder: 'books',
+    handleUploadUrl: '/api/admin/uploads/book-photo',
+  });
+}
+
 export function formatBytes(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
