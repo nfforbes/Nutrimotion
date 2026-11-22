@@ -1,6 +1,7 @@
 package com.nutrimotion.cmp.data.network
 
 import com.nutrimotion.cmp.AppConfig
+import com.nutrimotion.cmp.clientPlatform
 import com.nutrimotion.cmp.data.auth.TokenStore
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -46,9 +47,10 @@ class ApiClient {
             requestTimeoutMillis = 30_000
             connectTimeoutMillis = 15_000
         }
-        install(Logging) { level = LogLevel.INFO }
+        if (AppConfig.httpLogging) install(Logging) { level = LogLevel.INFO }
         defaultRequest {
             contentType(ContentType.Application.Json)
+            header("X-Nutrimotion-Client", clientPlatform)
             TokenStore.get()?.let { header(HttpHeaders.Authorization, "Bearer $it") }
         }
     }

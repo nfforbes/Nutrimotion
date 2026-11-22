@@ -1,8 +1,10 @@
 package com.nutrimotion.cmp.data.model
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNames
 
 object Roles {
     const val ADMINISTRATOR = "administrator"
@@ -199,7 +201,8 @@ data class CartDto(
 
 @Serializable
 data class CartItemDto(
-    @SerialName("_id") val id: String? = null,
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonNames("id", "_id") val id: String? = null,
     val itemType: String = "",
     val itemId: String = "",
     val name: String = "",

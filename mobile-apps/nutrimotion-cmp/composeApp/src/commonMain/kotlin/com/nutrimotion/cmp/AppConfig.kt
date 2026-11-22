@@ -7,4 +7,6 @@ object AppConfig {
     var auth0ClientId: String = "WkjrdWm6dXyUY5IlUjwFXDXbWOXAbhGt"
     var auth0Audience: String = "https://n4consulting.us.auth0.com/api/v2/"
     var auth0Scheme: String = "nutrimotion"
+    /** Logs every API request; debug builds only. */
+    var httpLogging: Boolean = false
 }

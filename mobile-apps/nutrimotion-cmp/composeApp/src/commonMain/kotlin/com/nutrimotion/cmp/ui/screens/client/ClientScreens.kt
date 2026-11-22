@@ -37,6 +37,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import com.nutrimotion.cmp.DIGITAL_ITEM_TYPES
+import com.nutrimotion.cmp.canSellDigitalGoods
 import com.nutrimotion.cmp.data.model.CartDto
 import com.nutrimotion.cmp.data.model.CartItemRequest
 import com.nutrimotion.cmp.data.model.CatalogItemDto
@@ -74,6 +76,7 @@ import com.nutrimotion.cmp.ui.components.SimpleListScreen
 import com.nutrimotion.cmp.ui.map.MapMarker
 import com.nutrimotion.cmp.ui.map.TrackingMapView
 import com.nutrimotion.cmp.ui.screens.admin.SwitchRow
+import com.nutrimotion.cmp.ui.screens.admin.friendlyMessage
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -381,11 +384,45 @@ fun CartScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
+            val blockedItems = if (canSellDigitalGoods) {
+                emptyList()
+            } else {
+                cart!!.items.filter { it.itemType in DIGITAL_ITEM_TYPES }
+            }
+            if (blockedItems.isNotEmpty()) {
+                Card(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Some items can't be bought in the app", style = MaterialTheme.typography.titleSmall)
+                        Text(
+                            "Remove ${blockedItems.joinToString { it.name }} to check out.",
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
             cart!!.items.forEach { item ->
                 Text(
                     "${item.name} x ${item.quantity} - $${item.price}",
                     style = MaterialTheme.typography.titleMedium,
                 )
+                if (item in blockedItems) {
+                    TextButton(
+                        enabled = item.id != null,
+                        onClick = {
+                            val lineId = item.id ?: return@TextButton
+                            scope.launch {
+                                repo.removeCartItem(lineId)
+                                    .onSuccess {
+                                        cart = it
+                                        error = null
+                                    }
+                                    .onFailure { error = it.friendlyMessage("Could not remove the item") }
+                            }
+                        },
+                    ) {
+                        Text("Remove", color = MaterialTheme.colorScheme.error)
+                    }
+                }
                 if (item.itemType == "package") {
                     packageChoiceLines(item.packageDetails, mealNames).forEach { line ->
                         Text(
@@ -430,7 +467,7 @@ fun CartScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
             SecondaryButton(text = "Continue shopping", onClick = onContinueShopping)
-            PrimaryButton(text = "Checkout", onClick = onCheckout)
+            PrimaryButton(text = "Checkout", onClick = onCheckout, enabled = blockedItems.isEmpty())
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }
@@ -1088,7 +1125,9 @@ fun ProfileScreen(repo: NutrimotionRepository, onLogout: () -> Unit) {
                                     confirmDelete = false
                                     onLogout()
                                 }
-                                .onFailure { deleteError = it.message ?: "Could not delete your account." }
+                                .onFailure {
+                                    deleteError = it.friendlyMessage("Could not delete your account.")
+                                }
                             deleting = false
                         }
                     },

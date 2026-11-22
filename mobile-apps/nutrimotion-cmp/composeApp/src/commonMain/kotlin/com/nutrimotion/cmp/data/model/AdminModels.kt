@@ -134,6 +134,23 @@ data class AdminUserDto(
 data class RolesRequest(val roles: List<String>)
 
 @Serializable
+data class InviteUserRequest(
+    val email: String,
+    val name: String? = null,
+    val roles: List<String> = listOf(Roles.CLIENT),
+)
+
+@Serializable
+data class InviteUserResponse(
+    val id: String = "",
+    val name: String = "",
+    val email: String = "",
+    val roles: List<String> = emptyList(),
+    val emailSent: Boolean = true,
+    val warning: String? = null,
+)
+
+@Serializable
 data class AdminAssignmentDto(
     val id: String = "",
     val orderId: String = "",

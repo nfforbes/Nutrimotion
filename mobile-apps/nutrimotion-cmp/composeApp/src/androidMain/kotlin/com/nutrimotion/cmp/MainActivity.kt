@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
         AppConfig.auth0Domain = BuildConfig.AUTH0_DOMAIN
         AppConfig.auth0ClientId = BuildConfig.AUTH0_CLIENT_ID
         AppConfig.auth0Audience = BuildConfig.AUTH0_AUDIENCE
+        AppConfig.httpLogging = BuildConfig.DEBUG
         initSecureStorage(this)
         AndroidAuthBrowser.init(this)
         AndroidPush.init(this)

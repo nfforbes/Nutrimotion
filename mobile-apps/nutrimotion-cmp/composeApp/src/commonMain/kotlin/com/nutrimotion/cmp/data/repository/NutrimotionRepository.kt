@@ -42,6 +42,8 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
     suspend fun addCartItem(item: CartItemRequest): Result<CartDto> =
         api.post("api/cart/items", item)
 
+    suspend fun removeCartItem(lineId: String): Result<CartDto> = api.delete("api/cart/items/$lineId")
+
     suspend fun applyDiscount(code: String): Result<CartDto> =
         api.post("api/cart/discount", DiscountRequest(code))
 
@@ -99,6 +101,9 @@ class NutrimotionRepository(private val api: ApiClient = ApiClient()) {
 
     suspend fun updateUserRoles(userId: String, roles: List<String>): Result<AdminUserDto> =
         api.put("api/admin/users/$userId/roles", RolesRequest(roles))
+
+    suspend fun inviteUser(email: String, name: String?, roles: List<String>): Result<InviteUserResponse> =
+        api.post("api/admin/users/invite", InviteUserRequest(email = email, name = name, roles = roles))
 
     suspend fun getAssignments(): Result<List<AdminAssignmentDto>> = api.get("api/admin/assignments")
 

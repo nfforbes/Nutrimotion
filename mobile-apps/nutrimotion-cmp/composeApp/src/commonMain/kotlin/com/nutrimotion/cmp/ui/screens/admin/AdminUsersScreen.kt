@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -26,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.nutrimotion.cmp.data.model.Roles
 import com.nutrimotion.cmp.data.repository.NutrimotionRepository
+import com.nutrimotion.cmp.ui.components.PrimaryButton
 import kotlinx.coroutines.launch
 
 private val ROLE_LABELS = listOf(
@@ -39,6 +44,11 @@ private val ROLE_LABELS = listOf(
 fun AdminUsersScreen(repo: NutrimotionRepository) {
     var query by remember { mutableStateOf("") }
     var message by remember { mutableStateOf<String?>(null) }
+    var inviteOpen by remember { mutableStateOf(false) }
+    var inviteEmail by remember { mutableStateOf("") }
+    var inviteName by remember { mutableStateOf("") }
+    var inviteRoles by remember { mutableStateOf(listOf(Roles.CLIENT)) }
+    var inviting by remember { mutableStateOf(false) }
     val pendingRoles = remember { mutableStateMapOf<String, List<String>>() }
     val scope = rememberCoroutineScope()
 
@@ -51,10 +61,24 @@ fun AdminUsersScreen(repo: NutrimotionRepository) {
                 onValueChange = { query = it },
                 label = { Text("Search ${users.size} users") },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+            PrimaryButton(
+                text = "Invite user",
+                onClick = {
+                    inviteEmail = ""
+                    inviteName = ""
+                    inviteRoles = listOf(Roles.CLIENT)
+                    inviteOpen = true
+                },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             )
             message?.let {
-                Text(it, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(horizontal = 16.dp))
+                Text(
+                    it,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                )
             }
             LazyColumn(
                 contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
@@ -94,6 +118,87 @@ fun AdminUsersScreen(repo: NutrimotionRepository) {
                     }
                 }
             }
+        }
+
+        if (inviteOpen) {
+            AlertDialog(
+                onDismissRequest = { if (!inviting) inviteOpen = false },
+                title = { Text("Invite user by email") },
+                text = {
+                    Column {
+                        Text(
+                            "We’ll create their account and Auth0 will email them a link to set a password.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = inviteEmail,
+                            onValueChange = { inviteEmail = it },
+                            label = { Text("Email") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = inviteName,
+                            onValueChange = { inviteName = it },
+                            label = { Text("Name (optional)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("Roles", style = MaterialTheme.typography.labelLarge)
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            ROLE_LABELS.forEach { (role, label) ->
+                                FilterChip(
+                                    selected = role in inviteRoles,
+                                    onClick = {
+                                        inviteRoles = if (role in inviteRoles) {
+                                            val next = inviteRoles - role
+                                            if (next.isEmpty()) inviteRoles else next
+                                        } else {
+                                            inviteRoles + role
+                                        }
+                                    },
+                                    label = { Text(label) },
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        enabled = !inviting && inviteEmail.trim().isNotEmpty() && inviteRoles.isNotEmpty(),
+                        onClick = {
+                            inviting = true
+                            scope.launch {
+                                val name = inviteName.trim().ifBlank { null }
+                                repo.inviteUser(inviteEmail.trim(), name, inviteRoles)
+                                    .onSuccess { result ->
+                                        inviteOpen = false
+                                        message = result.warning
+                                            ?: if (result.emailSent) {
+                                                "Invite sent to ${result.email}"
+                                            } else {
+                                                "Account created for ${result.email}, but the invite email could not be sent."
+                                            }
+                                        reload()
+                                    }
+                                    .onFailure { message = it.friendlyMessage("Could not invite that user") }
+                                inviting = false
+                            }
+                        },
+                    ) {
+                        Text(if (inviting) "Sending…" else "Send invite")
+                    }
+                },
+                dismissButton = {
+                    TextButton(enabled = !inviting, onClick = { inviteOpen = false }) {
+                        Text("Cancel")
+                    }
+                },
+            )
         }
     }
 }
