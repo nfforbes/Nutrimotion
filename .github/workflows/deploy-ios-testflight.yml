@@ -24,7 +24,8 @@ env:
 jobs:
   build-framework:
     name: Compile ComposeApp (iOS)
-    runs-on: macos-26
+    # xcode-27 ships the iOS 27 SDK. App Store Connect rejects uploads built with the iOS 26 SDK (ITMS-90725).
+    runs-on: xcode-27
     defaults:
       run:
         working-directory: mobile-apps/nutrimotion-cmp
@@ -44,6 +45,11 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Select Xcode 27.2 (iOS 27 SDK)
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "27.2"
+
       - name: Link release framework (iosArm64)
         run: ./gradlew :composeApp:linkReleaseFrameworkIosArm64 --stacktrace
 
@@ -51,7 +57,7 @@ jobs:
     name: Archive & upload TestFlight
     needs: build-framework
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    runs-on: macos-26
+    runs-on: xcode-27
     defaults:
       run:
         working-directory: mobile-apps/nutrimotion-cmp
@@ -68,10 +74,20 @@ jobs:
             exit 1
           fi
 
-      - name: Select Xcode (latest stable / iOS SDK required by App Store Connect)
+      - name: Select Xcode 27.2 (iOS 27 SDK required by App Store Connect)
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "latest-stable"
+          xcode-version: "27.2"
+
+      - name: Require the iOS 27 SDK
+        run: |
+          xcodebuild -version
+          sdk=$(xcodebuild -showsdks | awk '/iphoneos27/{ print $NF; exit }')
+          echo "iOS device SDK: ${sdk:-none}"
+          case "$sdk" in
+            iphoneos27*) ;;
+            *) echo "::error::ITMS-90725: this archive must be built with the iOS 27 SDK. Found: ${sdk:-none}"; exit 1 ;;
+          esac
 
       - name: Set up JDK
         uses: actions/setup-java@v4
